@@ -1,0 +1,22 @@
+---
+---
+
+@import "{{ site.theme }}";
+@media (min-width: 80em) {
+  .page {
+    width: calc(100% - 300px);
+    padding-right: 50px;
+  }
+}
+
+.page__content {
+  p,
+  li,
+  dl {
+    font-size: 16px;
+  }
+}
+
+code > * {
+  font-size: 14px;
+}
