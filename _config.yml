@@ -9,3 +9,9 @@ aux_links:
 plugins:
   - jekyll-remote-theme
   - jekyll-seo-tag
+# Optional: If you're having trouble with image paths
+defaults:
+  - scope:
+      path: "assets/images"
+    values:
+      image: true
