@@ -6,7 +6,7 @@ layout: default
 For this course we will use a very handy tool called Anaconda. It is basically Python in a box, meaning that it creates a closed environment on your PC which already has Python and a lot of extra packages as well as additional software such as a code editor installed on it. This makes the installation as easy as it gets. The downside is that the installer is quite large (>800mb).  
 
 To get started, just go to [Link: the Anaconda website...](https://www.anaconda.com/download){:target="_blank"}{:rel="noopener noreferrer"} and download the version for your operating system.  
-![Download Page](./assets/images/python/0/download.PNG)  
+![Download Page](/New_BAI_DateAnalysis/assets/images/python/0/download.PNG)  
 
 Simply follow the download instructions and leave all the buttons as they are by default.  
   
