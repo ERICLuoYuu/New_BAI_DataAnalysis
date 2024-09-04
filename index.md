@@ -1,5 +1,5 @@
 ---
-title: "Installing Python"
+title: Home
 layout: home
 nav_order: 1
 ---
