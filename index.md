@@ -43,6 +43,6 @@ for line in Crypticlist:
 Now its time to run your first script! You can run all of your script by clicking the green arrow on top (red circle) or you can run the code line-by-line with the green arrow with the line-symbol next to it (white circle). Once you ran the code you will see the variables created in the list on the top right (see picture below) and you will
 see the output of your code in the bottom right in the console (see picture below).  
 
-![Spyder window](assets\images\python\0\spyder.PNG)
+![Spyder window](assets/images/python/0/spyder.PNG)
 
  May the code be with you!
