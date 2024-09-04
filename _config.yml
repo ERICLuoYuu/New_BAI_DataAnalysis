@@ -2,16 +2,26 @@ title: Just the Docs Template
 description: A starter template for a Jeykll site using the Just the Docs theme!
 remote_theme: just-the-docs/just-the-docs@v0.4.0
 
-url: https://just-the-docs.github.io
-baseurl: "/New_BAI_DateAnalysis"
+url: https://ericluoyuu.github.io
+baseurl: "/New_BAI_DateAnalysis"  # Replace with your actual repo name
+
 aux_links:
   Template Repository: https://github.com/just-the-docs/just-the-docs-template
+
 plugins:
   - jekyll-remote-theme
   - jekyll-seo-tag
-# Optional: If you're having trouble with image paths
-defaults:
-  - scope:
-      path: "assets/images"
-    values:
-      image: true
+
+# Just the Docs specific settings
+color_scheme: light
+search_enabled: true
+
+# Exclude these files from production site
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
