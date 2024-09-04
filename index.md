@@ -11,13 +11,13 @@ To get started, just go to [Link: the Anaconda website...](https://www.anaconda.
 Simply follow the download instructions and leave all the buttons as they are by default.  
   
 Once the installation is finished, search for the program "Anaconda Navigator" and open it. Once it opens you are presented with the main window of your Anaconda environment  
-![Anaconda Main Window](assets\images\python\0\anaconda.PNG)  
+![Anaconda Main Window](assets/images/python/0/anaconda.PNG)  
 
 In the "Home" screen you see a bunch of different programs that can run within Anaconda. The one we will use most is "Spyder" (definitely usable by people with Arachnophobia!). Make sure that Spyder is installed, if it is not click on the button to install it.  
 Spyder is a code editor for Python which has some handy extensions, such as line-by-line execution and nicely viewable variables and tables during execution of code. But we will come back to that later...  
 
 Additionally there is a window called "Environnments". Click on it and you will be presented with a table of two columns.  
-![Anaconda Main Window](assets\images\python\0\environments.PNG)   
+![Anaconda Main Window](assets/images/python/0/environments.PNG)   
 
 The left side shows you environments (red box). Anaconda lets you create multiple environments (again, basically separete Python installations which are secluded from each other). This can be useful if e.g. you need functionality of very specific versions of packages for some program, but the same package in a different version in another program. To avoid the different versions clashing you can put them in different environments.  
 On the right side (blue box) you can see the packages which are installed in an environment. Python has some internal core functionalities, but there are many many (many many many...) additional packages created by the community which unlock Pythons full potential. Some of the most widely used pacakges are e.g. numpy, pandas or scikit-learn. 
