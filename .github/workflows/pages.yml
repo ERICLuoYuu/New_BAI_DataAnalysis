@@ -13,14 +13,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: ruby/setup-ruby@v1
+      
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.1'
-          bundler-cache: true
-      - name: Build Jekyll site
+          ruby-version: '3.1'  # Use a specific version that's compatible with GitHub Pages
+          bundler-cache: false  # We'll handle caching manually
+      
+      - name: Install dependencies
         run: |
+          rm -f Gemfile.lock
           bundle install
-          bundle exec jekyll build
+      
+      - name: Build Jekyll site
+        run: bundle exec jekyll build
+      
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
