@@ -3,6 +3,7 @@ title: "Basics of Python"
 layout: default
 nav_order: 3
 ---
+##The Basics of Python
 This interactive tutorial will get you started on your data-exploration road and make you familiar with some core
 concepts of Python programming and data analysis.  
 
@@ -10,7 +11,7 @@ concepts of Python programming and data analysis.
 and run them in your IDE (e.g. Spyder).
 {: .notice}
 
-#### Table of Contents
+### Table of Contents
 1. [General stuff about Python](#1-general-stuff-about-python)
 2. [Data Types and Variables](#2-data-types-and-variables)
 3. [Operators](#3-operators)
