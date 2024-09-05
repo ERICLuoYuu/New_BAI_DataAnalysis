@@ -3,7 +3,7 @@ title: "Basics of Python"
 layout: default
 nav_order: 3
 ---
-##The Basics of Python
+## The Basics of Python
 This interactive tutorial will get you started on your data-exploration road and make you familiar with some core
 concepts of Python programming and data analysis.  
 
