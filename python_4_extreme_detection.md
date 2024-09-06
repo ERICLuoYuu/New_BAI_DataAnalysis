@@ -97,7 +97,7 @@ Alright, now that we layed out the basics, lets dive into theme methods!
 The first approach is the Point Over Threshold (POT) method. This is a very simple approach that looks at the whole dataset as one.  
 We define fixed thresholds for the dataset, defining the upper and lower bounds above or below which values will be considered extreme.  
 The boundaries are usually defined by the quantiles we provided as an argument to the function.
-<div style="background-color: #E0E0E0; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+<div style="background-color: #EEEEEE; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
   <h3>Exercise</h3>
   <p>Let's try and code that method ourselves. It is actually not very difficult!<br>
   Define a new function called "peak_over_threshold()".<br>
@@ -111,17 +111,19 @@ The boundaries are usually defined by the quantiles we provided as an argument t
   <p>A little hint: The description here is quite long but the code for this is actually quite short.</p>
 
   <details>
-    <summary style="cursor: pointer; color: #0366d6; font-weight: bold;"> Hint if you get stuck!</summary>
+    <summary style="cursor: pointer; color: #000000; font-weight: bold;"> Hint if you get stuck!</summary>
     <div style="padding: 15px; background-color: #ffffff; border-radius: 5px; margin-top: 10px;">
       <p>You can generate a Series of boolean values that indicate whether a datapoint is above or below a value with a direct comparison such as</p>
-      <pre><code>X_larger_than_280 = X > 280</code></pre>
+      <pre style="background-color: #f5f6fa; padding: 10px; border-radius: 5px;"><code style="display: block; overflow-x: auto;">
+X_larger_than_280 = X > 280
+      </code></pre>
     </div>
   </details>
 
   <details>
-    <summary style="cursor: pointer; color: #0366d6; font-weight: bold;"> Solution!</summary>
+    <summary style="cursor: pointer; color: #000000; font-weight: bold;"> Solution!</summary>
     <div style="padding: 15px; background-color: #ffffff; border-radius: 5px; margin-top: 10px;">
-      <pre><code>
+      <pre style="background-color: #f5f6fa; padding: 10px; border-radius: 5px;"><code style="display: block; overflow-x: auto;">
 def peak_over_threshold(X:pd.Series, prob):
 
     print(f'Extremes detection using peak over threshold method at: {prob} percentile')
