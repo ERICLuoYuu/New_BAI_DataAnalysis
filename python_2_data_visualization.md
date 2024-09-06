@@ -3,7 +3,7 @@ title: "Data Handling and Visualization"
 layout: default
 nav_order: 4
 ---
-# Of plots and pandas: Data handling and Visualization
+# **Of plots and pandas: Data handling and Visualization**
 
 In this second part of the course we will talk about how to handle, process and visualize data in Python. For that purpose we will make use of a few third-party libraries. NumPy and Pandas will help us store the data in array- and matrix-like structures (in Pandas more specifically Dataframes) and do some processing of the data. Pandas already has some visualization capabilities, but for nicer looks and configurability we will make use of the Plotly package.    
 To underline that these are essential tools in Python, let me once again pull out the Stackoverflow 2023 survey: According to the ~3k respondants, Numpy, Pandas and Scikit-Learn (which we will use in the next lesson) are 3 of the 8 most used technologies in programming across all languages (disregarding web-technologies)!  
