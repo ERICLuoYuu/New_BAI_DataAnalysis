@@ -97,7 +97,7 @@ Alright, now that we layed out the basics, lets dive into theme methods!
 The first approach is the Point Over Threshold (POT) method. This is a very simple approach that looks at the whole dataset as one.  
 We define fixed thresholds for the dataset, defining the upper and lower bounds above or below which values will be considered extreme.  
 The boundaries are usually defined by the quantiles we provided as an argument to the function.
-<div style="background-color: #17153B; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+<div style="background-color: #E0E0E0; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
   <h3>Exercise</h3>
   <p>Let's try and code that method ourselves. It is actually not very difficult!<br>
   Define a new function called "peak_over_threshold()".<br>
@@ -189,7 +189,7 @@ df_bm["extreme_low"] = df_bm["diff"] < lower_thresh, "data"
 
 Note: In the POT approach the quantiles where built from the whole dataset itself. Here, the quantiles are built from the array of deviations from the mean! Remember this in the exercise when you evaluate the results.
 
-<div style="background-color: #17153B; padding: 5px; border-radius: 2px; margin-bottom: 20px;">
+<div style="background-color: #E0E0E0; padding: 5px; border-radius: 2px; margin-bottom: 20px;">
   <h3>Exercise</h3>
   <ol>
     <li>Go ahead and built a function for the block maxima method. You already got all the building blocks. Put them together and add the right function definition and return statement.</li>
