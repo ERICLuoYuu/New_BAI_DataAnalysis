@@ -112,7 +112,7 @@ The boundaries are usually defined by the quantiles we provided as an argument t
 
   <details>
     <summary style="cursor: pointer; color: #000000; font-weight: bold;"> Hint if you get stuck!</summary>
-    <div style="padding: 15px; background-color: #ffffff; border-radius: 5px; margin-top: 10px;">
+    <div style="padding: 15px; border-radius: 5px; margin-top: 10px;">
       <p>You can generate a Series of boolean values that indicate whether a datapoint is above or below a value with a direct comparison such as</p>
       <pre style="background-color: #f5f6fa; padding: 10px; border-radius: 5px;"><code style="display: block; overflow-x: auto;">
 X_larger_than_280 = X > 280
@@ -122,7 +122,7 @@ X_larger_than_280 = X > 280
 
   <details>
     <summary style="cursor: pointer; color: #000000; font-weight: bold;"> Solution!</summary>
-    <div style="padding: 15px; background-color: #ffffff; border-radius: 5px; margin-top: 10px;">
+    <div style="padding: 15px; border-radius: 5px; margin-top: 10px;">
       <pre style="background-color: #f5f6fa; padding: 10px; border-radius: 5px;"><code style="display: block; overflow-x: auto;">
 def peak_over_threshold(X:pd.Series, prob):
 
