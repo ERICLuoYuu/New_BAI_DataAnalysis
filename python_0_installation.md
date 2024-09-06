@@ -1,5 +1,5 @@
 ---
-title: "0.Installation"
+title: "0. INSTALLATION"
 layout: default
 nav_order: 2
 ---
