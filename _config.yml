@@ -27,8 +27,4 @@ exclude:
 math: mathjax
 compress_html:
   blanklines: false
-markdown: kramdown
-kramdown:
-  math_engine: mathjax
-  syntax_highlighter_opts:
-    disable: true
+
