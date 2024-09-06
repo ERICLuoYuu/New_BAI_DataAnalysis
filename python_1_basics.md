@@ -1,5 +1,5 @@
 ---
-title: "1. Basics of Python"
+title: "1. BASICS OF PYTHON"
 layout: default
 nav_order: 3
 ---
