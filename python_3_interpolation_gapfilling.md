@@ -496,8 +496,8 @@ px.scatter(x=y_hat_ml,y=y_test["tair_2m_mean"]).show()
 As you can see the score is roughly 0.36. That is not exactly great but does indicate
 a weak correlation between predicted and true values. 
 
+<div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
 {% capture exercise %}
-
 <h3> Exercise </h3>
 <p >Do a linear interpolation and 1-D linear model prediction for this same data.
 Do any of them perform equally good or better than the multiple regression? </p>
@@ -544,7 +544,7 @@ regression_results(y_test, y_hat)
 <div class="notice--primary">
   {{ exercise | markdownify }}
 </div>
-
+</div>
 
 ### 2.4: Machine Learning approaches (example Random Forests)
 We already covered quite a lot of ground on how to deal with missing data by
