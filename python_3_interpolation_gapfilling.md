@@ -125,9 +125,7 @@ $yn = y1 + \frac{(y_{2}-y_{1})}{(x_{2}-x_{1})} * (x_{n} - x_{1})$
 We simply construct a straight line where y1 is our y-intercept, the slope is derived 
 from the two points with the well known slope-formula 
 
-$$
-m = (y2-y1)/(x2-x1)
-$$ 
+$m = (y2-y1)/(x2-x1)$ 
 
 and our x value on this constructed line is difference between the point we want to look at minus the starting point
 
@@ -265,9 +263,7 @@ and the predicted values. We square it to avoid negative and positive values cou
 
 Looking at an array of n data points we can write  
 
-$$ 
-SSE = \sum_{i=1}^n (y(i) - b - m * x(i))^2 
-$$ 
+$SSE = \sum_{i=1}^n (y(i) - b - m * x(i))^2$ 
   
 y(i) is the true y value at the predicted point, b is the y-intercept of the linear model, 
 m is the first coefficient of the linear model and x(i) is the x-value at the predicted point. 
@@ -280,11 +276,11 @@ To derive the model parameters we can use the following relations where we repla
 (as that is the general standard). Also we will now denote the predicted y-value with a ^ on top of that, which is
 the common standard in literature. Sometimes this is also referred to as y_hat.  
 
-$$ \hat{y}_{i} = \alpha + \beta * x_{i} $$
+$\hat{y}_{i} = \alpha + \beta * x_{i}$
 
-$$ \alpha = \bar{y} - (m \bar{x}) $$
+$\alpha = \bar{y} - (m \bar{x})$
 
-$$ \beta = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^n (x_i - \bar{x})^2} $$
+$\beta = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^n (x_i - \bar{x})^2}$
 
 If we would do it by hand, we would simply plug in all the numbers we have into the expression for beta and
 use the result to derive our alpha
