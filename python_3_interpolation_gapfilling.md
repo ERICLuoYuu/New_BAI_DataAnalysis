@@ -276,7 +276,7 @@ To derive the model parameters we can use the following relations where we repla
 (as that is the general standard). Also we will now denote the predicted y-value with a ^ on top of that, which is
 the common standard in literature. Sometimes this is also referred to as y_hat.  
 
-$\hat{y}_{i} = \alpha + \beta * x_{i}$
+$\widehat{y}_{i} = \alpha + \beta * x_{i}$
 
 $\alpha = \bar{y} - (m \bar{x})$
 
