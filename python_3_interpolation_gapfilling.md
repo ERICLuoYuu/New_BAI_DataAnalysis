@@ -278,6 +278,9 @@ the common standard in literature. Sometimes this is also referred to as y_hat.
 
 $\hat{y}_{i} = \alpha + \beta * x_{i}$
 
+$\hat{y}_{i} = \alpha + \beta \cdot x_{i}$
+
+
 $\alpha = \bar{y} - (m \bar{x})$
 
 $\beta = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^n (x_i - \bar{x})^2}$
