@@ -23,9 +23,13 @@ Additionally there is a window called "Environnments". Click on it and you will 
 The left side shows you environments (red box). Anaconda lets you create multiple environments (again, basically separete Python installations which are secluded from each other). This can be useful if e.g. you need functionality of very specific versions of packages for some program, but the same package in a different version in another program. To avoid the different versions clashing you can put them in different environments.  
 On the right side (blue box) you can see the packages which are installed in an environment. Python has some internal core functionalities, but there are many many (many many many...) additional packages created by the community which unlock Pythons full potential. Some of the most widely used pacakges are e.g. numpy, pandas or scikit-learn. 
 
-**Notice:** Try searching for them in the environment using the search-box on the top right and see whether they are already installed!
-{: .notice}
-
+<Notice 
+  bgColor="bg-green-100" 
+  borderColor="border-green-500" 
+  textColor="text-green-700"
+>
+  Try searching for them in the environment using the search-box on the top right and see whether they are already installed!
+</Notice>
 If a package is missing and you want to install it, select the dropdown menu on the top that by default says "installed" and swithc to "Not installed". Then use the search box again to find the package you want to install. 
 
 **Notice:** Try installing the package "xgboost" in this way.
