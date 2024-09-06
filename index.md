@@ -4,7 +4,7 @@ layout: home
 nav_order: 1
 ---
 
-# **Why should you learn Python?**
+# **WHY SHOULD YOU LEARN PYTHON?**
 
 Generally speaking Python is a general-purpose, high-level interpreted programming language. What does that mean? 
 
