@@ -26,5 +26,4 @@ exclude:
   - vendor/ruby/
 math: mathjax
 compress_html:
-…
   blanklines: false
