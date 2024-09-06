@@ -22,7 +22,7 @@ We will use some data I have prepared in a way that you might find it in an onli
 To test some things we will work with the air temperature column "tair_2m_mean" here.
 There are several issues when we have a missing-data-placeholder like that. Try two things:
 
- <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+ <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise </h3>
@@ -222,7 +222,7 @@ where y is the true value and ypred is the predicted y value. You simply compute
 each datapoint and square them to avoid counter balancing of negative and positive errors. Then you take 
 the mean of these values and finally take the square root, to get back into your data range.
 
-<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise </h3>
@@ -498,7 +498,7 @@ px.scatter(x=y_hat_ml,y=y_test["tair_2m_mean"]).show()
 As you can see the score is roughly 0.36. That is not exactly great but does indicate
 a weak correlation between predicted and true values. 
 
-<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 <h3> Exercise </h3>
 <p >Do a linear interpolation and 1-D linear model prediction for this same data.
@@ -658,7 +658,7 @@ y_hat_rf = rf_model.predict(X_test)
 regression_results(y_test, y_hat_rf)
 # as you can see, the model performs yet another bit better.
 ```
-<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise </h3>
@@ -748,7 +748,7 @@ regression_results(y_true, y_hat_rf)
 
 ```
 
-<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise </h3>
