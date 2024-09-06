@@ -29,7 +29,7 @@ On the right side (blue box) you can see the packages which are installed in an 
 If a package is missing and you want to install it, select the dropdown menu on the top that by default says "installed" and swithc to "Not installed". Then use the search box again to find the package you want to install. 
 
 > **Notice:**  
-> Try searching for them in the environment using the search-box on the top right and see whether they are already installed!
+> Try installing the package “xgboost” in this way.
 
 Once you have finished all of this you should be good to go! To verify that everything works go to the "Home" tab and start Spyder. Time for your first line of code!  
 In the open Editor you will have to save the file in order to run it. Then copy and paste the following code by clicking the button on the top right in the box below. Insert it into spyder.  
