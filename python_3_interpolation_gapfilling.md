@@ -282,6 +282,8 @@ $\hat{y}_{i} = \alpha + \beta \cdot x_{i}$
 
 $$\hat{y}_i = \alpha + \beta * x_i$$
 
+<div> $$ \hat{y}_{i} = \alpha + \beta * x_{i} $$ </div>
+
 $\alpha = \bar{y} - (m \bar{x})$
 
 $\beta = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^n (x_i - \bar{x})^2}$
