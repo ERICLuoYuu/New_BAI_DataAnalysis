@@ -24,3 +24,7 @@ exclude:
   - vendor/cache/
   - vendor/gems/
   - vendor/ruby/
+
+compress_html:
+…
+  blanklines: false
