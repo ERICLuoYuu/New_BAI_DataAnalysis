@@ -1,5 +1,5 @@
 ---
-title: "3. EXTREME VALUE DETECTION"
+title: "4. EXTREME VALUE DETECTION"
 layout: default
 nav_order: 6
 ---
@@ -9,7 +9,7 @@ nav_order: 6
 In this exercise we will look at extreme values in meteorological data. First you will learn about different ways to define what is an "extreme" 
 value (extreme relative to what?). Afterwards we will work with an example dataset and code the methods in Python to get some hands on experience.
 
-#### Table of Contents
+### Table of Contents
 1. [Material](#1-material)  
 2. [Background](#2-background)  
 3. [Methods and Implementation](#3-methods-and-implementation)  
