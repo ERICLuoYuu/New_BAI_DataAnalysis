@@ -120,13 +120,15 @@ where y is the amount of flour in grams and x is the number of people eating cak
 The formula for an interpolation between two points (x1,y1) and (x2,y2) at a specific point
 (xn, yn) is:  
 
-$yn = y1 + \frac{(y_{2}-y_{1})}{(x_{2}-x_{1})} * (x_{n} - x_{1})$
+$$
+yn = y1 + \frac{(y_{2}-y_{1})}{(x_{2}-x_{1})} * (x_{n} - x_{1})
+$$
 
 We simply construct a straight line where y1 is our y-intercept, the slope is derived 
 from the two points with the well known slope-formula 
 
 $$
-m = (y2-y1)/(x2-x1) 
+m = (y2-y1)/(x2-x1)
 $$ 
 
 and our x value on this constructed line is difference between the point we want to look at minus the starting point
@@ -282,11 +284,11 @@ To derive the model parameters we can use the following relations where we repla
 (as that is the general standard). Also we will now denote the predicted y-value with a ^ on top of that, which is
 the common standard in literature. Sometimes this is also referred to as y_hat.  
 
-<div> $$ \hat{y}_{i} = \alpha + \beta * x_{i} $$ </div>
+$$ \hat{y}_{i} = \alpha + \beta * x_{i} $$
 
-<div> $$ \alpha = \bar{y} - (m \bar{x}) $$ </div>
+$$ \alpha = \bar{y} - (m \bar{x}) $$
 
-<div> $$ \beta = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^n (x_i - \bar{x})^2} $$ </div>
+$$ \beta = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^n (x_i - \bar{x})^2} $$
 
 If we would do it by hand, we would simply plug in all the numbers we have into the expression for beta and
 use the result to derive our alpha
