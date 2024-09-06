@@ -220,9 +220,7 @@ temperature way off.
 
 A simple measure of how well our model performed is to look at the root mean squared error.
 
-$$ 
-RMSE = \sqrt{\overline{(y[i] - ypred[i])^2}} 
-$$
+$RMSE = \sqrt{\overline{(y[i] - ypred[i])^2}}$
 
 where y is the true value and ypred is the predicted y value. You simply compute the model error for 
 each datapoint and square them to avoid counter balancing of negative and positive errors. Then you take 
