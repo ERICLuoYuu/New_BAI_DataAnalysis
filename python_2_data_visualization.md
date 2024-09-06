@@ -1,5 +1,5 @@
 ---
-title: "2.Data Handling and Visualization"
+title: "2. Data Handling and Visualization"
 layout: default
 nav_order: 4
 ---
