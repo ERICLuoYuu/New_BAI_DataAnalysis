@@ -120,12 +120,16 @@ where y is the amount of flour in grams and x is the number of people eating cak
 The formula for an interpolation between two points (x1,y1) and (x2,y2) at a specific point
 (xn, yn) is:  
 
-<div> $$ yn = y1 + \frac{(y_{2}-y_{1})}{(x_{2}-x_{1})} * (x_{n} - x_{1}) $$ </div>
+$$ 
+yn = y1 + \frac{(y_{2}-y_{1})}{(x_{2}-x_{1})} * (x_{n} - x_{1}) 
+$$
 
 We simply construct a straight line where y1 is our y-intercept, the slope is derived 
 from the two points with the well known slope-formula 
 
-<div> $$ m = (y2-y1)/(x2-x1) $$ </div> 
+$$
+m = (y2-y1)/(x2-x1) 
+$$ 
 
 and our x value on this constructed line is difference between the point we want to look at minus the starting point
 
@@ -216,7 +220,9 @@ temperature way off.
 
 A simple measure of how well our model performed is to look at the root mean squared error.
 
-<div> $$ RMSE = \sqrt{\overline{(y[i] - ypred[i])^2}} $$ </div>
+$$ 
+RMSE = \sqrt{\overline{(y[i] - ypred[i])^2}} 
+$$
 
 where y is the true value and ypred is the predicted y value. You simply compute the model error for 
 each datapoint and square them to avoid counter balancing of negative and positive errors. Then you take 
@@ -263,7 +269,9 @@ and the predicted values. We square it to avoid negative and positive values cou
 
 Looking at an array of n data points we can write  
 
-<div> $$ SSE = \sum_{i=1}^n (y(i) - b - m * x(i))^2 $$ </div> 
+$$ 
+SSE = \sum_{i=1}^n (y(i) - b - m * x(i))^2 
+$$ 
   
 y(i) is the true y value at the predicted point, b is the y-intercept of the linear model, 
 m is the first coefficient of the linear model and x(i) is the x-value at the predicted point. 
