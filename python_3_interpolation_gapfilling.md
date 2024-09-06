@@ -280,6 +280,7 @@ $\hat{y}_{i} = \alpha + \beta * x_{i}$
 
 $\hat{y}_{i} = \alpha + \beta \cdot x_{i}$
 
+$$\hat{y}_i = \alpha + \beta * x_i$$
 
 $\alpha = \bar{y} - (m \bar{x})$
 
