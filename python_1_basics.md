@@ -10,7 +10,6 @@ concepts of Python programming and data analysis.
 > **Notice:**  
 > In all following sections I will insert some code snippets. You are very much encouraged to copy and paste them with the button on the top right
 and run them in your IDE (e.g. Spyder).
-{: .notice}
 
 ### Table of Contents
 1. [General stuff about Python](#1-general-stuff-about-python)
@@ -254,6 +253,8 @@ f = b / 5   # dividing numbers
 g = a ** 2  # Exponentation, this is a²
 h = 12 % 5  # Modulus, this returns the remaining amount after fitting one number into the other as many times as possible.
 ```
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 <h3> Exercise </h3>
 <p >With what you know so far, grab the scores josefine scored in the last games and compute the average amount of goals per game she scores</p>
@@ -282,7 +283,7 @@ mean_scores = sum(josefine["scores_last_games"]) / len(josefine["scores_last_gam
 <div class="notice--primary">
   {{ exercise | markdownify }}
 </div>
-
+</div>
 
 ### 3.2 Comparison operations
 Comparison operations are used to compare values with each other in order to make decisions in your script.  
@@ -345,6 +346,7 @@ a in c
 
 ## Code block in details in a notice
 
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise </h3>
@@ -402,7 +404,7 @@ f = (alfonso["grade_ecophysiology"] > 4.0 or alfonso["grade_archery"] > 4.0) or 
 <div class="notice--primary">
   {{ exercise | markdownify }}
 </div>
-
+</div>
 
 
 # 4. Conditionals and Loops
@@ -523,7 +525,7 @@ while a <= 10:
 </div>
 
 
-
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise </h3>
@@ -580,7 +582,7 @@ for index, month in enumerate(months):
 <div class="notice--primary">
   {{ exercise | markdownify }}
 </div>
-
+</div>
 
 # 5. Functions and Classes
 **Congratulations!**  
@@ -611,9 +613,8 @@ Functions are constructs of own, separate blocks of code in your program which t
  to the function. Here we do all the operations the function should do. Finally, we use the "return" keyword which ends
  the function and defines, which piece of information should be returned to the outside code. 
  
-  **Important** The variables which are defined inside a function are restricted to that function!
- The outside code won't know of the variables n_samples or "mean" which are defined in the function.
- {: .notice}
+ > **Important** The variables which are defined inside a function are restricted to that function!
+ > The outside code won't know of the variables n_samples or "mean" which are defined in the function.
  
  Calling the function would
  for example look like this:
@@ -642,7 +643,7 @@ def calculate_mean(list_of_values:list[float]) -> int:
  "-> int" which states that this function will return an integer value.  
 
 
-
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise 5.1.1 </h3>
@@ -692,8 +693,9 @@ print(d)                                # so 4/2 is 2, thn 2*2 is 4
 <div class="notice--primary">
   {{ exercise | markdownify }}
 </div>
+</div>
 
-
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise 5.1.2 </h3>
@@ -752,6 +754,7 @@ while password_is_bad:
 
 <div class="notice--primary">
   {{ exercise | markdownify }}
+</div>
 </div>
 
 ## 5.2 Classes
@@ -829,6 +832,7 @@ amtsvenn = Ecosystem(id="amtsvenn", IGBP_ecosystem_class = "open shrublands", la
 amtsvenn.print_ecosystem_information()
 ```
 
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise 5.2.1 </h3>
@@ -907,6 +911,7 @@ variance = stat.calculate_variance(example_list)
 
 <div class="notice--primary">
   {{ exercise | markdownify }}
+</div>
 </div>
 
 We will not go deeper into classes here, but it is very important to understand the concept. Most 
