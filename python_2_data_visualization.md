@@ -834,7 +834,7 @@ You can grab the results from the figure using px.get_trendline_results(fig_expr
 import plotly.express as px
 fig_express = px.scatter(df_dwd_daily, x="pressure_air", y="tair_2m_mean", trendline="ols")
 results = px.get_trendline_results(fig_express)
-
+```
 # To actually access the results of the regression we need to 
 # access the first row of the px_fit_results:
 ols_results = results.px_fit_results.iloc[0]
