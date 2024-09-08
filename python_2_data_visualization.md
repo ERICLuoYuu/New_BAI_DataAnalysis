@@ -772,11 +772,13 @@ fig_subplots.show()
 
 As a little exercise, print the fig_subplots object from above and try to figure out how to change the y-axis titles on the first and the second plot.
 <details><summary>Solution</summary>
+```python
 fig_subplots.update_layout(
     xaxis2_title="Date",
     yaxis_title="Tair 2m [F]",
     yaxis2_title="Rain amount, daily [mm]"
 )
+```
 </details>
 
 #### Templates
@@ -834,7 +836,7 @@ You can grab the results from the figure using px.get_trendline_results(fig_expr
 import plotly.express as px
 fig_express = px.scatter(df_dwd_daily, x="pressure_air", y="tair_2m_mean", trendline="ols")
 results = px.get_trendline_results(fig_express)
-```
+
 # To actually access the results of the regression we need to 
 # access the first row of the px_fit_results:
 ols_results = results.px_fit_results.iloc[0]
