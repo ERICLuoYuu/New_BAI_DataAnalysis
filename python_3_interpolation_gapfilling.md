@@ -1,58 +1,689 @@
 ---
-title: "3. INTERPOLATION AND GAP FILLING"
+title: "1. BASICS OF PYTHON"
 layout: default
-nav_order: 5
+nav_order: 3
 ---
+# **The Basics of Python**
+This interactive tutorial will get you started on your data-exploration road and make you familiar with some core
+concepts of Python programming and data analysis.  
 
-## **Interpolation and Gap Filling**
+> **Notice:**  
+> In all following sections I will insert some code snippets. You are very much encouraged to copy and paste them with the button on the top right
+and run them in your IDE (e.g. Spyder).
 
-In this exercise we look at interpolation and the rather time-series specific topic of data-gap filling.  
-In time-series data we often have gaps due to a variety of reasons. They can result from instrumental issues or maintenance times or unfavorable weather conditions which leads to data being discarded. These data gaps can be filled with statistical methods.
+### Table of Contents
+1. [General stuff about Python](#1-general-stuff-about-python)
+2. [Data Types and Variables](#2-data-types-and-variables)
+3. [Operators](#3-operators)
+4. [Loops and Conditionals](#4-loops-and-conditionals)
+5. [Functions and Classes](#5-functions-and-classes)
 
-In this lesson exercises are not completely separated from the content. Just follow along, grab the code and in some parts you will get snippets to run and fiddle with yourself.
+Notice that it is not at all expected that you learn all these things and they are burnt into your brain (!!!!!). 
+It is more of a broad intrdocution to all the basics so you have hard of them, but programmers do look up stuff
+all the time! So don't worry if it is a lot of input right now, just try to understand the concepts and you 
+can always come back and find help in here, in the internet or from me directly.
+  
+Here are some useful ressources to look things up:
 
-Before we start plotting data we will see, how we can deal with missing values which are already handled by the institution
-measuring the data, e.g. the DWD. For example it is common that the data is included with a specific placeholder value, which
-we first need to handle.
+[Link: w3schools.com: Tutorials on many topics where you can quickly look up things...](https://www.w3schools.com/python/python_intro.asp){:target="_blank"}{:rel="noopener noreferrer"}  
+[Link: geeks4geeks.com: Another nice overview of many functionalities of Python (requires login)...](https://www.geeksforgeeks.org/python-cheat-sheet/){:target="_blank"}{:rel="noopener noreferrer"}   
+Geeksforgeeks requires you to make an account or use e.g. a google login, but it features many tutorials, project ideas, quizzes and so on on many programming languages and general
+topics such as Machine Learning, Data Visualization, Data Science, Web Development and many more  
+[Link: Pandas cheat sheet: Later on we will use the library "Pandas" (so cute!) for data handling. A nice cheat sheet is provided by the developers...](https://pandas.pydata.org/Pandas_Cheat_Sheet.pdf){:target="_blank"}{:rel="noopener noreferrer"}   
 
-### 1. Loading and  converting data:
-We will use some data I have prepared in a way that you might find it in an online data portal.  
-[Download the file here](https://nicbehr.github.io/new_bai_data_analysis/assets/data/dwd_diepholz_1996_2023_missing_placeholders.parquet)
 
-To test some things we will work with the air temperature column "tair_2m_mean" here.
-There are several issues when we have a missing-data-placeholder like that. Try two things:
+## 1. General things about Python
+I quickly want to highlight some things which are special about Python compared to many other programming languages and that one needs to get used to.  
 
- <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+### Python is indentation sensitive
+In Python it matters, how far you indent your lines, meaning how much space you have at the beginning of a line.
+As an example this will work:
+```python
+a = 5
+b = 1
+```
+but this will throw an error:
+```python
+a = 5
+  b = 5
+```
+will result in an error:
+```python
+File "<stdin>", line 1
+  b = 5
+IndentationError: unexpected indent
+```
+
+### Variables
+Generally in Python variables are created by assigning a value to them with an equal sign, just like we did above. Theire output can be shown by just typing the variable:
+```python
+a = 5
+a
+5
+``` 
+
+### Comments
+Comments are lines in the code that are not executed and are there for documentation. For now it is a good idea to use comments in your code to keep track of what is happening where.  
+Single line comments are always created with an '#'. Everything after that symbol in the line is not executed. Multi-line comments can be written by enclosing them in three ':
+```python
+# first I create a single line comment, this is not executed
+a = 5 # this line is executed, but the comment gets ignored
+''' 
+Now I write a multi-line comment
+I can continue the comment on the next line
+b = 5 <-- this is ignored
+'''
+```
+### Python is 0-indexed
+In Python, the first index in for example a list always has the number 0! This takes some time to get used to, especially if you come from e.g. R which has 1-based indexing, but most programming lanuge handle indexing like that and it is worth getting used to it. I won't go into why it is handled like that but there are many discussions on the internet about it, feel free to dive in if you feel like diving into a
+rabbit-hole ;)
+
+
+### Separators
+In Python separators for decimal numbers are ALWAYS dots! Commas are used e.g. to separete variables from each other or entries in a list
+```python
+correct_decimal = 2.5
+correct_decimal
+2.5
+```
+
+### Naming of variables, functions, and anything at all
+This is not Python-specific but a very important note!  
+**Always use descriptive names for variables, functions or anything that you give a name!**  
+Especially in scientific programming you see it time and time again that people name variables and functions
+using abbreviations that just came to their mind. This makes code much, **much** harder to read and to use by other people or your own future self.
+It happens so often that people look back at what they wrote 3 weeks ago and do not understand half of it because they did not give descriptive names.  
+
+You can also use comments to document your code a bit, but that always takes up extra space, often does not look good because you barely keep the same
+formatting throughout the code and gives the next user more work to do when trying to understand the code. Just making the code explain itself is the best solution of all.  
+Here is a very simple example:  
+```python
+# Bad code with abbreviations  
+# it requires the user to interprete the variables and look at 
+# used functions to understand what this even does
+l = [1,5,12,17,18,14,11]
+n = len(l)
+s = sum(l)
+m = s/n
+
+# Fixing it with comments
+# With comments we require the user to read all the extra text to 
+# 1) understand what the data is
+# 2) understand what is calculated
+
+l = [1,5,12,17,18,14,11] # a list of temperature values
+n = len(l)  # get total number of samples
+s = sum(l)  # get total sum of samples
+m = s/n     # calculate the mean value
+
+
+# This gets so much easier to read when using declarative naming.
+# You dont even have to look into the function to understand what it is doing:
+monthly_temperature = [1,5,12,17,18,14,11]
+number_of_samples = len(monthly_temperature) 
+sum_of_samples = sum(monthly_temperature)
+mean_monthly_temperature = sum_of_samples/number_of_samples 
+
+# This does not mean that naming has to replace comments completely 
+# (although some people argue like that). It is still alright to use comments
+# to clarify parts of your code, just try keep it to a minimum and make the
+# code as self-explanatory as possible!
+
+```
+
+## 2. Data Types and Variables
+Python knows different types of data. A number is a different kind of variable than a word. That helps organizing the variables and defines, which operations are
+possible with which data. For example, computing the mean of a word would be difficult, just as translating a number to all-uppercase letters...  
+
+In Python you dont have to define the data type yourself because Python is smart and finds the type of data on its own. For example when we define a number  
+Python will understand and give it the type "int" or "float", which means "integer" or "floating point number" (decimal)
+We will not cover all data types as we probably won't need all of them for our purpose. However these ones are important:  
+  
+**Primitive Datatypes**  
+Primitive datatypes are simple constructs that consists basically of one chunk of information, e.g. a number or a word:
+- **int**: Integer, a number without a floating point
+- **float**: Floating point number, a number with decimals
+- **str**: A string of characters, e.g. letters, words and sentences
+- **bool**: Boolean, a value that can only be True or False. This helps us make decisions in our code  
+  
+**Non-Primitive Datatypes**  
+Non-primitive datatypes consist of aggregations of primitive datatypes. A list for example holds several numbers or words or something else  
+- **list**: An ordered sequence of data, for example [1,2,3] is a list where each of the entries have a specific position and the entries can be accessed by indices
+- **dict**: A non-ordered mapping that consists of keys and values. That simply means, we can not get entries from the dictionary by indices (e.g. the 0th entry in a dictionary) but instead grab data from the dictionary by using the key. Imagine it like a digital telephone-book. The comparison does not hold completely because in theory a telephone book is ordered, but you would never search the 5001231th entry in a telephone book. Instead you would search the phone number of  
+Mr. Smith", so you go to the "key" Mr. Smith and get the "value" 0251/1234567.
+  
+Lets look at some examples for data types:  
+```python
+# Primitive datatypes:
+
+letter_a = "a"                  # <-- a string 
+name = "Josefine" # <-- a longer string 
+age = 24                        # <-- an integer
+total_playtime = 354.5          # <-- a float
+is_injured = False              # <-- a boolean
+
+# Non-Primitive datatypes:
+# list: 
+# a list is alwasys enclosed by brackets 
+# and the items are separeted with commas:
+scores_last_games = [5,3,0,1] 
+# To access the values we can use the index, for example 
+scores_last_games[0]  # <-- gets the first entry
+scores_last_games[2]  # <-- gets the 3rd entry
+scores_last_games[-1] # <-- gets the last entry
+scores_last_games[-2] # <-- gets the second last entry
+
+# dictionary:
+# is always enclosed by {}, 
+# and has the structure "key":value, lines are separeted by a comma.
+josefine = {
+  "age":age,
+  "total_playtime":total_playtime,
+  "is_injured":is_injured,
+  "scores_last_games":scores_last_games
+}
+# Now the values of the dictionary can be accessed using the key like this:
+josefine["age"]
+24
+# new entries can be added by assigning a value to a new key:
+josefine["trikot_number"] = 9
+```
+You can always find the type of a variable by using the type() function (more on functions later):
+```python
+type(name)
+type(age)
+type(total_playtime)
+type(is_injured)
+type(scores_last_games)
+type(josefine)
+```
+
+It is possible to change the type of a variable, but only if Python is able to understand what the outcome should be.  
+The functions to do that have the same name as the target data type, for example int() or str():
+```python
+int("10")       # <-- this works
+str(500)        # <-- this works
+float(500)      #<-- this works
+float("500.5")  #<-- this works
+float("abc")    #<-- this won't work, how should you translate a word to a number?
+```
+One last thing is important to note. When you assign a non-primitive variable to another non-primitive variable, the two variables **share** the same data. That means,
+when you manipulate one you also manipulate the other. This can lead to confusion when you don't keep it in mind.  
+```python
+list_1 = [1,2,3]  # a list is non-primitive
+list_2 = list_1   # here we assign the non-primitive list_1 to the variable list_2
+list_2.append(4)  # we add a fourth value, 4, to list_2
+list_2            # list_2 is now [1,2,3,4]
+list_1            # BUT! list_1 is now also [1,2,3,4]
+
+# We can avoid this and extract the values from list_1 to create a completely new variable by using the .copy() function
+list_1 = [1,2,3]
+list_2 = list_1.copy()    # we copy the values of list_1 to the new variable list_2
+list_2.append(4)          # we add a fourth value, 4, to the list list_2
+list_2                    # list_2 is now [1,2,3,4]
+list_1                    # list_1 is still [1,2,3]
+```
+On the other hand when you assign a variable containing a primitive datatype to another variable, the value gets simply
+copied to the new variable. Here is an example:
+```python
+a = 5
+b = a     # we assign the value of a to the variable b
+b = b + 1 # we increase the value of b by one
+b         # b is now 6
+a         # a is still 5
+```
+## 3. Operators
+An operator is something that allows you to interact with variables. Some very examples are mathematical operations or comparisons.  
+
+### 3.1 Arithmetic operations
+Most operations are very intuitive. For example you can add numbers and also add words to concatenate them, but you can not subtract words from each other...  
+Here is a list of operations:
+```python
+a = 5
+b = 10
+word1 = "Hi"
+word2 = "there"
+
+# Airthmetic Operators:
+c = a + b   # adding numbers
+concatenated_words = word1 + " " + word2 # adding words
+d = b - c   # subtracting numbers
+e = a * b   # multiplying numbers
+f = b / 5   # dividing numbers
+g = a ** 2  # Exponentation, this is a²
+h = 12 % 5  # Modulus, this returns the remaining amount after fitting one number into the other as many times as possible.
+```
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
-
 <h3> Exercise </h3>
-<p >Look at a quick express plot of the data. Is that a meaningful representation?
-Then try to resample this data to daily values. Plot the data, do the values make sense?</p>
+<p >With what you know so far, grab the scores josefine scored in the last games and compute the average amount of goals per game she scores</p>
 
 {::options parse_block_html="true" /}
 
 <details><summary markdown="span">Solution!</summary>
 
 ```python
-df_dwd = pd.read_parquet(<path to file>)
-df_dwd["date_time"] = pd.to_datetime(df_dwd["date_time"])
-
-fig = px.scatter(df_dwd, y = "ta_2m_mean")
-fig.show()
+scores = josefine["scores_last_games"]
+total_scores = scores[0] + scores[1] + scores[2] + scores[3]
+mean_scores = total_scores / 4
 ```
-Plotting the data with the missing value placeholder makes the data barely readable:  
-![Image of data with missing values](/assets/images/python/3/missing_values.png)
+<p >There are much better solutions to this, for example the iteration over all scores can be done with the built-in function sum()
+and the total number of score-values can be found using the len() function. A one-line solution could look like this:</p>
+
+```python
+mean_scores = sum(josefine["scores_last_games"]) / len(josefine["scores_last_games"])
+```
+</details>
+
+{::options parse_block_html="false" /}
+
+{% endcapture %}
+
+<div class="notice--primary">
+  {{ exercise | markdownify }}
+</div>
+</div>
+
+### 3.2 Comparison operations
+Comparison operations are used to compare values with each other in order to make decisions in your script.  
+The output of a comparison is **always** a boolean value that is "True" if the comparison is evaluated as correct and "False" otherwise. 
+
+```python
+goals_team1 = 5
+goals_team2 = 2
+
+goals_team1 > goals_team2    # > larger than
+goals_team1 >= goals_team2    # >= larger than or equal
+goals_team1 < goals_team2    # < smaller than
+goals_team1 <= goals_team2    # <= smaller than or equal
+goals_team1 == goals_team2   # == equal
+goals_team1 != goals_team2   # != not equal
+
+# you can also store the result in a variable:
+is_team1_winner = goals_team1 > goals_team2
+is_team2_winner = goals_team1 < goals_team2
+```
+
+### 3.3 Logical operators
+Logical operators can combine multiple comparisons. Namely there are three: **and**, **or** and **not**. The use of these is pretty intuitive.
+If we combine two comparisons with an "and", the result is only True if all conditions hold.  
+If we combine two comparisons with an "or", the result is True if one of the conditions hold, even if the other is False.
+Not is a special case, that reverts the result. 
+
+```python
+# Lets use a new example
+peter = {
+  "age":24,
+  "height":1.73,
+  "is_enrolled": True
+}
+joana = {
+  "age":25,
+  "height":1.75,
+  "is_enrolled": False
+}
+# Now we can do some comparisons:
+is_peter_taller_and_older_than_joana = peter["age"] > joana["age"] and peter["height"] > joana["height"]
+is_peter_not_enrolled = not peter["is_enrolled"]
+is_joana_not_enrolled = not joana["is_enrolled"]
+is_peter_or_joana_enrolled = peter["is_enrolled"] or joana["is_enrolled"]
+```
+
+### 3.4 Identity and membership operators
+The identitiy operator "is" is to check whether two objects are the same. On the other side, the membership operator "in" checks whether an object is contained within another object.
+Simple examples:
+```python
+a = [1,2,3] # a simple list
+b = a       # we assign a to b, remember non-primitive data types?
+a is b      # What will be the result of this?
+
+1 in a      # we can test whether a contains a number 1
+c = [a,b]   # here we create a new list that contains the lists a and b
+a in b      # now we can check whether one of the lists is within another list
+a in c
+```
+
+## Code block in details in a notice
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
+
+<h3> Exercise </h3>
+<p >Now you know all about operators. Try to use your knowledge and figure out what we test for in the following operations and what the result is:</p>
+
+{::options parse_block_html="true" /}
+
+```python
+joana = {
+    enrolled = True,
+    grade_ecophysiology = 1.3,
+    grade_archery = 1.3
+}
+alfonso = {
+    enrolled = True,
+    grade_ecophysiology = 1.7,
+    grade_archery = 4.3
+}
+legolas = {
+    enrolled = False,
+    grade_ecophysiology = 4.0,
+    grade_archery = 1.0
+}
+
+# 1.
+a = (legolas["grade_ecophysiology"] < joana["grade_ecophysiology"]) and (legolas["grade_ecophysiology"] < alfonso["grade_ecophysiology"])
+# 2.
+b = (legolas["grade_archery"] < joana["grade_archery"]) and (legolas["grade_archery"] < alfonso["grade_archery"])
+# 3.
+c = not (legolas["grade_ecophysiology"] < joana ["grade_ecophysiology"]) or (alfonso["grade_ecophysiology"] < joana ["grade_ecophysiology"])
+# 4.
+d = joana["enrolled"] and alfonso["enrolled"] and legolas["enrolled"]
+# 5.
+e = alfonso["grade_ecophysiology"] > 4.0 or alfonso["grade_archery"] > 4.0
+# 6.
+f = (alfonso["grade_ecophysiology"] > 4.0 or alfonso["grade_archery"] > 4.0) or (legolas["grade_ecophysiology"] > 4.0 or legolas["grade_archery"] > 4.0) or (joana["grade_ecophysiology"] > 4.0 or joana["grade_archery"] > 4.0)
+
+```
+
+<details><summary markdown="span">Solution!</summary>
+<ol>
+<li>Check 1 tests whether legolas is the best ecophysiologist. The result is False.</li>
+<li>Check 2 tests whether legolas is the best archer. The result is True.</li>
+<li>Check 3 tests whether legolas or alfonso are better ecophysiologists than joana. With the "not" in the beginning, the result is turned into whether Joana is better than any of the two. The result is True.</li>
+<li>Check 4 tests whether everyone is enrolled. The result is False. Legolas is probably buisy somewhere else...</li>
+<li>Check 5 tests whether Alfonso failed one of the exams with a grade higher than 4.0. The result is True.</li>
+<li>Check 6 tests whether anyone failed one of the exams with a grade higher than 4.0. The result is True.</li>
+</ol>
+</details>
+
+{::options parse_block_html="false" /}
+
+{% endcapture %}
+
+<div class="notice--primary">
+  {{ exercise | markdownify }}
+</div>
+</div>
+
+
+# 4. Conditionals and Loops
+Conditionals and loops are constructs in your code that are often combined. A loop is used to do a certain task on many elements sequentially,
+a conditional uses a certain condition (or truth-evaluation) to decide whether a piece of code should be executed.  
+
+## 4.1 Conditionals
+Remember how we talked about comparison, logical and identitiy and membership operators? They all result in a boolean, stating whether
+a condition is True or False. We can make use of that by utilizing conditionals. Here is a simple example:
+```python
+is_peter_smart = True
+if is_peter_smart == True:
+    print("Peter is smart")
+```
+Notice how indentation plays a role here! We end the line of the if-check with a ":" and start the new line indented.
+Indented lines signal a code block, that always belongs to the previous statement that ended with a ":".
+  
+In  the above example the print() command will be executed because the value of is_peter_smart is True.
+If we check for a boolean value (True or False) we can also leave the comparison operation out
+and ask very coloquially:
+```python
+is_peter_smart = True
+if is_peter_smart:
+    print("Peter is smart")
+```
+We can also define a code that should be executed, ONLY if the if-check is evaluated as False. For that 
+we use the keyword "else". 
+```python
+is_peter_smart = True
+if is_peter_smart:
+    print("Peter is smart")
+else:
+    print("Peter is not smart")
+```
+Finally, you can also chain if-checks by using the "elif" keyword. This stands for "else if", meaning
+that "if the previous checks failed and this check is evaluated as True, run the code"
+```python
+is_peter_smart = False
+is_peter_big = True
+if is_peter_smart:
+    print("Peter is smart")
+elif is_peter_big:
+    print("Peter is big")
+else:
+    print("Peter is not smart and not big")
+```
+
+## 4.2 Loops
+A loop is a structure that allows you to iteratively perform actions, either with several elements (e.g. stored in a list)
+or while a specific condition holds. These two types are called "for-loops" and "while-loops". 
+They always consist of two parts: The definition how and over what you want to iterate (or "loop") and 
+the actual action you want to perform. 
+
+### 4.2.1 The for-loop
+The most "classical" loop is the for-loop.  
+The syntax is, as often in Python, held very simple. Here is an easy example:
+```python
+temperatures = [12,14,16,15,16,17,20,21]
+for temperature in temperatures:
+    print(temperature)
+```
+Notice that in the definition of the loop, we define a new variable called "temperature".
+This variable represents the element we are currently working on in each step of the loop.
+So in the first step, temperature is 12, in the next temperature is 14 and so on.  
+There is one very handy built-in method that can give you both the value of the list-entry **and**
+its corresponding index, called enumerate(). You can put them both in variables by using a comma
+in the loop-definition. A quick demo:
+```python
+temperatures = [12,14,16,15,16,17,20,21]
+hour_of_day = [8,9,10,11,12,13,14,15]
+
+# When using enumerate, each iteration we get the index and value of the current list entry.
+# So in the first loop index will be 0 and temperature 12, 
+# next index will be 1 and temperature 14 and so on...
+for index, temperature in enumerate(temperatures): 
+    print("Temperature at "+str(hour_of_day[index]) + ":00: "+str(temperature) + "°C")
+```
+
+### 4.2.2 The while-loop
+A while loop is not used as often as a for-loop. In the definition you define a condition
+and "while" that condition holds, the loop is executed. 
+
+Look at this example:
+```python
+a = 1
+while a <= 10:
+    print(a)
+    a = a +1
+```
+Can you guess what will be display?
+<details>
+<summary>Solution</summary>
+It will print the numbers 1 to 10, including 10
+</details>
+
+{% capture warning %}
+
+<h3> Warning </h3>
+<p >When you define a while-loop, always make sure that the condition will at some
+point be fullfilled. Otherwise it can easily happen that youre while-loop just keeps running
+endlessly!</p>
+
+{::options parse_block_html="true" /}
+
+```python
+a = 1
+# This loop will run forever, because a will never be > 10!
+while a <= 10:
+    print(a)
+```
+
+{::options parse_block_html="false" /}
+
+{% endcapture %}
+
+<div class="notice--warning">
+  {{ warning | markdownify }}
+</div>
+
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
+
+<h3> Exercise </h3>
+<p >Now you already know quite some tools for writing a Python script! Use your knowledge to complete the code below.
+The goal is to print the doy (day of the year, as in 1-365) and the sentence "{month} was a hot month" whenever the mean monthly temperature is above two times the mean
+and "{month} was a dry month" whenever the precipitation was less than half of the mean.  </p>
+<p >One tip: For the printing you can use formatted strings. They make inserting variables in a string much easier! 
+just put an "f" in front of the string and insert the variable in curly braces {}.  
+For example print(f"Hello {name}" would print "Hello Peter" if the variable name=Peter is defined.</p>
+<p >Here is your starter code:</p>
+
+
+{::options parse_block_html="true" /}
+
+```python
+months = ["January", "February", "March", "April", "May", "June", "Juli","August", "September", "October", "November", "December"]
+monthly_temperature = [4, 4, 7, 11, 15, 17, 28, 24, 27, 12, 7, 4]
+monthly_precipitation = [15, 40, 60, 75, 65, 32, 10, 80, 60, 70, 57, 100]
+
+mean_temperature = 
+mean_precipitation = 
+
+for ... in enumerate(...):
+    if ...:
+        ...
+    if ...:
+        ...
+
+
+```
+
+<details><summary markdown="span">Solution!</summary>
+
+```python
+months = ["January", "February", "March", "April", "May", "June", "Juli","August", "September", "October", "November", "December"]
+monthly_temperature = [4, 4, 7, 11, 15, 17, 28, 24, 27, 12, 7, 4]
+monthly_precipitation = [15, 40, 60, 75, 65, 32, 10, 80, 60, 70, 57, 100]
+
+mean_temperature = sum(monthly_temperature)/len(monthly_temperature)
+mean_precipitation = sum(monthly_precipitation)/len(monthly_precipitation)
+
+for index, month in enumerate(months):
+    if monthly_temperature[index] > 2*mean_temperature:
+        print(f"{month} was a hot month")
+    if monthly_precipitation[index] < mean_precipitation/2:
+        print(f"{month} was a dry month")
+```
+</details>
+
+{::options parse_block_html="false" /}
+
+{% endcapture %}
+
+<div class="notice--primary">
+  {{ exercise | markdownify }}
+</div>
+</div>
+
+# 5. Functions and Classes
+**Congratulations!**  
+You made it this far down, that means you have accquired knowledge of the basic building blocks of Python.
+  
+![Congrats Meme](assets/images/python/1/grats.gif)  
+
+You are now ready to go into two concepts that go beyond basic scripting (meaning, just putting all your code line by line into one file),
+and learn about the fundamental blocks that help strcuturing your program: Functions and Classes!
+
+## 5.1 Functions
+Functions are constructs of own, separate blocks of code in your program which take care of certain tasks. They are super useful, because often 
+ you want to do the same operation many times in your code but don't want to write the same code every time again. Just write your own function and 
+ call it whenever you need its expertise! Lets just look at a simple example:
+ ```python
+ def calculate_mean(list_of_values):
+    n_samples = len(list_of_values)
+    sum_of_values = sum(list_of_values)
+    mean = sum_of_values/n_samples
+    return mean
+ ```
+ Pretty intuitive, right? 
+ 
+ A function is always defined by starting with the keyword "def", then we give it a name,
+ calculate_mean in this case. Afterwards in the braces are the "arguments" that the function takes. Arguments are
+ pieces of information from the outside code, which the function requires to work. Here it is the list_of_values
+ the function shall calculate the mean value of. After the ":" we follow with the indented codeblock that belongs
+ to the function. Here we do all the operations the function should do. Finally, we use the "return" keyword which ends
+ the function and defines, which piece of information should be returned to the outside code. 
+ 
+ > **Important** The variables which are defined inside a function are restricted to that function!
+ > The outside code won't know of the variables n_samples or "mean" which are defined in the function.
+ 
+ Calling the function would
+ for example look like this:
+ ```python
+monthly_temperature = [4, 4, 7, 11, 15, 17, 28, 24, 27, 12, 7, 4]
+mean_monthly_temperature = calculate_mean(monthly_temperature)
+ ```
+ You do not **have to** return a value. You could also for example print something in the function and then return, without
+ providing a value to return.  
+   
+In older versions of Python this was all there was to writing a function. However, nowadays you can add some additonal
+information to make it even easier for the next person or your future self to understand it. With some extra bits 
+you can add the infos, what type of data you expect as an input to the function and what type of data it will output.
+This is generally a good thing to do and now considered best practice when writing functions. For the above code it would
+look like this:
+ ```python
+def calculate_mean(list_of_values:list[float]) -> int:
+    n_samples = len(list_of_values)
+    sum_of_values = sum(list_of_values)
+    mean = sum_of_values/n_samples
+    return mean
+ ```
+ In the first line, after the list_of_values we write ":list[float]" to specify that we 
+ expect a list of float (floats actually imply integers, so we can use that to also accept integers).
+ After the closing bracket we write  
+ "-> int" which states that this function will return an integer value.  
+
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
+
+<h3> Exercise 5.1.1 </h3>
+<p >As a first exercise, try to figure out what the output of the below
+function will be without executing it!</p>
+
+{::options parse_block_html="true" /}
 
 ```python 
-df_dwd_daily = df_dwd.resample(rule="d", on="date_time").mean()
+def square_value(value:int) -> int:
+    return value * value
 
-fig = px.scatter(df_dwd_daily, y = "tair_2m_mean")
-fig.show()
+def divide_value_by(numerator:int, denominator:int) -> int:
+    return numerator / denominator
+
+a = square_value(2)
+b = square_value(a)
+c = divide_value_by(b,a)
+d = square_value(divide_value_by(c,1))
+print(d)
 ```
-When averaging the values, the -999.99 values are taken into account leading
-to unrealistic results:  
-![Image of poorly average data](/assets/images/python/3/bad_averaged_data.png)
 
+
+<details><summary markdown="span">Solution!</summary>
+<p >The result is 4!</p>
+
+```python
+def square_value(value:int) -> int:
+    return value * value
+
+def divide_value_by(numerator:int, denominator:int) -> int:
+    return numerator / denominator
+
+a = square_value(2)                     # 2*2 = 4
+b = square_value(a)                     # 4*4 = 16
+c = divide_value_by(b,a)                # 16/4 = 4
+d = square_value(divide_value_by(c,2))  # square_value gets the output of divide_value(c,2) as argument.
+print(d)                                # so 4/2 is 2, thn 2*2 is 4
+
+```
 </details>
 
 {::options parse_block_html="false" /}
@@ -63,481 +694,58 @@ to unrealistic results:
   {{ exercise | markdownify }}
 </div>
 </div>
-
-Lets look at the first way to solve this issue. We have to find the rows, where
-the values are the placeholder value. You can identify these rows
-by grabbing the right-row indices of the dataframe with a condition:  
-```python
-# we find the indices in the column of air temperature, where
-# the values are -999.99:
-
-#                                     |  here we find the rows we need:    | column we need|
-#                                     | those where the row tair is -999.99|
-#                                                        |                      |
-#                                                        v                      v
-indices_of_missing_values = df_dwd.loc[df_dwd["tair_2m_mean"] == -999.99, "tair_2m_mean"].index
-```
-
-We can then go ahead and replace these
-values with a special type, a "NaN"-value. NaN stands for Not a Number and
-represents specifically missing numeric values. This object is provided by the 
-numpy package and works nicely with pandas:
-
-```python
-import numpy as np # do this if you have not already imported numpy
-df_dwd.loc[indices_of_missing_values, "tair_2m_mean"] = np.NaN
-```
-
-Now the irritating -888.88 values are replaced and you can easily plot and resample
-the data in a meaningful manner:
-
-```python
-fig = px.scatter(df_dwd, y="tair_2m_mean")
-fig.show()
-
-df_dwd_daily = df_dwd.resample(rule="d", on="date_time").mean()
-fig_daily = px.scatter(df_dwd_daily, y="tair_2m_mean")
-fig_daily.show()
-
-```
-
-### 2. Gap Filling, interpolation and modelling
-
-In the next part we will discuss how we can work with timeseries that have gaps of different sizes.
-This is a regular task when working with long-time observations and there are a couple of options,
-depending on what data is available to you and what is the final evaluation goal you have in mind.
-
-#### 2.1: Simple linear interpolation
-
-You do basic interpolation in your every day live. You want to bake a cake and only find a receipe for an 8 person cake,
-but only 3 friends are coming over for cake time. In the receipe you have to use 1 kg of flour. Intuitively you can 
-see that since you will only be four at the table, you can alter the receipe and only use 500 g of flour.
-And already did you do some interpolation! 
-What you easily did right away in your head could be mathematically formulated as:
-y = 125 * x
-where y is the amount of flour in grams and x is the number of people eating cake.
-
-The formula for an interpolation between two points (x1,y1) and (x2,y2) at a specific point
-(xn, yn) is:  
-
-<div> $$ yn = y1 + \frac{(y_{2}-y_{1})}{(x_{2}-x_{1})} * (x_{n} - x_{1}) $$ </div>
-
-We simply construct a straight line where y1 is our y-intercept, the slope is derived 
-from the two points with the well known slope-formula 
-
-<div> $$ m = (y2-y1)/(x2-x1) $$ </div> 
-
-and our x value on this constructed line is difference between the point we want to look at minus the starting point
-
-Note that in this form of y = mx + b we only have one x which we use to explain our y-value. We have one "predictor".
-Using only one predictor gives us a so called simple linear regression. This is a super simple form of interpolation 
-and of course leaves a lot of information aside. 
-
-Lets look at a simple example of how to actually do linear interpolation in Python:  
-  
-First we create a data set to play with. We create a simple running index from 1 to 11 and some 
-made up y-values. We make one array in which all values are present and a second in which some
-values are missing. :
-
-```python
-index = [1,2,3,4,5,6,7,8,9,10,11]
-data = {
-    "full_data" : [1,2,0,13,4,10,19,15,13,21,27],
-    "missing_data" : [1,2,0,np.NaN,4,np.NaN,19,15,13,np.NaN,27]
-}
-data = pd.DataFrame(index = index, data = data)
-```
-
-lets take a quick look at the two datasets:
-
-First we create as simple plot to look at the characteristics of the data. Lets make a 
-quick little function to keep a bit of styling:  
-
-```python
-import plotly.express as px
-def scatter_plot_interp(data, columns:list[str], show=True):
-    fig = px.scatter(data, y=columns)
-    fig.update_traces(marker_size=10)
-    fig.update_layout(template="simple_white")
-    if show:
-      fig.show()
-    return fig
-scatter_plot_interp(data, ["full_data", "missing_data"])
-```
-
-Since the two plots overlay each other, you can see the "missing" values in blue and all the ones
-in the reduced dataset in red.  
-
-To do a linear interpolation between each adjacent points you can use a numpy function, np.interp() or a built-in pandas method.
-You can find its documentation [here](https://numpy.org/doc/stable/reference/generated/numpy.interp.html).  
-The function takes 3 main arguments: 
-1. The x-coordinates for which the data shall be interpolated
-2. The x-coordinates of the input data
-3. The y-values of the input data
-
-The catch with the numpy function however is that the function will return NaN if there are NaN-values in the input arrays. 
-The pandas function is a lot easier, but we will have to deal more with this problem of getting rid of NaN values later when we use other models,
-so we can practice getting rid of NaN data in our training data now anyways.  
-Specifically we will do the following:  
-- find indices of NaN values
-- find indices of non-NaN-values
-- first argument is where to interpolate, so provide the indices of the NaN values
-- second and third arguments are the x and y values of the adjacent non-NaN values,
-so provide the index and the y-values at the non-NaN indices
- 
-```python
-# 1. get indices of missing and present points:
-
-indices_of_missing_points = data.loc[data["missing_data"].isna()].index
-indices_of_present_points = data.loc[data["missing_data"].notna()].index
-
-# 2. interpolate missing values and store them in 
-# a new column in the dataframe. We can either do this with
-# the numpy function np.interp:
-data.loc[indices_of_missing_points,"interpolated_data"]= np.interp(indices_of_missing_points, 
-          data.loc[indices_of_present_points,"missing_data"].index, 
-          data.loc[indices_of_present_points,"missing_data"])
-
-# the pandas approach is much easier to use and is simply:
-data["interpolated_data"] = data["missing_data"].interpolate()
-```
-
-In this approach all we did was to draw straight lines between adjacent points. As you see, for the first point
-the prediction was rather poor, the other two where pretty well reconstructed:
-
-```python
-fig = scatter_plot_interp(data, ["full_data", "interpolated_data"])
-```
-
-However, with this approach we leave all the information the other points give us about the data aside. 
-Imagine for example that you have a timeseries where you measure temperature at midnight and at 12AM.
-If one datapoint was missing, you would connect the two night time temperatures and interpolate the daytime
-temperature way off.
-
-A simple measure of how well our model performed is to look at the root mean squared error.
-
-<div> $$ RMSE = \sqrt{\overline{(y[i] - ypred[i])^2}} $$ </div>
-
-
-where y is the true value and ypred is the predicted y value. You simply compute the model error for 
-each datapoint and square them to avoid counter balancing of negative and positive errors. Then you take 
-the mean of these values and finally take the square root, to get back into your data range.
 
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
-<h3> Exercise </h3>
-<p >Use your knowledge of pandas and numpy to write a function that returns the RMSE</p>
+<h3> Exercise 5.1.2 </h3>
+<p >Lets go for a bit more challenging of an exericse (I am sure you are ready for it!)
+There is a built-in function that allows the user to give an input through the command-line to the program.
+It is simply called "input()". E.g. "testword = input()" would stop the program and wait for the user to input
+something in the console and then press enter. </p>
+<p  >Imagine you want a program in which you set a new password.
+Write a function that checks whether the new password is longer than 9 symbols and that returns the corresponding
+boolean. the function should also print that the password is too short if it is too short and that it is ok when it is ok. 
+Use the returned boolean to keep asking for new input from the user <u>while</u> the word is less than 9 characters long</p>
+<p  >Here is some starter code:</p>
 
 {::options parse_block_html="true" /}
+
+```python 
+def is_password_too_short(word:str, min_length:int)->bool:
+    is_password_too_short = ...
+    if ...:
+        ....
+    else:
+        ....
+    return ...
+
+password_is_bad = True
+while ...:
+    print("Please enter your password:")
+    password = input()
+    password_is_bad = ...
+```
+
 
 <details><summary markdown="span">Solution!</summary>
 
 ```python
-def get_RMSE(y_true, y_predicted):
-    RMSE = np.sqrt(np.mean((y_true - y_predicted)**2))
-    return RMSE
+def is_password_too_short(word:str, min_length:int)->bool:
+    is_password_too_short = len(word) < min_length
+    if is_password_too_short:
+        print(f"Password has to be at least {min_length} characters long!")
+    else:
+        print("New password set!")
+    return is_password_too_short
 
-y_true = data.loc[indices_of_missing_points, "full_data"]
-y_predicted = data.loc[indices_of_missing_points, "interpolated_data"]
-RMSE = get_RMSE(y_true, y_predicted)
-```
-</details>
+password_is_bad = True
+while password_is_bad:
+    print("Please enter your new password:")
+    password = input()
+    password_is_bad = is_password_too_short(password, 8)
+ ```
 
-{::options parse_block_html="false" /}
-
-{% endcapture %}
-
-<div class="notice--primary">
-  {{ exercise | markdownify }}
-</div>
-</div>
-#### 2.2: Simple linear models
-
-Another approach is be to create a linear model that builds not only on the two points adjacent to the one we want to know,
-but rather the whole of the dataset that we have available.
-
-So what we want to achieve, is to find a function that constructs our unknown data points based on the data we have
-available in the best possible way. That means, that we want to have as little errors in our model as possible. 
-The error is usually measured as the "sum of squared errors" (SSE) which is the total of distances between true values 
-and the predicted values. We square it to avoid negative and positive values counterbalancing each other. 
-
-Looking at an array of n data points we can write  
-
-<div> $$ SSE = \sum_{i=1}^n (y(i) - b - m * x(i))^2 $$ </div>
-  
-y(i) is the true y value at the predicted point, b is the y-intercept of the linear model, 
-m is the first coefficient of the linear model and x(i) is the x-value at the predicted point. 
-
-Since we want to find the straight line, that MINIMIZES the SSE, we call a procedure like this
-a "minimization problem" and specifically the estimation of this line is called a "least squares estimation".
-
-In the easiest way of fitting a linear model to such a dataset, it all depends on the mean of our dataset.
-To derive the model parameters we can use the following relations where we replace b with alpha and m with beta
-(as that is the general standard). Also we will now denote the predicted y-value with a ^ on top of that, which is
-the common standard in literature. Sometimes this is also referred to as y_hat.  
-
-<div> $$ \hat{y}_{i} = \alpha + \beta * x_{i} $$ </div>
-
-<div>$$\alpha = \bar{y} - (m \bar{x})$$</div>
-
-<div>$$\beta = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^n (x_i - \bar{x})^2}$$</div>
-
-If we would do it by hand, we would simply plug in all the numbers we have into the expression for beta and
-use the result to derive our alpha
-
-But we are working with Python so we will now introduce an awesome modelling and machine-learning library called
-"scikit-learn".  
-Scikit-learn has a huge amount of model-packages available, from simple linear regression all the way advanced statistical
-regressions, classifications and analysis tools. [The documentation is also quite nice and extensive!](https://scikit-learn.org/stable/index.html)  
-We will make use of scikit-learn to fit a simple linear regression model to our data. However to do so we need to some tweaking of our data.
-Especially two things are important:  
-1. Scikit learn can not work with NaN-data. That means we need to filter these out of the data we feed to the linear model
-2. The model needs two-dimensional data. A list like [1,2,3] is one-dimensional and does not work with creating linear models.
-Instead we have to bring it to a form of [[1],[2],[3]] etc. We can do this using the "reshape" function.
-
-```python
-from sklearn.linear_model import LinearRegression
-# Scikit learn is quite object oriented. That means,
-# we imported a Class called "LinearRegression", which contains
-# all the following functions to work with the model.
-
-# Step 1: instantiate the class
-linearModel = LinearRegression()
-
-# Step 2: Fit the model. This is the process of 
-# feeding our known data to the model and tweaking the
-# parameters so that the prediction error gets minimized.
-# However, sklearn can not work with NaN values, so again
-# we need to leave them out in the fitting:
-
-# --- repetition from before:
-indices_of_present_points = data.loc[data["missing_data"].notna()].index
-x = data.loc[indices_of_present_points,"missing_data"].index.values.reshape(-1,1)
-y = data.loc[indices_of_present_points,"missing_data"].values.reshape(-1,1)
-# --- fitting the model:
-linearModel.fit(x,y)
-
-# Step 3: Check how well our model performed! sklearn has an inbuilt
-# function for it called "score". It returns the R^2 value for 
-# the true values and the values predicted by the model:
-linearModel.score(x,y)
-```  
-We can obtain the paramters of the linear model, that scikit-learn has created for us:
-
-```python
-m = linearModel.coef_
-b = linearModel.intercept_
-print(f"Linear equation: {m}*x+{b}")
-```
-
-The last thing left to do is to use this model to predict our missing values.
-All we need to do is use the models "predict()" function and give it the 
-indices we want to prediction for:
-
-```python
-# first we create a new column consisting of NaN values
-data["sklearn_prediction"] = np.NaN
-# then we replace the values in the missing rows with our model prediction:
-linear_prediction = linearModel.predict(indices_of_missing_points.values.reshape(-1,1))
-data.loc[indices_of_missing_points, "sklearn_prediction"] = linear_prediction
-```
-
-We can look at out interpolated values by plotting them as red dots together with our reduced dataset:
-```python
-fig_linmod = scatter_plot_interp(data, ["full_data", "sklearn_prediction"], show=False)
-```
-As you can see, the linear model already performs a bit better than the simple linear interpolation does. 
-We can visualize the linear regression line by predicting the full array of x-values and plotting
-the result as a line:
-
-```python
-data["yhat_full"] = linearModel.predict(data.index.values.reshape(-1,1))
-fig_linmod.add_traces(
-    go.Scatter(
-        x = data.index,
-        y = data["yhat_full"],
-        mode="lines",
-        name="linear regression line"
-    )
-)
-fig_linmod.show()
-```
-Finally we need to look at statistical metrics to find out, how well our linear model performed.
-Luckily we can easily get a whole range of such metrics from the sklearn.metrics package. 
-Lets define a simple function to grab a bunch of metrics at once:
-
-```python
-
-import sklearn.metrics as metrics
-def regression_results(y_true, y_pred):
-
-    # Regression metrics
-    mse=metrics.mean_squared_error(y_true, y_pred) 
-    median_absolute_error=metrics.median_absolute_error(y_true, y_pred)
-    r2=metrics.r2_score(y_true, y_pred)
-
-    print('r^2: ', round(r2,4))
-    print('MAE: ', round(median_absolute_error,4))
-    print('MSE: ', round(mse,4))
-    print('RMSE: ', round(np.sqrt(mse),4))
-```
-
-A few things we can take from this are:  
-**a)** r^2 is 0.8351, which is the ratio of the sum of squared errors divided by the sum of squared
-deviations from the mean. You can say that r^2 is a measure of how much of the variance in the original
-data is reflected by the model. In this case, as our model is just a line, the amount of variance captured in the model
-stems from the linear trend that is inherent in the original data.
-
-Whether an r^2 is reflective of a good correlation depends heavily on the application. If you are a social scientist and work on 
-voter behaviour an r_square of 0.65 may be spectacularly good. If you want to calibrate your measurement device
-and the reference and measured values have an r^2 of less than 0.85 you might want to check it again...
-
-**b)** The mean squared error (MSE) is exactly that: we calculate the distance from each datapoint to its predicted counterpart,
-and to avoid negative errors counterbalancing positive ones, we square them. Then we take the mean of all errors. Due to the squaring
-the errors get quite high and are not directly interpretable. That is why we take the square root of the squared errors and get to the
-"root mean square error" (RMSE). This is an error very often reported in model performance evaluation, also often used in scientific papers.
-
-**c)** Lastly the median absolute error (MAE) is a different performance metric that gets shown not as often, but is still very useful.
-For the MAE, we also calculate each error, take the absolute of it (make negative values positive) and then grab the median value,
-so the one that sits right in the middle of all datapoints. Because we take the median instead of the mean, this metric is insensitive
-to outliers. If we have very low errors, but then a few extremely high ones (or the other way around), the mean value can be skewed
-while the median would not change.  
-
-We wont go much deeper into statistical metrics here. But as you can see, this model does represent certain characteristics
-of the data regarding its variance (judging by the rsquare of > 0.8)
-but has a pretty high average error of more than 4 while we are in a 
-domain of data that only reaches from 1 to 27.
-
-### Part 2.3: Multiple linear models
-
-Lets look at another way to make our models a bit more flexible
-So far we created a linear model with only one parameter. Obviously that did not catch all of the variance in our 
-data. In reality we often have more data at hand which can help us explain the measure of interest.
-For example to fill gaps in temperature data instead of only using the indices to predict, we could add variables
-such as the incoming radiation or the relative humidity of the air.
-
-Lets continue working with the dwd data we used before. Load it just like we did in the previous exercises
-
-When we try to simply interpolate with the pointwise linear interpolation, 
-you will see that we get a pretty uninformed output.
-
-We will now create a more sophisticated model to reconstruct our missing data. However, this time we have a whole dataset
-of predictors to choose from.  
-Since we want to fill a gap in temperature data, we need to find predictors that are well correlated with 
-temperature. To figure out which ones are suitable we can make use of the correlation matrix.  
-A correlation matrix is a normalized form of a covariance matrix. The values vary between -1 and 1. 
-A value of 1 signals a perfect positive, -1 a perfect negative correlation. 0 means that the two variables are not
-correlated at all. With pandas you can get the full correlation matrix with all variables with the .corr() function:
-
-```python
-# lets look at the correlation matrix
-df_dwd.corr()
-# you can plot and explore it with plotly.
-# The interactivity is really handy here:
-px.imshow(df_dwd.corr()).show()
-# To get all correlations with tair_2m_mean we have to index it:
-df_dwd.corr()["tair_2m_mean"]
-```
-Try to figure out, which variables could be suitable to fill the gaps in our data from the below table.
-
-Now we can go ahead and start building our multivariate model! Let go!
-Before we really start plugging the data into the model we need to do a bit of 
-preparation:  
-Since the model has to be fit with data where all the predictors we want are present AND
-we have observation data of our target variable to train the model on, we first need to find that
-data. We can do that easily by dropping the rows, where these columns are na with "dropna()":
-
-```python
-df_dwd_noNA = df_dwd.loc[:,["date_time","SWIN","rH","tair_2m_mean"]].dropna()
-```
-
-Now we want to split these into the data we use as predictors (y) and the data we want to 
-predict (x, also called the "predictand"):
-
-```python
-x = df_dwd_noNA.loc[:,["SWIN","rH"]]
-y = df_dwd_noNA.loc[:,["tair_2m_mean"]]
-```
-
-Finally one last very important step is that we need to split our available data into two parts:
-a training and a testing dataset. The training data will ONLY be used for creating (or "fitting")
-the model. To test the performance of the model, we keep a fraction of the available data out 
-of the training set. That way we can predict the testing data and compare it to the real results.
-We are working with some artificiallly created gaps in the data here, but in real life you would 
-otherwise have no way to test, how well your model actually predicts data.  
-Additionally to splitting the data, the training datasets also get shuffled. That makes the 
-model more robust in extrapolating it to unknown data.  
-
-It is extremely important to do this split, because you can never test a model on data that it 
-has already seen during its training phase. That would skew your results and make it look better than
-it actually is.  
-Luckily, because this is such a common task to do, scikit learn has us covered with a very simple function
-to do the splitting:
-```python
-from sklearn.model_selection import train_test_split 
-# creating train and test sets 
-X_train, X_test, y_train, y_test = train_test_split( 
-	x, y, test_size=0.3, random_state=42) 
-```
-
-Now that we have our final training and testing datasets ready for use, we can go ahead and fit our model!
-
-```python
-linearModel = LinearRegression()
-# Only training data used for fitting:
-linearModel.fit(X_train,y_train)
-# Only testing data used for the score:
-linearModel.score(X_test,y_test)
-
-# You can plot the prediction for the testing period
-# as a scatter plot to get an idea of the spread
-# of the errors. Put true values on one axis and predicted on the other:
-y_hat_ml = linearModel.predict(X_test).reshape(1,-1)[0]
-px.scatter(x=y_hat_ml,y=y_test["tair_2m_mean"]).show()
-```
-As you can see the score is roughly 0.36. That is not exactly great but does indicate
-a weak correlation between predicted and true values. 
-
-<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
-{% capture exercise %}
-<h3> Exercise </h3>
-<p >Do a linear interpolation and 1-D linear model prediction for this same data.
-Do any of them perform equally good or better than the multiple regression? </p>
-
-{::options parse_block_html="true" /}
-
-<details><summary markdown="span">Solution!</summary>
-
-```python
-#------- interpolation:
-# in order to interpolate value-by-value we need to
-# first sort the previously randomized data:
-
-y_train_sorted = y_train.sort_index()
-y_test_sorted = y_test.sort_index()
-
-interpolated_data = np.interp(
-    y_test_sorted.index,
-    y_train_sorted.index,
-    y_train_sorted["tair_2m_mean"])
-
-regression_results(y_test, interpolated_data)
-
-#-------- 1-D linear model:
-y = df_dwd_noNA.loc[:,["tair_2m_mean"]].values.reshape(-1,1)
-x = df_dwd_noNA.index.values.reshape(-1,1)
-
-from sklearn.model_selection import train_test_split 
-# creating train and test sets 
-X_train, X_test, y_train, y_test = train_test_split( 
-	x, y, test_size=0.3, random_state=101) 
-
-linearModel = LinearRegression()
-linearModel.fit(X_train,y_train)
-y_hat_linear = linearModel.predict(X_test)
-regression_results(y_test, y_hat)
-```
 </details>
 
 {::options parse_block_html="false" /}
@@ -549,222 +757,153 @@ regression_results(y_test, y_hat)
 </div>
 </div>
 
-### 2.4: Machine Learning approaches (example Random Forests)
-We already covered quite a lot of ground on how to deal with missing data by
-- cleaning the raw data
-- gap fill with interpolation, 1D-linear modeling and multiple linear regression
-
-In this final part we will take a quick look at a more sophisticated type of model, the
-Random Forests algorithm. Random Forest is a so-called decision-tree algorithm
-and can be counted to the broad category of "machine-learning" methods.
-The latter however is reeeeally a broad category, as it basically just describes that
-the machine works through a minimization procedure on such a large amount of data, that
-humans could not handle it manually, thus the machine is "learning" the optimization of
-the model and can make predictions from it.  
-
-Random Forests has proven to be quite effective in gap-filling applications in a 
-variety of contexts and is available as part of the scikit-learn package. 
-The purpose is for you to get an idea, how to implement such a sophisticated method 
-and to hopefully get you excited about machine learning! We will not go
-into the details of the actual method.
-
-Lets dive right in and load the random forest regressor from scikit-learn. We use the regressor
-because we work with time-series data. Random Forest also has a classification model, which is used
-for categorical data (for example image-recognition, predicting an animal type from its traits etc...)
-
-The great thing about scikit-learn is that most of the models work in the exact same way, no 
-matter whether it is a simple linear model or a complex machine-learning approach.  
-For example to run a model with simple default setting all we have to do is the following:  
-
+## 5.2 Classes
+Classes are the final fundamental building block of Python we will look at here.
+A class basically represents a blueprint of an object that has certain properties. As an example, 
+when I am working with data on ecosystems it could be convenient to have an ecosystem class
+that includes information about the ecosystem type, the location as latitude and longitude, and
+some meteorological data. Lets look at an example:
 ```python
-from sklearn.ensemble import RandomForestRegressor
-  # I set n_estimators to 12 for a quick initial fit
-  # we will go into the parameters a bit more later!
-rf_model = RandomForestRegressor(random_state=42, n_estimators=12)
-rf_model.fit(X_train, y_train)
-rf_model.score(X_test, y_test)
-y_hat_rf = rf_model.predict(X_test)
-regression_results(y_test, y_hat_rf)
-```
-The predicting performance is still not that great. However, with a machine-learning approach we can feed 
-some more data into the model and see, whether it improves the model.  
-I will only give a very brief intro to random forests here, no need to memorize that. If you are interested,
-you can also look the below youtube video for a very good short video on the method.  
-https://www.youtube.com/watch?v=v6VJ2RO66Ag  
-   
-Very generally speaking you can say that this algorithm looks at your data and the predictors and it picks
-a few of  the predictors, leaving others out.  
-With this reduced set it trains a model. That means, it tries to find out under which circumstances in the 
-predictors, the data has a certain value.   
-In random forests, many of those models are trained and compared. Each with different predictors and trained on 
-different amounts and points of training data.  
-After building the model, you can use it to predict unknown values. Therefore, the predictor data for these 
-unknown datapoints is fed into each of these models and the combined output from all of them is evaluated as the
-final decision.
-
-Lets try adding some more of our weather-data into the model and see whether it improves the performance:
-```python
-# Lets add the other weather-data columns into the predictor data as well.
-# First we find the rows where all the predictors data and our observations
-# are present:
-df_dwd_noNA = df_dwd.loc[:,["date_time", "SWIN","rH", "pressure_air", "wind_speed", "precipitation", "tair_2m_mean"]].dropna()
-
-# Now we split them into the x-values (predictors) and the y-values
-# (predictand or target variable)
-x = df_dwd_noNA.loc[:,["SWIN","rH", "pressure_air", "wind_speed", "precipitation"]]
-y = df_dwd_noNA.loc[:,["tair_2m_mean"]]
-
-# Now we go an split the data into training and testing data:
-X_train, X_test, y_train, y_test = train_test_split( 
-	x, y, test_size=0.3, random_state=101) 
-
-# Finally we do the full pipeline of 
-# creating the model, fitting it, and scoring:
-rf_model = RandomForestRegressor(random_state=42, n_estimators=12)
-rf_model.fit(X_train, y_train)
-rf_model.score(X_test, y_test)
-y_hat_rf = rf_model.predict(X_test)
-regression_results(y_test, y_hat_rf)
-# Aha, the model performs a bit better.
+class Ecosystem():
+    def __init__(self, id, IGBP_ecosystem_class, lat, lon, mean_annual_Tair, mean_annual_precip):
+        self.id = id
+        self.IGBP_ecosystem_class = IGBP_ecosystem_class
+        self.lat = lat
+        self.lon = lon
+        self.mean_annual_Tair = mean_annual_Tair
+        self.mean_annual_precip = mean_annual_precip
 ```
 
-Finally, we will do some tweaking on the random forest paramters. Parameters are 
-options given to the model, that define how it is set up. Here for example n_estimators
-is one parameter we gave to the model so far.  
-Maybe we can make the model perform even a bit better by increasing that value.
-In order to do so, we better use hourly data, because as we make the model bigger,
-the time it takes to fit the model gets substanitally larger.  
-Lets first aggregate the data like before:  
-
+The definition of a class always begins with the class-keyword followed by the name of the class.
+It always has a first function called __init__() which is also called "constructor". This method is used to 
+create new instances of the class and assigns values to the class. The "self" keyword is in this context 
+always used within a class to reference the class itself. Note, that "self" also has to be in the list of arguments
+for the function, but is does not get passed when you call the function.  
+Many new words but stay with me, it is pretty simple when we look at an example, how we create a new instance:
 ```python
-# mean for most data:
-df_dwd_hourly_noNA = df_dwd_noNA.loc[:,["SWIN","rH", "pressure_air", "wind_speed","tair_2m_mean", "date_time"]].resample(rule="1h", on="date_time").mean().dropna()
-# sum for precipitation data:
-df_dwd_hourly_noNA["precipitation"] = df_dwd_noNA.loc[:,["precipitation", "date_time"]].resample(rule="1h", on="date_time").sum().dropna()
+# First we define the class
+class Ecosystem():
+    # see how the first argument here is "self"
+    def __init__(self, id, IGBP_ecosystem_class, lat, lon, mean_annual_Tair, mean_annual_precip):
+        self.id = id
+        self.IGBP_ecosystem_class = IGBP_ecosystem_class
+        self.lat = lat
+        self.lon = lon
+        self.mean_annual_Tair = mean_annual_Tair
+        self.mean_annual_precip = mean_annual_precip
+
+# now we use that class to create a new ecosystem-object, 
+# see how we have to provide every value defined in the constructor except for "self":
+amtsvenn = Ecosystem(id="amtsvenn", IGBP_ecosystem_class = "open shrublands", lat = 52.176, lon = 6.955, mean_annual_Tair = 10.5, mean_annual_precip = 870)
+
+# Now you have stored all the info about amtsvenn in the "amtsvenn"
+# object and can access them whenever you want:
+print(amtsvenn.id)
+print(amtsvenn.IGBP_ecosystem_class)
+print(amtsvenn.lat)
+print(amtsvenn.lon)
 ```
-
-Now we can run a new model on the hourly data and e.g. set the n_estimators to 50.
-Play around with the parameter a bit and see how the performance changes:
+Classes can not only comprise of the information associated with them but
+can also have methods associated specifically with them. For example we can create
+a function that prints all the information enclosed in the object. 
 ```python
 
-x_hourly = df_dwd_hourly_noNA.loc[:,["SWIN","rH", "pressure_air", "wind_speed", "precipitation"]]
-y_hourly = df_dwd_hourly_noNA.loc[:,["tair_2m_mean"]]
+class Ecosystem():
+    def __init__(self, id, IGBP_ecosystem_class, lat, lon, mean_annual_Tair, mean_annual_precip):
+        self.id = id
+        self.IGBP_ecosystem_class = IGBP_ecosystem_class
+        self.lat = lat
+        self.lon = lon
+        self.mean_annual_Tair = mean_annual_Tair
+        self.mean_annual_precip = mean_annual_precip
 
-X_train, X_test, y_train, y_test = train_test_split( 
-	x_hourly, y_hourly, test_size=0.3, random_state=101) 
-rf_model = RandomForestRegressor(random_state=42, n_estimators=50)
-rf_model.fit(X_train, y_train)
-rf_model.score(X_test, y_test)
-y_hat_rf = rf_model.predict(X_test)
-regression_results(y_test, y_hat_rf)
-# as you can see, the model performs yet another bit better.
-```
-<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
-{% capture exercise %}
+    def print_ecosystem_information(self):
+        print("=====================")
+        print("Ecosystem information")
+        print(f"ID: {self.id}")
+        print(f"IGBP ecosystem class: {self.IGBP_ecosystem_class}")
+        print(f"Location (lat/lon): {self.lat}°/{self.lon}°")
+        print(f"Mean annual air temperature: {self.mean_annual_Tair} °C")
+        print(f"Mean annual precipitation: {self.mean_annual_precip} mm")
 
-<h3> Exercise </h3>
-<p >Practice makes perfect! For the hourly data, see how the linear interpolation, 1D-linear model and 
-multiple linear models perform compared to the random forest regression.</p>
+amtsvenn = Ecosystem(id="amtsvenn", IGBP_ecosystem_class = "open shrublands", lat = 52.176, lon = 6.955, mean_annual_Tair = 10.5, mean_annual_precip = 870)
 
-{::options parse_block_html="true" /}
-
-<details><summary markdown="span">Solution!</summary>
-
-```python
-#------- preparation of  data:
-# mean for most data aggregation:
-df_dwd_hourly_noNA = df_dwd_noNA.loc[:,["SWIN","rH", "pressure_air", "wind_speed","tair_2m_mean", "date_time"]].resample(rule="1h", on="date_time").mean().dropna()
-# sum for precipitation aggregation:
-df_dwd_hourly_noNA["precipitation"] = df_dwd_noNA.loc[:,["precipitation", "date_time"]].resample(rule="1h", on="date_time").sum().dropna()
-
-x_hourly = df_dwd_hourly_noNA.loc[:,["SWIN","rH", "pressure_air", "wind_speed", "precipitation"]]
-y_hourly = df_dwd_hourly_noNA.loc[:,["tair_2m_mean"]]
-X_train, X_test, y_train, y_test = train_test_split( 
-	x_hourly, y_hourly, test_size=0.3, random_state=101) 
-
-print("------- linear intrpolation:")
-y_train_sorted = y_train.sort_index()
-y_test_sorted = y_test.sort_index()
-interpolated_data = np.interp(
-    y_test_sorted.index,
-    y_train_sorted.index,
-    y_train_sorted["tair_2m_mean"])
-regression_results(y_test_sorted, interpolated_data)
-
-print("------- multiple linear regression:")
-linearModel = LinearRegression()
-linearModel.fit(X_train,y_train)
-y_hat = linearModel.predict(X_test)
-errors = (y_test - y_hat).iloc[:,0].values
-regression_results(y_test, y_hat)
-
-print("------- random forest:")
-rf_model = RandomForestRegressor(random_state=42, n_estimators=50)
-rf_model.fit(X_train, y_train.values.ravel())
-rf_model.score(X_test, y_test)
-y_hat_rf = rf_model.predict(X_test)
-regression_results(y_test, y_hat_rf)
-```
-</details>
-
-{::options parse_block_html="false" /}
-
-{% endcapture %}
-
-<div class="notice--primary">
-  {{ exercise | markdownify }}
-</div>
-</div>
-For hourly data the linear interpolation still performs best.
-However, the gaps we are interpolating thus far are rather small. As a last exercise, we will see how the methods
-perform for longer gaps. Therefore I create a gap in the hourly dataset of a full day. We will then see how
-the different methods perform in filling the gap:
-
-```python
-df_dwd_hourly_noNA = df_dwd_noNA.loc[:,["SWIN","rH", "pressure_air", "wind_speed","tair_2m_mean", "date_time"]].resample(rule="1h", on="date_time").mean().dropna()
-df_dwd_hourly_noNA["precipitation"] = df_dwd_noNA.loc[:,["precipitation", "date_time"]].resample(rule="1h", on="date_time").sum().dropna()
-
-# first lets create the 14-day long gap:
-# I first extract the indices of some single day and safe them
-indices_for_gap = df_dwd_hourly_noNA.iloc[505:529, :].index
-# Now I make a copy of the original data to not mess it up
-gapped_data_hourly = df_dwd_hourly_noNA.copy()
-# Then I set all the values for tair in these indices to NaN
-gapped_data_hourly.loc[indices_for_gap, "tair_2m_mean"] = np.NaN
-# Finally I can extract the predictor and predictand columns with these indices:
-x_hourly = gapped_data_hourly.loc[indices_for_gap,["SWIN","rH", "pressure_air", "wind_speed", "precipitation"]]
-y_true = df_dwd_hourly_noNA.loc[indices_for_gap, "tair_2m_mean"]
-
-#---- interpolation
-interpolated_data = gapped_data_hourly["tair_2m_mean"].interpolate()
-regression_results(y_true, interpolated_data[indices_for_gap])
-
-#---- multiple linear regression:
-y_hat_linear = linearModel.predict(x_hourly)
-regression_results(y_true, y_hat_linear)
-
-#---- Random Forest:
-y_hat_rf = rf_model.predict(x_hourly)
-regression_results(y_true, y_hat_rf)
-
+# After creating the object we can use the classes functions like this:
+amtsvenn.print_ecosystem_information()
 ```
 
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
-<h3> Exercise </h3>
-<p >Play around with the length of the gap and observe how the performance of the different methods changes.
-Try to give an explanation and maybe formulate, when something like linear interpolation could be suitable and 
-when it is better to rely on a more complex method.</p>
+<h3> Exercise 5.2.1 </h3>
+<p >Lets do one exercise that can further show, why classes are great for creating reusable code. 
+Try to write a function called "Statistics". This class will be a "behavioural" class, meaning it does not need to hold
+own data but rather holds some methods, that belong to the same topic. In that class, define functions that calculate the 
+mean, the variance and the standard deviation of a given list. Then use that class to calculate these metrics of an arbitrary list. </p>
+<p > Hint: For the standard deviation you need to take the square root. You can do that with pythons built-in math module.
+You can use it like this: </p>
+```python
+import math
+math.sqrt(24)
+```
+<p >Try to work out the solution yourself first! There is some starter code below, in case you get stuck though.</p>
 
 {::options parse_block_html="true" /}
 
-<details><summary markdown="span">Solution!</summary>
-The Random Forest method works quite nicely on longer prediction windows. As long as there is 
-a clear linear trend in the data, a simple interpolation might perform very well. However, if 
-within a data gap a shift happens and for example a warm period comes around, the linear interpolation 
-will quickly get worse in its prediction.
+<details><summary markdown="span">Starter code</summary>
+```python
+class Statistics():
+    
+    def calculate_mean(self, ...):
+        ...
+    
+    def calculate_variance(self, ...):
+        mean = ...
+        squares = []
+        for value in values:
+            squares.append(...)
+        variance = ...
+        return ...
+    
+    def calculate_stdev(self, ...):
+        variance = ...
+        stdev = ....
+        return ...
+```
 </details>
+
+<br>
+
+<details><summary markdown="span">Solution!</summary>
+
+```python
+import math
+
+class Statistics():
+    
+    def calculate_mean(self, values:list[float]):
+        return sum(values)/len(values)
+    
+    def calculate_variance(self, values:list[float]):
+        mean = self.calculate_mean(values)
+        squares = []
+        for value in values:
+            squares.append((value-mean)**2)
+        variance = sum(squares) / (len(values)-1)
+        
+        return variance
+    
+    def calculate_stdev(self, values:list[float]):
+        variance = self.calculate_variance(values)
+        stdev = math.sqrt(variance)
+        return stdev
+    
+stat = Statistics()
+example_list = [1,2,3,4,5,5,6,7,123,1,1,4]
+mean = stat.calculate_mean(example_list)
+stdev = stat.calculate_stdev(example_list)
+variance = stat.calculate_variance(example_list)
+```
 
 {::options parse_block_html="false" /}
 
@@ -774,11 +913,7 @@ will quickly get worse in its prediction.
   {{ exercise | markdownify }}
 </div>
 </div>
-As long as there is a clear linear trend in the data, a simple interpolation might perform very well. However, if 
-within a data gap a shift happens and for example a warm period comes around, the linear interpolation 
-can not capture that. 
 
-Keep in mind that a model is by definition NEVER the actual truth. Its goal is to come as close as possible to the truth
-while often times drastically reducing the complexity of the issue. In a real world scenario we would not
-know that our final modelled data is not the same as the true data. Therefore all we can do is create and test our models
-to the best of our knowledge and be honest about what they are capable of doing and what their shortcomings are!
+We will not go deeper into classes here, but it is very important to understand the concept. Most 
+Python packages are written in object-oriented style, which (in very simple terms) means that the
+methods are enclosed in classes. So knowing the basics makes it much easier to understand the following bits.
