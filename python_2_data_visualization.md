@@ -10,11 +10,12 @@ To underline that these are essential tools in Python, let me once again pull ou
   
 ![Stackoverflow 2023 survey technologies](assets/images/python/2/technologies.PNG)  
   
-For this part we will use some example data. It is a dataset from the german weather service DWD from the Diepholz Station (ID 963) ranging from 1996 to 2023. [Click here to download (25mb)...](assets/data/dwd_diepholz_1996_2023.parquet).  
+For this part we will use some example data. It is a dataset from the german weather service DWD from the Ahaus Station (ID 7374) ranging from 1996 to 2023. [Click here to download (25mb)...](assets/data/ahaus_data_1996_2023.parquet).  
   
-**Note** The data is in .parquet-format. You may not have heard of it, but this is a very compressed and fast format. For example this dataset with 27 years worth of data, in Parquet this is 25mb of data, in .csv its 208mb.  
+>**Note** 
+> The data is in .parquet-format. You may not have heard of it, but this is a very compressed and fast format. For example this dataset with 27 years worth of data, in Parquet this is 25mb of data, in .csv its 208mb.  
 While you can not open .parquet directly in excel or a text editor like a .csv file, it is much much faster to load e.g. when using it in programming languages, which is exactly what we are going to do here.
-{:.notice}
+
   
 As a last note: NumPy is one of the older Python libraries and Pandas is actually built on top of it. However, because we work with example data and want to get hands-on as fast as possible, we will cover Pandas first and then go from there.  
 
@@ -107,6 +108,7 @@ evaluate the data we have.
 Note that the output of .describe() is again a DataFrame, that you can save in a variable to evaluate it.  
 There are also built-in methods that you can run directly on single columns. Examples of such functions are .mean(), .min(), .max() and .std().
   
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise </h3>
@@ -168,7 +170,7 @@ df.describe().map('{:,.2f}'.format).loc[["mean", "std", "min", "max"], ["tair_2m
 <div class="notice--primary">
   {{ exercise | markdownify }}
 </div>
-
+</div>
 ### Datetime 
 Pandas has a specific datatype that is extremely useful when we are working with time series data (a s our example DWD dataset). It is called datetime64[ns] and allows us to do a range of super useful things like slicing based on dates or resampling from 10-minute to daily, weekly, monthly data and so on. With datetime-indices, handling timeseries gets so much more convenient.  
 
@@ -192,7 +194,7 @@ example_df = pd.DataFrame({
 type(example_df["date_time"])
 example_df["date_time"] = pd.to_datetime(example_df["date_time"])
 ```
-
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise </h3>
@@ -292,7 +294,8 @@ print(seasonal_df)
 <div class="notice--primary">
   {{ exercise | markdownify }}
 </div>
-  
+</div>
+
 In this exercise we extracted seasonal information from 5-minute interval data. This type of frequency-conversion is something we do very often when working with time-series data. We also call this operation "resampling". Pandas actually has a great convenience function, that makes resampling a breeze, utilizing the wonderful datetime64-format.  
   
 The operation consists basically only of two function calls on the pandas dataframe. The first is ".resample()". We must define the column that contains the datetimes with the "on" argument and our target frequency with the "rule" argument as a string. The most useful frequency specifiers are:
@@ -460,6 +463,7 @@ np.pi returns the value of pi, np.e returns Eulers number.
 Other mathematical operations include all angle computations such as np.sin(), np.cos() etc.
 These are all computed in radians, but you can turn them into degrees with np.degrees()
 
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise </h3>
@@ -491,7 +495,7 @@ rounded_noisy_sin_vector = np.round(noisy_sin_vector, 3)
 <div class="notice--primary">
   {{ exercise | markdownify }}
 </div>
-
+</div>
 
 ## 3. Data Visualization: Plotly
 Finally! It is time to not only create endless boring arrays of numbers, but to mold them into beautiful, descriptive images that tell the story of what the data actually means. Because that is essentially what we are doing when plotting data. Nobody can look at a table of 100.000 rows and start talking about it, that is what we can achieve with data visualization.  
@@ -591,6 +595,7 @@ fig.show()
 This is pretty much the way you can change any attribute that is related to the layout of the figure. The only thing you have to figure out for whatever you want to change in your figure is, where the respective property lies. Is it part of the data or the layout layer? Which sub-layers are there? Sometimes you can figure it out by thinking about it, however you can always refer to the documentation and the hive-mind of the internet. Especially in the beginning you'll need to google quite a bite, but once you get the hang of it, it is actually quite intuitive.  
 Lets do some more styling. Above we created a scatter-plot. This is a time-series, so maybe a line-plot would be more appropriate...
 
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise 1 </h3>
@@ -676,10 +681,12 @@ fig.show()
 <div class="notice--primary">
   {{ exercise | markdownify }}
 </div>
+</div>
 
 Great, you are on the best way to becoming a Data-Painting Plotly-Wizard!  
 Of course there are not just simple line and scatter charts. [There is a whole world of graphs to explore!](https://plotly.com/python/){:target="_blank"}{:rel="noopener noreferrer"}. For now, lets look at just one more type of graph, a bar-chart. This is a common type of graph to compare measured amounts (as opposed to discrete values such as a temperature). Such a value would be our rainfall measurement!  
 
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise </h3>
@@ -719,6 +726,7 @@ fig_precip.show()
 
 <div class="notice--primary">
   {{ exercise | markdownify }}
+</div>
 </div>
 
 Right on, this was quite a deep dive into the Plotly library! But if you followed all the way down here, you are on a very good way to become super proficient in plotting data in python! The skills you got from the exercise above should get you quite far in designing your own figures in the future.  
