@@ -7,7 +7,8 @@ nav_order: 3
 This interactive tutorial will get you started on your data-exploration road and make you familiar with some core
 concepts of Python programming and data analysis.  
 
-**Notice:** In all following sections I will insert some code snippets. You are very much encouraged to copy and paste them with the button on the top right
+> **Notice:**  
+> In all following sections I will insert some code snippets. You are very much encouraged to copy and paste them with the button on the top right
 and run them in your IDE (e.g. Spyder).
 {: .notice}
 
