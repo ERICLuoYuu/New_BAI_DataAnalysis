@@ -1,10 +1,8 @@
-
 ---
 title: "3. INTERPOLATION AND GAP FILLING"
 layout: default
 nav_order: 5
 ---
-
 ## **Interpolation and Gap Filling**
 
 In this exercise we look at interpolation and the rather time-series specific topic of data-gap filling.  
