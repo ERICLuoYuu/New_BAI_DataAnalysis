@@ -191,18 +191,20 @@ df_bm["extreme_low"] = df_bm["diff"] < lower_thresh, "data"
 
 Note: In the POT approach the quantiles where built from the whole dataset itself. Here, the quantiles are built from the array of deviations from the mean! Remember this in the exercise when you evaluate the results.
 
-<div style="background-color: #E0E0E0; padding: 5px; border-radius: 2px; margin-bottom: 20px;">
-  <h3>Exercise</h3>
-  <ol>
-    <li>Go ahead and built a function for the block maxima method. You already got all the building blocks. Put them together and add the right function definition and return statement.</li>
-    <li>After using POT and the BM, which method do you expect to yield more extreme values per year? How do you think the extremes of the two methods are different from each other?</li>
-    <li>To compare the outcomes of the two functions you can plot the distributions of the extreme values together. In the "visualize_quantiles" method above you already have a function given that creates a distribution. Write a new function that builds distributions of the extreme values for the different methods and creates a plot. This can well be done by first creating an empty figure object and then looping through the different extremes-dataframes, calculating the distributions for each and adding a new trace. After the loop you can call the "fig.show()" to display the figure. A starter code is given below.</li>
-  </ol>
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
 
-  <details>
-    <summary style="cursor: pointer; color: #0366d6; font-weight: bold;"> Starter Code ex. 3</summary>
-    <div style="padding: 15px; background-color: #ffffff; border-radius: 5px; margin-top: 10px;">
-      <pre><code>
+<h3> Exercise </h3>
+
+1. Go ahead and built a function for the block maxima method. You already got all the building blocks. Put them together and add the right function definition and return statement.  
+2. After using POT and the BM, which method do you expect to yield more extreme values per year? How do you think the extremes of the two methods are different from each other?  
+3. To compare the outcomes of the two functions you can plot the distributions of the extreme values together. In the "visualize_quantiles" method above you already have a function given that creates a distribution. Write a new function that builds distributions of the extreme values for the different methods and creates a plot. This can well be done by first creating an empty figure object and then looping through the different extremes-dataframes, calculating the distributions for each and adding a new trace. After the loop you can call the "fig.show()" to display the figure. A starter code is given below.
+
+{::options parse_block_html="true" /}
+
+<details><summary markdown="span">Starter Code ex. 3</summary>
+
+```python
 def visualize_extreme_distributions(dfs:list[pd.DataFrame], extr_high_col:str, extr_low_col:str, methods:list[str]):
     print("----")
     print("Printing extremes")
@@ -219,14 +221,12 @@ def visualize_extreme_distributions(dfs:list[pd.DataFrame], extr_high_col:str, e
         # Use the "method" variable to give the traces
         # labels (with the "name" parameter to tell them apart
         # in the legend)
-      </code></pre>
-    </div>
-  </details>
+```
+</details>
 
-  <details>
-    <summary style="cursor: pointer; color: #0366d6; font-weight: bold;"> Solution Ex. 1</summary>
-    <div style="padding: 15px; background-color: #ffffff; border-radius: 5px; margin-top: 10px;">
-      <pre><code>
+<details><summary markdown="span">Solution Ex. 1</summary>
+
+```python
 # the full code for the block maxima method
 def block_maxima(X:pd.Series, prob:float):
     df_bm = pd.DataFrame(index=X.index, data={
@@ -247,14 +247,13 @@ def block_maxima(X:pd.Series, prob:float):
     df_bm["extreme_high"] = df_bm["diff"] > upper_thresh
     df_bm["extreme_low"] = df_bm["diff"] < lower_thresh
     return df_bm
-      </code></pre>
-    </div>
-  </details>
 
-  <details>
-    <summary style="cursor: pointer; color: #0366d6; font-weight: bold;"> Solution Ex. 3</summary>
-    <div style="padding: 15px; background-color: #ffffff; border-radius: 5px; margin-top: 10px;">
-      <pre><code>
+```
+</details>
+
+<details><summary markdown="span">Solution Ex. 3</summary>
+
+```python
 def plot_extremes_distribution(dfs:list[pd.DataFrame], extr_high_col:str, extr_low_col:str, methods:list[str]):
     print("----")
     print("Plotting extreme distributions")
@@ -290,11 +289,15 @@ def plot_extremes_distribution(dfs:list[pd.DataFrame], extr_high_col:str, extr_l
         )
     fig.update_layout(template="simple_white") # <- not neccessary, I just like it!>
     fig.show()
-      </code></pre>
-    </div>
-  </details>
-</div>
+```
+{::options parse_block_html="false" /}
 
+{% endcapture %}
+
+<div class="notice--primary">
+  {{ exercise | markdownify }}
+</div>
+</div>
 ---
 
 #### 3.3. Moving Average Method (MA)
