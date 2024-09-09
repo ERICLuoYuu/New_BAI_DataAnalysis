@@ -18,7 +18,7 @@ value (extreme relative to what?). Afterwards we will work with an example datas
   3.3. [Moving Average (MA)](#33-moving-average-method-ma)  
 
 
-### 1. Material
+## 1. Material
 We will once again use the DWD dataset from the Diepholz station for this section. Below you can find the download again:
 [Diepholz DWD meteo data (25mb)...](assets/data/dwd_diepholz_1996_2023.parquet).  
 [Literatur](/assets/r_ex4/wmo-td_1500_en.pdf)  
@@ -28,7 +28,7 @@ of the dataset a bit.
 By now you should know how to do it. Try to create a pandas Series with hourly air temperature data.  
 If you are getting stuck, you can refer to the exercise before.
 
-### 2. Background
+## 2. Background
 We will look at three different methods to determine extreme events from time series of meteorological data. The main difference between the methods is the way they define the reference, to which we compare a value to describe it as being "extreme" or not.  
 Pause for a second and think about how you could describe what an extreme value is.  
   
@@ -47,7 +47,7 @@ Read More: Extreme value return periods
 Another approach is the evaluation of extreme values and their probabilities based on historical data. Relating these probabilities to the time series of the data produces "return periods", frequencies in which the extreme values are expected to occur. As an example, requirements for buildings often include a resistance to weather extremes with a certain return period. Making up a case, wind turbines would be built that they can withstand windspeeds with a "return level" in a "return period" of 1 in 10.000, meaning the chance that such a windspeed occurs in a year would be 0.01%.
 </details>
 
-### 3. Methods and Implementation
+## 3. Methods and Implementation
 Lets now look at three different methods to analyze extreme events in our sample dataset. We will talk about the reasoning and the implementations of the methods. 
 We will then go through each method and implement the methods into functions, which you can then use to analyze your data.
 
@@ -92,7 +92,7 @@ Alright, now that we layed out the basics, lets dive into theme methods!
 
 ![extreme Meme](assets/images/python/4/extreme_meme.png)  
 
-#### 3.1 Peak Over Threshold (POT)
+### 3.1 Peak Over Threshold (POT)
 
 The first approach is the Point Over Threshold (POT) method. This is a very simple approach that looks at the whole dataset as one.  
 We define fixed thresholds for the dataset, defining the upper and lower bounds above or below which values will be considered extreme.  
@@ -206,7 +206,7 @@ Which questions could you answer with this type of extreme detection, which not?
   {{ exercise | markdownify }}
 </div>
 </div>
-#### 3.2. Block Maxima Method (BM)
+### 3.2. Block Maxima Method (BM)
 
 The next method we are looking at is the "Block Maxima" method. As the name states, we are looking at a certain "block" of data and find the maxima based on the defined threshold of the values in this block. There are several ways we could define these reference blocks. For example we could look at every year individually and find the extreme values for these. Alternatively, we could create blocks from each week of the year across all years or for every month across all years. We could then find extremes based on the quantiles of the data for every wekk of the year and separate e.g. extreme values in spring and autumn from the overshadowing extreme values in winter and summer.
 
@@ -369,7 +369,7 @@ def plot_extremes_distribution(dfs:list[pd.DataFrame], extr_high_col:str, extr_l
 </div>
 ---
 
-#### 3.3. Moving Average Method (MA)
+### 3.3. Moving Average Method (MA)
 
 The final method we will look at is the moving average method. As the name already states, here the extremes are detected on a more temporally constrained basis, the moving average around each datapoint. Take a look at the code block for the block-maxima method. Everything we need for the moving average method is already in there. This time, try to write the method all by yourself. It is really not hard. You just need to figure out, which data you need to subtract to get the "diff" column right. As a little hint: You don't need the day_of_year information here anymore at all.  
 
