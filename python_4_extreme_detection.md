@@ -56,9 +56,9 @@ What are quantiles?
   
 Quantiles are points in a dataset that divide the data into equal-sized groups. They're incredibly useful for understanding how values in a dataset are spread out and for comparing different datasets. E.g.we see a normal distribution curve divided into four equal areas. Each area represents 25% of the total data. The lines dividing these areas are our quartiles:
 
-Q1: The first quartile (25th percentile)
-Q2: The second quartile (50th percentile, also known as the median)
-Q3: The third quartile (75th percentile)
+- Q1: The first quartile (25th percentile)
+- Q2: The second quartile (50th percentile, also known as the median)
+- Q3: The third quartile (75th percentile)
 
 ![Quantiles](.\assets\images\Quartiles-probability-distribution.jpg)
 
