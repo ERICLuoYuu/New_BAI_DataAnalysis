@@ -162,7 +162,7 @@
   },"23": {
     "doc": "4. EXTREME VALUE DETECTION",
     "title": "1. Material",
-    "content": "We will once again use the DWD dataset from the Diepholz station for this section. Below you can find the download again: Diepholz DWD meteo data (25mb)…. Literatur . We will have to do some plotting again, so it might be good for you to resample the data to daily data, just to reduce the size of the dataset a bit. By now you should know how to do it. Try to create a pandas Series with hourly air temperature data. If you are getting stuck, you can refer to the exercise before. ",
+    "content": "We will once again use the DWD dataset from the Ahaus station for this section. Below you can find the download again: Ahaus DWD meteo data (25mb)…. Literatur . We will have to do some plotting again, so it might be good for you to resample the data to daily data, just to reduce the size of the dataset a bit. By now you should know how to do it. Try to create a pandas Series with hourly air temperature data. If you are getting stuck, you can refer to the exercise before. ",
     "url": "/New_BAI_DateAnalysis/python_4_extreme_detection.html#1-material",
     
     "relUrl": "/python_4_extreme_detection.html#1-material"
