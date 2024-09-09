@@ -16,7 +16,7 @@ we first need to handle.
 
 ## 1. Loading and  converting data:
 We will use some data I have prepared in a way that you might find it in an online data portal.  
-[Download the file here](https://nicbehr.github.io/new_bai_data_analysis/assets/data/dwd_diepholz_1996_2023_missing_placeholders.parquet)
+[Download the file here](assets/data/dwd_ahaus_1996_2023_missing_placeholders.parquet)
 
 To test some things we will work with the air temperature column "tair_2m_mean" here.
 There are several issues when we have a missing-data-placeholder like that. Try two things:
