@@ -771,17 +771,19 @@ fig_subplots.show()
 ```
 
 As a little exercise, print the fig_subplots object from above and try to figure out how to change the y-axis titles on the first and the second plot.
-<details><summary>Solution</summary>
+
+<details markdown="1">
+
+<summary>Solution</summary>
 
 ```python
-
 fig_subplots.update_layout(
     xaxis2_title="Date",
     yaxis_title="Tair 2m [F]",
     yaxis2_title="Rain amount, daily [mm]"
 )
-
 ```
+
 </details>
 
 #### Templates
