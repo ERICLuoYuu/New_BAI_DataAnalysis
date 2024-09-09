@@ -54,8 +54,14 @@ We will then go through each method and implement the methods into functions, wh
 As a little preface we need to talk about a concept we will use for all methods: Quantiles.  
 What are quantiles?  
   
-A quantile is a subset of the given data, that contains a certain percentage of the distribution of the data. E.g. in the following figure, everything left of the red line is in the q10 percentile, the lowest 10% of the data. Everything up to the blue line is in the q90, the quantity that comprises of 90% of the data.
-![Quantiles](.\misc\2023\01\05\quantiles.png)
+Quantiles are points in a dataset that divide the data into equal-sized groups. They're incredibly useful for understanding how values in a dataset are spread out and for comparing different datasets. E.g.we see a normal distribution curve divided into four equal areas. Each area represents 25% of the total data. The lines dividing these areas are our quartiles:
+
+Q1: The first quartile (25th percentile)
+Q2: The second quartile (50th percentile, also known as the median)
+Q3: The third quartile (75th percentile)
+
+![Quantiles](.\assets\images\Quartiles-probability-distribution.jpg)
+
 You can use the following function to visualize the quantiles of our dataset:
 ```python
 
@@ -214,6 +220,7 @@ The next method we are looking at is the "Block Maxima" method. As the name stat
 In our example we will define the blocks as the values for each single day across all the years. The procedure is as follows: 
 
 **Step 1**  
+
 In the first line we again create a dataframe with the data, a date column and then add a new column called "DOY" with a mutation, that gives each date a value of 1 to 365. We need this "day" value to group our data across the years by it. We can get this by grabbing the "day_of_year" property from our datetime-indices in Pandas.
 
 ```python
@@ -224,6 +231,7 @@ df_bm = pd.DataFrame(index=X.index, data={
 ```
 
 **Step 2**  
+
 Next we create the column "data_14d_ma". This is the 15 day moving average around every day. Moving average means that the "window" of data we are calculating the mean from varies.
 
 ```python
@@ -234,6 +242,7 @@ Through this, we accquire a smoothing of the daily temperature values and make t
 We want to create a representative dataset for daily temperature values across the years. If we use the single day for each year, we have a dataset of 18 datapoints which can easily include heavy outliers. By using a moving average of 15 days we enhance our dataset for each day by a factor of 15 to 270 datapoints, still restricted to a pretty small time window. While it does reduce the impact of individual extremely hot or cold days, it is more likely to representatively capture the state of the atmosphere around the time of interest.  
   
 **Step 3**  
+
 Now that we have the smoothed data and our doy information we can go ahead and calculate the long-term mean for every day of the year. To do so, we use the pandas "groupby" function. This allows us to sample data based on common values in a column. E.g. for the day of the year, it will grab all values where the day of the year is 1 and calculate the mean for those, then for day 2 and so on.  
 
 ```python
@@ -250,6 +259,7 @@ for row, index in df_bm.iterrows():
 ```  
 
 **Step 4**  
+
 One thing is still missing: the threshold to define our datapoint as extreme! In this approach we define the thresholds for something to be extreme based on the "diff" column. We want to find those values, where the deviation from the long-term mean for that specific day of the year is larger than usual. Makes sense right? Again we can use the quantiles function to find the extremes of the differences:
 
 ```python
