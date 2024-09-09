@@ -3,7 +3,7 @@ title: "3. INTERPOLATION AND GAP FILLING"
 layout: default
 nav_order: 5
 ---
-## **Interpolation and Gap Filling**
+# **Interpolation and Gap Filling**
 
 In this exercise we look at interpolation and the rather time-series specific topic of data-gap filling.  
 In time-series data we often have gaps due to a variety of reasons. They can result from instrumental issues or maintenance times or unfavorable weather conditions which leads to data being discarded. These data gaps can be filled with statistical methods.
@@ -14,7 +14,7 @@ Before we start plotting data we will see, how we can deal with missing values w
 measuring the data, e.g. the DWD. For example it is common that the data is included with a specific placeholder value, which
 we first need to handle.
 
-### 1. Loading and  converting data:
+## 1. Loading and  converting data:
 We will use some data I have prepared in a way that you might find it in an online data portal.  
 [Download the file here](https://nicbehr.github.io/new_bai_data_analysis/assets/data/dwd_diepholz_1996_2023_missing_placeholders.parquet)
 
@@ -100,13 +100,13 @@ fig_daily.show()
 
 ```
 
-### 2. Gap Filling, interpolation and modelling
+## 2. Gap Filling, interpolation and modelling
 
 In the next part we will discuss how we can work with timeseries that have gaps of different sizes.
 This is a regular task when working with long-time observations and there are a couple of options,
 depending on what data is available to you and what is the final evaluation goal you have in mind.
 
-#### 2.1: Simple linear interpolation
+### 2.1: Simple linear interpolation
 
 You do basic interpolation in your every day live. You want to bake a cake and only find a receipe for an 8 person cake,
 but only 3 friends are coming over for cake time. In the receipe you have to use 1 kg of flour. Intuitively you can 
@@ -251,7 +251,7 @@ RMSE = get_RMSE(y_true, y_predicted)
   {{ exercise | markdownify }}
 </div>
 </div>
-#### 2.2: Simple linear models
+### 2.2: Simple linear models
 
 Another approach is be to create a linear model that builds not only on the two points adjacent to the one we want to know,
 but rather the whole of the dataset that we have available.
