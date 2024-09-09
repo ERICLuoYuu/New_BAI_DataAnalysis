@@ -206,6 +206,7 @@ Which questions could you answer with this type of extreme detection, which not?
   {{ exercise | markdownify }}
 </div>
 </div>
+
 ### 3.2. Block Maxima Method (BM)
 
 The next method we are looking at is the "Block Maxima" method. As the name states, we are looking at a certain "block" of data and find the maxima based on the defined threshold of the values in this block. There are several ways we could define these reference blocks. For example we could look at every year individually and find the extreme values for these. Alternatively, we could create blocks from each week of the year across all years or for every month across all years. We could then find extremes based on the quantiles of the data for every wekk of the year and separate e.g. extreme values in spring and autumn from the overshadowing extreme values in winter and summer.
