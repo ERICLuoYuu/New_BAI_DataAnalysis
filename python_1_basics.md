@@ -344,7 +344,7 @@ a in b      # now we can check whether one of the lists is within another list
 a in c
 ```
 
-## Code block in details in a notice
+### Code block in details in a notice
 
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
@@ -407,11 +407,11 @@ f = (alfonso["grade_ecophysiology"] > 4.0 or alfonso["grade_archery"] > 4.0) or 
 </div>
 
 
-# 4. Conditionals and Loops
+## 4. Conditionals and Loops
 Conditionals and loops are constructs in your code that are often combined. A loop is used to do a certain task on many elements sequentially,
 a conditional uses a certain condition (or truth-evaluation) to decide whether a piece of code should be executed.  
 
-## 4.1 Conditionals
+### 4.1 Conditionals
 Remember how we talked about comparison, logical and identitiy and membership operators? They all result in a boolean, stating whether
 a condition is True or False. We can make use of that by utilizing conditionals. Here is a simple example:
 ```python
@@ -452,13 +452,13 @@ else:
     print("Peter is not smart and not big")
 ```
 
-## 4.2 Loops
+### 4.2 Loops
 A loop is a structure that allows you to iteratively perform actions, either with several elements (e.g. stored in a list)
 or while a specific condition holds. These two types are called "for-loops" and "while-loops". 
 They always consist of two parts: The definition how and over what you want to iterate (or "loop") and 
 the actual action you want to perform. 
 
-### 4.2.1 The for-loop
+#### 4.2.1 The for-loop
 The most "classical" loop is the for-loop.  
 The syntax is, as often in Python, held very simple. Here is an easy example:
 ```python
@@ -483,7 +483,7 @@ for index, temperature in enumerate(temperatures):
     print("Temperature at "+str(hour_of_day[index]) + ":00: "+str(temperature) + "°C")
 ```
 
-### 4.2.2 The while-loop
+#### 4.2.2 The while-loop
 A while loop is not used as often as a for-loop. In the definition you define a condition
 and "while" that condition holds, the loop is executed. 
 
@@ -584,7 +584,7 @@ for index, month in enumerate(months):
 </div>
 </div>
 
-# 5. Functions and Classes
+## 5. Functions and Classes
 **Congratulations!**  
 You made it this far down, that means you have accquired knowledge of the basic building blocks of Python.
   
@@ -593,7 +593,7 @@ You made it this far down, that means you have accquired knowledge of the basic 
 You are now ready to go into two concepts that go beyond basic scripting (meaning, just putting all your code line by line into one file),
 and learn about the fundamental blocks that help strcuturing your program: Functions and Classes!
 
-## 5.1 Functions
+### 5.1 Functions
 Functions are constructs of own, separate blocks of code in your program which take care of certain tasks. They are super useful, because often 
  you want to do the same operation many times in your code but don't want to write the same code every time again. Just write your own function and 
  call it whenever you need its expertise! Lets just look at a simple example:
@@ -757,7 +757,7 @@ while password_is_bad:
 </div>
 </div>
 
-## 5.2 Classes
+### 5.2 Classes
 Classes are the final fundamental building block of Python we will look at here.
 A class basically represents a blueprint of an object that has certain properties. As an example, 
 when I am working with data on ecosystems it could be convenient to have an ecosystem class
