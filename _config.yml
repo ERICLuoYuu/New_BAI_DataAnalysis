@@ -3,7 +3,7 @@ description: A tutorial for starters learning how to use python to munipulate cl
 remote_theme: just-the-docs/just-the-docs
 
 url: https://ericluoyuu.github.io
-baseurl: "/New_BAI_DateAnalysis"
+baseurl: "/New_BAI_DataAnalysis"
 
 plugins:
   - jekyll-remote-theme
