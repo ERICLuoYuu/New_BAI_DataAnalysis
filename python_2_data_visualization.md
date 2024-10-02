@@ -112,7 +112,7 @@ There are also built-in methods that you can run directly on single columns. Exa
 {% capture exercise %}
 
 <h3> Exercise </h3>
-<p >You already know, how to call a method that is attached to a class. With that knowledge, explore the Diepholz DWD dataset and figure out the mean, standard deviation, min and max for 
+<p >You already know, how to call a method that is attached to a class. With that knowledge, explore the Ahaus DWD dataset and figure out the mean, standard deviation, min and max for 
 air temperature, precipitation height, air pressure and short wave radiation (SWIN)</p>
 
 {::options parse_block_html="true" /}
