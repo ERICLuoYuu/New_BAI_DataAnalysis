@@ -356,19 +356,19 @@ a in c
 
 ```python
 joana = {
-    enrolled = True,
-    grade_ecophysiology = 1.3,
-    grade_archery = 1.3
+    "enrolled": True,
+    "grade_ecophysiology": 1.3,
+    "grade_archery": 1.3
 }
 alfonso = {
-    enrolled = True,
-    grade_ecophysiology = 1.7,
-    grade_archery = 4.3
+    "enrolled": True,
+    "grade_ecophysiology": 1.7,
+    "grade_archery": 4.3
 }
 legolas = {
-    enrolled = False,
-    grade_ecophysiology = 4.0,
-    grade_archery = 1.0
+    "enrolled": False,
+    "grade_ecophysiology": 4.0,
+    "grade_archery": 1.0
 }
 
 # 1.
@@ -530,7 +530,7 @@ while a <= 10:
 
 <h3> Exercise </h3>
 <p >Now you already know quite some tools for writing a Python script! Use your knowledge to complete the code below.
-The goal is to print the doy (day of the year, as in 1-365) and the sentence "{month} was a hot month" whenever the mean monthly temperature is above two times the mean
+The goal is to print the sentence "{month} was a hot month" whenever the mean monthly temperature is above two times the mean
 and "{month} was a dry month" whenever the precipitation was less than half of the mean.  </p>
 <p >One tip: For the printing you can use formatted strings. They make inserting variables in a string much easier! 
 just put an "f" in front of the string and insert the variable in curly braces {}.  
@@ -662,7 +662,7 @@ def divide_value_by(numerator:int, denominator:int) -> int:
 a = square_value(2)
 b = square_value(a)
 c = divide_value_by(b,a)
-d = square_value(divide_value_by(c,1))
+d = square_value(divide_value_by(c,2))
 print(d)
 ```
 
