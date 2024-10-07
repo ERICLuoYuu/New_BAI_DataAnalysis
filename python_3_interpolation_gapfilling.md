@@ -42,9 +42,9 @@ Plotting the data with the missing value placeholder makes the data barely reada
 ![Image of data with missing values](/assets/images/python/3/missing_values.png)
 
 ```python 
-df_dwd_daily = df_dwd.resample(rule="d", on="date_time").mean()
+df_dwd = df_dwd.resample(rule = 'D', on = 'data_time').mean()
 
-fig = px.scatter(df_dwd_daily, y = "tair_2m_mean")
+fig = px.scatter(df_dwd, x = df_dwd.index, y = "tair_2m_mean")
 fig.show()
 ```
 When averaging the values, the -999.99 values are taken into account leading
