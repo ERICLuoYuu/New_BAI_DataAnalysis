@@ -513,16 +513,16 @@ Plotly provides two different approaches to plotting:
 
 To get a good understanding of Plotly it makes sense to go from large to small, first looking at the general structure of Plotly figures and the way graphic_objects work. If you have a broad overview of these you can still learn about the quick-and-easy ways, but you will have a much easier time when you want to change something about the express solutions manually.  
   
-### Plotly - The modern plotting library
+## Plotly - The modern plotting library
 
-#### Where to find help
+### Where to find help
 
 First of all lets gather some ressources. The two best places to find advice about any plotly-related questions are 
 - [the official documentation at plotly.com](https://plotly.com/python/){:target="_blank"}{:rel="noopener noreferrer"}
 - [the plotly community forum](https://community.plotly.com/){:target="_blank"}{:rel="noopener noreferrer"}
 - as always, Stackoverflow...
 
-#### The general structure of Plotly figures
+### The general structure of Plotly figures
 First of all we need to go through a little bit of vocabulary to be able to talk about Plotly. In Plotly-world the whole image of a plot, including the axes, the data, the labels, the title and everything is called the "graph-object". This is the top-level of every Plotly figure and it is also the name of the Python class, with which we build the plots.
 Within the graph-object there are two layers:  
 One is the "data" layer with everything that is directly related to the displayed data. That is the data itself, the mode of repesentation in the graph for example the line (in a line-plot) or points (in a scatter-plot) and the styling such as the size or color of the line/points. In plotly, they also call the group of data-related attributes "traces". Don't ask me how they came up with it but we have to live with it... We will come back to that later!  
@@ -734,7 +734,7 @@ If it is all a bit much in the start, don't worry! As time comes you will do thi
   
 Before we finish the visualization exercises I want to show a few more very helpful things.  
 
-#### Subplots
+### Subplots
 Often you want to create not just one but multiple plots in one figure, for example one big figure with a temperature plot on top and a precipitation plot on the bottom. This way readers can easily get an overview of the climate at the station.  
 Creating such a "subplot" in Plotly is super easy! Instead of using go.Figure(), you use a different function to create your top-layer "graph-object". The function we need is plotly.subplots.make_subplots(). In it we can define the number of rows and columns of figures we want to create with the "rows" and "cols" keywords. Think about the whole figure like a matrix. The figure on the top-left will be row 1, column 1, second on the left row 2, column 1 etc.  
 Then whenever you are adding a new trace, you can define its position with the properties "row" and "col":
@@ -786,7 +786,7 @@ fig_subplots.update_layout(
 
 </details>
 
-#### Templates
+### Templates
 One very nice way to style your figure a bit differently than the default is to use Plotly templates! You can implement them in your figure simply by adding the template in the layout:  
 ```python
 fig_subplots.update_layout(
@@ -798,7 +798,7 @@ Looks nice right?
 There is a whole gallery of templates available on the website:  
 [Plotly template gallery...](https://plotly.com/python/templates/){:target="_blank"}{:rel="noopener noreferrer"}
 
-#### Plotly Express
+### Plotly Express
 For now, we will leave it with that. But wait, I was talking about an easier way to create graphs before right?  
 Yes, for "quick and dirty" graphs you can use the awesome plotly.express shortcut. With it you can create a bunch of graphs like the ones  we talked about above without all the fuzz of graph_objects etc.  
 All you need to do to create a scatter plot is  
