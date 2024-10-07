@@ -176,29 +176,29 @@ Pandas has a specific datatype that is extremely useful when we are working with
 
 ```python
 # get data newer than 31.12.2022
-df_dwd[df_dwd["date_time"] > "2022-12-31"]
+df_dwd[df_dwd["data_time"] > "2022-12-31"]
 
 # get only data from 2022
-df_dwd[df_dwd["date_time"].dt.year == 2022]
+df_dwd[df_dwd["data_time"].dt.year == 2022]
 
 # But wait! Its not working, is it?
 # Can you figure out why not? Remember the type() function!
 ```
-Now, how do we get this to work for us? Well, the methods work with the datetime64 data type, so we need to change the "date_time" column type! Luckily, Pandas has a function for that. It is called to_datetime() and is part of the main library, so you call it as pd.to_datetime(). It takes the column you want to convert to datetime64 type as argument, tries to parse it to datetime64 and returns the result series. If it fails to parse, maybe because your date_time column is in a country-specific formatting, you can pass an additional "format" argument in which you provide the input format. But we will not cover it here, as the default should work for the DWD dataset.  
+Now, how do we get this to work for us? Well, the methods work with the datetime64 data type, so we need to change the "data_time" column type! Luckily, Pandas has a function for that. It is called to_datetime() and is part of the main library, so you call it as pd.to_datetime(). It takes the column you want to convert to datetime64 type as argument, tries to parse it to datetime64 and returns the result series. If it fails to parse, maybe because your data_time column is in a country-specific formatting, you can pass an additional "format" argument in which you provide the input format. But we will not cover it here, as the default should work for the DWD dataset.  
   
 ```python
 example_df = pd.DataFrame({
-  "date_time": ["2022-01-01 01:00:00","2022-01-01 12:00:00", "2022-01-02 01:00:00", "2022-01-02 12:00:00", "2022-01-03 01:00:00", "2022-01-03 12:00:00"],
+  "data_time": ["2022-01-01 01:00:00","2022-01-01 12:00:00", "2022-01-02 01:00:00", "2022-01-02 12:00:00", "2022-01-03 01:00:00", "2022-01-03 12:00:00"],
   "values" : [1,5,4,20,6,-10]
 })
-type(example_df["date_time"])
-example_df["date_time"] = pd.to_datetime(example_df["date_time"])
+type(example_df["data_time"])
+example_df["data_time"] = pd.to_datetime(example_df["data_time"])
 ```
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
 <h3> Exercise </h3>
-<p >1. In your dataframe, turn the "date_time" column into a datetime64 type column. Then create dataframes for each season across all years, 
+<p >1. In your dataframe, turn the "data_time" column into a datetime64 type column. Then create dataframes for each season across all years, 
 meaning one for spring, summer, autumn and winter each. The respective months are March to May, June to August, September to November and December to February. Compare the mean air temperature, precipitation and radiation
 between the different seasons.
 <br>
@@ -224,17 +224,17 @@ series_ones_and_threes = series[series.isin(desired_values)]
 <details><summary markdown="span">Solution!</summary>
 
 ```python
-df_dwd["date_time"] = pd.to_datetime(df_dwd["date_time"])
-df_dwd["date_time"] = pd.to_datetime(df_dwd["date_time"])
+df_dwd["data_time"] = pd.to_datetime(df_dwd["data_time"])
+df_dwd["data_time"] = pd.to_datetime(df_dwd["data_time"])
 
 # First of all we create 4 dataframes, one for each season
-# We do it by accessing the numeric value of the months in the "date_time"
+# We do it by accessing the numeric value of the months in the "data_time"
 # column. 1 refers to January and so on. With the .isin() method we extract
 # those rows where the values correspond to the numbering of the month
-df_dwd_summer = df_dwd.loc[df_dwd["date_time"].dt.month.isin([6,7,8])]
-df_dwd_autumn = df_dwd.loc[df_dwd["date_time"].dt.month.isin([9,10,11])]
-df_dwd_winter = df_dwd.loc[df_dwd["date_time"].dt.month.isin([12,1,2])]
-df_dwd_spring = df_dwd.loc[df_dwd["date_time"].dt.month.isin([3,4,5])]
+df_dwd_summer = df_dwd.loc[df_dwd["data_time"].dt.month.isin([6,7,8])]
+df_dwd_autumn = df_dwd.loc[df_dwd["data_time"].dt.month.isin([9,10,11])]
+df_dwd_winter = df_dwd.loc[df_dwd["data_time"].dt.month.isin([12,1,2])]
+df_dwd_spring = df_dwd.loc[df_dwd["data_time"].dt.month.isin([3,4,5])]
 
 # To find the mean for each season we have a range of different options
 # how we want to get the means and compare them. I'll show three different
@@ -308,15 +308,15 @@ All of these can be extended with numbers, such as "7D" for 7 days or "30min" fo
 Afterwards we also have to call a function that specifies **how** we want to resample. You see, if we change the frequency from 5 minute data to daily data, the daily value can be computed in different ways. For example for temperature it would make sense to use the daily mean value. For precipitation on the other hand it is probably more useful to get the daily sum, if we are interested in the amount of rain per day. That is why ".resample()" has to be followed by a function like ".mean()" or ".sum()". Here is a full example:  
 
 ```python
-example_date_time = pd.to_datetime(["2022-01-01 01:00:00","2022-01-01 12:00:00", "2022-01-02 01:00:00", "2022-01-02 12:00:00", "2022-01-03 01:00:00", "2022-01-03 12:00:00"])
+example_data_time = pd.to_datetime(["2022-01-01 01:00:00","2022-01-01 12:00:00", "2022-01-02 01:00:00", "2022-01-02 12:00:00", "2022-01-03 01:00:00", "2022-01-03 12:00:00"])
 
 example_df = pd.DataFrame({
-  "date_time": example_date_time,
+  "data_time": example_data_time,
   "values1" : [1,5,4,20,6,-10],
   "values2" : [100,500,400,2000,600,-1000],
 })
-df_daily_means = example_df.resample(rule="1D", on="date_time").mean()
-df_daily_sums = example_df.resample(rule="1D", on="date_time").sum()
+df_daily_means = example_df.resample(rule="1D", on="data_time").mean()
+df_daily_sums = example_df.resample(rule="1D", on="data_time").sum()
 ```
 
 I mentioned before that pandas itself already has some built-in plotting capabilities. I won't go deep onto it, but it is definitely worth mentioning because you can use it to get a quick overview of data in a pandas dataframe. You can simply call the ".plot()" function on any dataframe. You can run this on the whole dataframe, which will plot all available columns, or you extract specific rows/columns with the methods we discussed before and then run ".plot()":  
@@ -324,16 +324,16 @@ I mentioned before that pandas itself already has some built-in plotting capabil
 ```python
 # lets use the example_df from above:
 # First we plot both values1 and values2:
-example_df.plot(x="date_time")
-# Note that we have to say that we want date_time on the 
+example_df.plot(x="data_time")
+# Note that we have to say that we want data_time on the 
 # x-axis, because otherwise it will by default use a numeric
-# index on the x-axis and plot the date_time column against it 
+# index on the x-axis and plot the data_time column against it 
 # as well. You can try it out by leaving the x=... out
 # The figure should now pop up in the "plots" tab on the right
 # side of your Spyder window
 
 # Now we just plot values 1:
-exampl_df.plot(x="date_time", y="values1")
+exampl_df.plot(x="data_time", y="values1")
 ```
   
 There is a lot more functionality, but I want to leave the pandas plotting with that, as we will dive deeper into plotting later in this course.  
@@ -536,10 +536,12 @@ Lets dive into the code and create a first figure object. Its easy:
 # Before we start, lets resample the dwd data down to daily values.
 # You will create quite some plots and plotting 27 years of 10-minute
 # data takes a bit of time.
-df_dwd_daily = df_dwd.resample("d", on="date_time").mean()
+df_dwd_daily = df_dwd.resample("d", on="data_time").mean()
 # First import the graph_objects module from plotly.
 # We call it "go" because that is convention 
 import plotly.graph_objects as go
+import plotly.io as pio
+pio.renderers.default = "browser" #This will force Plotly to open plots in your default web browser.
 # Then we create out figure like this:
 fig = go.Figure()
 
@@ -702,7 +704,7 @@ Of course there are not just simple line and scatter charts. [There is a whole w
 # resampling with the "sum" aggregation function
 # Here I directly grabbed only the precipitation-column, 
 # but you can also do it another way
-precip = df_dwd.resample(rule="d", on="date_time").sum()["precipitation"]
+precip = df_dwd.resample(rule="d", on="data_time").sum()["precipitation"]
 
 # Now we create the graph just like before:
 fig_precip = go.Figure()
@@ -742,7 +744,7 @@ Then whenever you are adding a new trace, you can define its position with the p
 
 # First we create the subplots graph_object.
 # To do so we have to import that specific method:
-import plotly.subplots.make_subplots
+from plotly.subplots import make_subplots
 # Now we create a subplot figure with two rows:
 fig_subplots = plotly.subplots.make_subplots(rows=2, cols=1)
 # Now we can start adding traces to the figure:
