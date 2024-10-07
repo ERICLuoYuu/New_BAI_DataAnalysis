@@ -33,10 +33,9 @@ Then try to resample this data to daily values. Plot the data, do the values mak
 <details><summary markdown="span">Solution!</summary>
 
 ```python
-df_dwd = pd.read_parquet(<path to file>)
-df_dwd["date_time"] = pd.to_datetime(df_dwd["date_time"])
-
-fig = px.scatter(df_dwd, y = "ta_2m_mean")
+df_dwd = pd.read_parquet('./dwd_ahaus_1996_2023_missing_placeholders.parquet')
+df_dwd["data_time"] = pd.to_datetime(df_dwd["data_time"])
+fig = px.scatter(df_dwd, x = 'data_time', y = "tair_2m_mean")
 fig.show()
 ```
 Plotting the data with the missing value placeholder makes the data barely readable:  
