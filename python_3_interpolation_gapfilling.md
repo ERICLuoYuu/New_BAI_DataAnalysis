@@ -42,10 +42,10 @@ Plotting the data with the missing value placeholder makes the data barely reada
 ![Image of data with missing values](/assets/images/python/3/missing_values.png)
 
 ```python 
-df_dwd = df_dwd.resample(rule = 'D', on = 'data_time').mean()
+df_dwd_daily = df_dwd.resample(rule = 'D', on = 'data_time').mean()
 
-fig = px.scatter(df_dwd, x = df_dwd.index, y = "tair_2m_mean")
-fig.show()
+fig_daily = px.scatter(df_dwd_daily, x = df_dwd_daily.index, y = "tair_2m_mean")
+fig_daily.show()
 ```
 When averaging the values, the -999.99 values are taken into account leading
 to unrealistic results:  
@@ -90,13 +90,12 @@ Now the irritating -999.99 values are replaced and you can easily plot and resam
 the data in a meaningful manner:
 
 ```python
-fig = px.scatter(df_dwd, y="tair_2m_mean")
+fig = px.scatter(df_dwd,x = 'data_time', y="tair_2m_mean")
 fig.show()
 
-df_dwd_daily = df_dwd.resample(rule="d", on="date_time").mean()
-fig_daily = px.scatter(df_dwd_daily, y="tair_2m_mean")
+df_dwd_daily = df_dwd.resample(rule="d", on="data_time").mean()
+fig_daily = px.scatter(df_dwd_daily, x = df_dwd_daily.index, y="tair_2m_mean")
 fig_daily.show()
-
 ```
 
 ## 2. Gap Filling, interpolation and modelling
