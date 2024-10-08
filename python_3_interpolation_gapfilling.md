@@ -86,7 +86,7 @@ import numpy as np # do this if you have not already imported numpy
 df_dwd.loc[indices_of_missing_values, "tair_2m_mean"] = np.NaN
 ```
 
-Now the irritating -888.88 values are replaced and you can easily plot and resample
+Now the irritating -999.99 values are replaced and you can easily plot and resample
 the data in a meaningful manner:
 
 ```python
