@@ -458,7 +458,7 @@ or while a specific condition holds. These two types are called "for-loops" and 
 They always consist of two parts: The definition how and over what you want to iterate (or "loop") and 
 the actual action you want to perform. 
 
-#### 4.2.1 The for-loop
+### 4.2.1 The for-loop
 The most "classical" loop is the for-loop.  
 The syntax is, as often in Python, held very simple. Here is an easy example:
 ```python
@@ -483,7 +483,7 @@ for index, temperature in enumerate(temperatures):
     print("Temperature at "+str(hour_of_day[index]) + ":00: "+str(temperature) + "°C")
 ```
 
-#### 4.2.2 The while-loop
+### 4.2.2 The while-loop
 A while loop is not used as often as a for-loop. In the definition you define a condition
 and "while" that condition holds, the loop is executed. 
 
