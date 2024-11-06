@@ -20,7 +20,7 @@ While you can not open .parquet directly in excel or a text editor like a .csv f
 As a last note: NumPy is one of the older Python libraries and Pandas is actually built on top of it. However, because we work with example data and want to get hands-on as fast as possible, we will cover Pandas first and then go from there.  
 
 
-#### Table of Contents
+### Table of Contents
 1. [Pandas](#1-pandas)
 2. [NumPy](#2-numpy)
 3. [Plotly](#3-plotly-the-modern-plotting-library)
