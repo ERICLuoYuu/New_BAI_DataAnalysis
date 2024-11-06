@@ -73,7 +73,7 @@ Another option to create a dataframe is of course to read in data. Lets go ahead
 # The path can either be the absolute path to the place where you saved the file
 # or the relative path, meaning the path relative to the place where your script is.
 # I'd recommend to create a subfolder where your script is called "data" and then
-# import the data from the path "./data/diepholz_data_1996_2023.parquet"
+# import the data from the path "./data/ahaus_data_1996_2023.parquet"
 df_dwd = pd.read_parquet('path_to_file')
 ```
 
