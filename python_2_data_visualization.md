@@ -159,7 +159,7 @@ There is a one-line solution to this task, that only grabs the values asked for 
 # ["tair_2m_mean","precipitation","SWIN","pressure_air"] as column-labels 
 # we can directly access the range of values asked for in the exercise.
 
-df.describe().map('{:,.2f}'.format).loc[["mean", "std", "min", "max"], ["tair_2m_mean","precipitation","SWIN","pressure_air"]]
+df.describe().applymap('{:,.2f}'.format).loc[["mean", "std", "min", "max"], ["tair_2m_mean","precipitation","SWIN","pressure_air"]]
 ```
 </details>
 
