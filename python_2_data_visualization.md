@@ -131,7 +131,7 @@ df.describe().applymap('{:,.2f}'.format)
 # You can use the above mentioned describe() method
 # First get the summary. Save the output of .describe()
 # in a new dataframe
-df_dwd_summary = df_dwd.describe().map('{:,.2f}'.format)
+df_dwd_summary = df_dwd.describe().applymap('{:,.2f}'.format)
 
 # Then you can access values in that dataframe like this:
 tair_2m_mean = df_dwd_summary.loc["mean", "tair_2m_mean"]
