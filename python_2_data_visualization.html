@@ -41,7 +41,7 @@
 # You can use the above mentioned describe() method
 # First get the summary. Save the output of .describe()
 # in a new dataframe
-</span><span class="n">df_dwd_summary</span> <span class="o">=</span> <span class="n">df_dwd</span><span class="p">.</span><span class="n">describe</span><span class="p">().</span><span class="nb">map</span><span class="p">(</span><span class="s">'{:,.2f}'</span><span class="p">.</span><span class="nb">format</span><span class="p">)</span>
+</span><span class="n">df_dwd_summary</span> <span class="o">=</span> <span class="n">df_dwd</span><span class="p">.</span><span class="n">describe</span><span class="p">().</span><span class="n">applymap</span><span class="p">(</span><span class="s">'{:,.2f}'</span><span class="p">.</span><span class="nb">format</span><span class="p">)</span>
 
 <span class="c1"># Then you can access values in that dataframe like this:
 </span><span class="n">tair_2m_mean</span> <span class="o">=</span> <span class="n">df_dwd_summary</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="s">"mean"</span><span class="p">,</span> <span class="s">"tair_2m_mean"</span><span class="p">]</span>
