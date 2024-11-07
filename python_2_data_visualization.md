@@ -120,7 +120,7 @@ air temperature, precipitation height, air pressure and short wave radiation (SW
 <details><summary markdown="span">Hint</summary>
 It may be that the output of the .describe() function has a pretty bad formatting with 5 decimal numbers or more. In that case you can change the formatting of the output using  
 ```python 
-df.describe().map('{:,.2f}'.format)
+df.describe().applymap('{:,.2f}'.format)
 ```
 </details>
 
