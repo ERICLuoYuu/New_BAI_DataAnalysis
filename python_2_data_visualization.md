@@ -267,7 +267,7 @@ for idx, variable in enumerate(variables):
     print("--------")
     for i, df in enumerate(seasonal_datasets):
         stats = df.describe()
-        print(f"{seasons[idx]}: {stats.loc['mean', variable]}")
+        print(f"{seasons[i]}: {stats.loc['mean', variable]}")
 
 # Often times we don't even want to print the output but rather
 # just extract and keep it for later use, e.g. for visualizing it later.
