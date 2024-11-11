@@ -446,7 +446,7 @@ we have observation data of our target variable to train the model on, we first 
 data. We can do that easily by dropping the rows, where these columns are na with "dropna()":
 
 ```python
-df_dwd_noNA = df_dwd.loc[:,["date_time","SWIN","rH","tair_2m_mean"]].dropna()
+df_dwd_noNA = df_dwd.loc[:,["data_time","SWIN","rH","tair_2m_mean"]].dropna()
 ```
 
 Now we want to split these into the data we use as predictors (y) and the data we want to 
@@ -604,7 +604,7 @@ Lets try adding some more of our weather-data into the model and see whether it 
 # Lets add the other weather-data columns into the predictor data as well.
 # First we find the rows where all the predictors data and our observations
 # are present:
-df_dwd_noNA = df_dwd.loc[:,["date_time", "SWIN","rH", "pressure_air", "wind_speed", "precipitation", "tair_2m_mean"]].dropna()
+df_dwd_noNA = df_dwd.loc[:,["data_time", "SWIN","rH", "pressure_air", "wind_speed", "precipitation", "tair_2m_mean"]].dropna()
 
 # Now we split them into the x-values (predictors) and the y-values
 # (predictand or target variable)
@@ -635,9 +635,9 @@ Lets first aggregate the data like before:
 
 ```python
 # mean for most data:
-df_dwd_hourly_noNA = df_dwd_noNA.loc[:,["SWIN","rH", "pressure_air", "wind_speed","tair_2m_mean", "date_time"]].resample(rule="1h", on="date_time").mean().dropna()
+df_dwd_hourly_noNA = df_dwd_noNA.loc[:,["SWIN","rH", "pressure_air", "wind_speed","tair_2m_mean", "data_time"]].resample(rule="1h", on="data_time").mean().dropna()
 # sum for precipitation data:
-df_dwd_hourly_noNA["precipitation"] = df_dwd_noNA.loc[:,["precipitation", "date_time"]].resample(rule="1h", on="date_time").sum().dropna()
+df_dwd_hourly_noNA["precipitation"] = df_dwd_noNA.loc[:,["precipitation", "data_time"]].resample(rule="1h", on="data_time").sum().dropna()
 ```
 
 Now we can run a new model on the hourly data and e.g. set the n_estimators to 50.
@@ -670,9 +670,9 @@ multiple linear models perform compared to the random forest regression.</p>
 ```python
 #------- preparation of  data:
 # mean for most data aggregation:
-df_dwd_hourly_noNA = df_dwd_noNA.loc[:,["SWIN","rH", "pressure_air", "wind_speed","tair_2m_mean", "date_time"]].resample(rule="1h", on="date_time").mean().dropna()
+df_dwd_hourly_noNA = df_dwd_noNA.loc[:,["SWIN","rH", "pressure_air", "wind_speed","tair_2m_mean", "data_time"]].resample(rule="1h", on="data_time").mean().dropna()
 # sum for precipitation aggregation:
-df_dwd_hourly_noNA["precipitation"] = df_dwd_noNA.loc[:,["precipitation", "date_time"]].resample(rule="1h", on="date_time").sum().dropna()
+df_dwd_hourly_noNA["precipitation"] = df_dwd_noNA.loc[:,["precipitation", "data_time"]].resample(rule="1h", on="data_time").sum().dropna()
 
 x_hourly = df_dwd_hourly_noNA.loc[:,["SWIN","rH", "pressure_air", "wind_speed", "precipitation"]]
 y_hourly = df_dwd_hourly_noNA.loc[:,["tair_2m_mean"]]
@@ -718,8 +718,8 @@ perform for longer gaps. Therefore I create a gap in the hourly dataset of a ful
 the different methods perform in filling the gap:
 
 ```python
-df_dwd_hourly_noNA = df_dwd_noNA.loc[:,["SWIN","rH", "pressure_air", "wind_speed","tair_2m_mean", "date_time"]].resample(rule="1h", on="date_time").mean().dropna()
-df_dwd_hourly_noNA["precipitation"] = df_dwd_noNA.loc[:,["precipitation", "date_time"]].resample(rule="1h", on="date_time").sum().dropna()
+df_dwd_hourly_noNA = df_dwd_noNA.loc[:,["SWIN","rH", "pressure_air", "wind_speed","tair_2m_mean", "data_time"]].resample(rule="1h", on="data_time").mean().dropna()
+df_dwd_hourly_noNA["precipitation"] = df_dwd_noNA.loc[:,["precipitation", "data_time"]].resample(rule="1h", on="data_time").sum().dropna()
 
 # first lets create the 14-day long gap:
 # I first extract the indices of some single day and safe them
