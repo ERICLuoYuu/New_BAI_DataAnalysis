@@ -381,7 +381,7 @@ def regression_results(y_true, y_pred):
 ```
 
 A few things we can take from this are:  
-**a)** r^2 is 0.8351, which is the ratio of the sum of squared errors divided by the sum of squared
+**a)** r^2 is the ratio of the sum of squared errors divided by the sum of squared
 deviations from the mean. You can say that r^2 is a measure of how much of the variance in the original
 data is reflected by the model. In this case, as our model is just a line, the amount of variance captured in the model
 stems from the linear trend that is inherent in the original data.
@@ -533,7 +533,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 linearModel = LinearRegression()
 linearModel.fit(X_train,y_train)
 y_hat_linear = linearModel.predict(X_test)
-regression_results(y_test, y_hat)
+regression_results(y_test, y_hat_linear)
 ```
 </details>
 
