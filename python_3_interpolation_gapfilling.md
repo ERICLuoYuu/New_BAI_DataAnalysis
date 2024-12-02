@@ -493,7 +493,7 @@ linearModel.score(X_test,y_test)
 y_hat_ml = linearModel.predict(X_test).reshape(1,-1)[0]
 px.scatter(x=y_hat_ml,y=y_test["tair_2m_mean"]).show()
 ```
-As you can see the score is roughly 0.36. That is not exactly great but does indicate
+As you can see the score is roughly 0.31. That is not exactly great but does indicate
 a weak correlation between predicted and true values. 
 
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
@@ -519,7 +519,7 @@ interpolated_data = np.interp(
     y_train_sorted.index,
     y_train_sorted["tair_2m_mean"])
 
-regression_results(y_test, interpolated_data)
+regression_results(y_test_sorted, interpolated_data)
 
 #-------- 1-D linear model:
 y = df_dwd_noNA.loc[:,["tair_2m_mean"]].values.reshape(-1,1)
@@ -577,6 +577,12 @@ For example to run a model with simple default setting all we have to do is the 
 from sklearn.ensemble import RandomForestRegressor
   # I set n_estimators to 12 for a quick initial fit
   # we will go into the parameters a bit more later!
+df_dwd_noNA = df_dwd.loc[:,["data_time","SWIN","rH","tair_2m_mean"]].dropna()
+
+x = df_dwd_noNA.loc[:,["SWIN","rH"]]
+y = df_dwd_noNA.loc[:,["tair_2m_mean"]]
+X_train, X_test, y_train, y_test = train_test_split( 
+	x, y, test_size=0.3, random_state=42) 
 rf_model = RandomForestRegressor(random_state=42, n_estimators=12)
 rf_model.fit(X_train, y_train)
 rf_model.score(X_test, y_test)
