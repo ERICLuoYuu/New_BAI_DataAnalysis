@@ -265,8 +265,8 @@ One thing is still missing: the threshold to define our datapoint as extreme! In
 ```python
 upper_thresh = df_bm["diff"].quantile(prob)
 lower_thresh = df_bm["diff"].quantile(1-prob)
-df_bm["extreme_high"] = df_bm["diff"] > upper_thresh, "data"
-df_bm["extreme_low"] = df_bm["diff"] < lower_thresh, "data"
+df_bm["extreme_high"] = df_bm["diff"] > upper_thresh
+df_bm["extreme_low"] = df_bm["diff"] < lower_thresh
 ```  
 
 Note: In the POT approach the quantiles where built from the whole dataset itself. Here, the quantiles are built from the array of deviations from the mean! Remember this in the exercise when you evaluate the results.
