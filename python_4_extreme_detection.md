@@ -390,6 +390,6 @@ The final method we will look at is the moving average method. As the name alrea
 
 1. Think about how using a smaller time reference window might affect the extreme value detection. Would you expect extreme values in this approach to be more or less frequent than in the block averaging method? Then run the detection function and save the output in a new variable.
 2. You have now run all three methods. How do you think does the distribution look for the moving average? Use your plotting function from before to check your hypothesis. 
-3. Change the parameter rollmean_period of the extreme detection function with the MA method to 365 and pass that output to the ```Plot_All_Extremes()``` function. How do you explain the output in comparison to the other methods?  
+3. Change the parameter rollmean_period of the extreme detection function with the MA method to 365 and pass that output to the ```plot_extremes()``` function. How do you explain the output in comparison to the other methods?  
 
 ----
