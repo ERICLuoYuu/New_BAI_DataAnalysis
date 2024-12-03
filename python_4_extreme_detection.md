@@ -285,7 +285,7 @@ Note: In the POT approach the quantiles where built from the whole dataset itsel
 <details><summary markdown="span">Starter Code ex. 3</summary>
 
 ```python
-def visualize_extreme_distributions(dfs:list[pd.DataFrame], extr_high_col:str, extr_low_col:str, methods:list[str]):
+def plot_extremes_distribution(dfs:list[pd.DataFrame], extr_high_col:str, extr_low_col:str, methods:list[str]):
     print("----")
     print("Printing extremes")
     colors = ["red", "blue", "green", "purple", "lightblue", "coral"]
