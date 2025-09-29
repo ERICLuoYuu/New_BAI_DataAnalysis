@@ -24,6 +24,7 @@ Different from the simple CSV files we might have worked with before, the raw da
 A metadata header: This block at the top contains useful information about the measurement (like timezone, device model, etc.), but we don't need it for our flux calculations.
 The data block: This is the core data we need, with columns for date, time, and gas concentrations.
 Our first challenge is to programmatically read only the data block and ignore the metadata.
+
 ![alt text](/assets/images/python/5/Metadata.png)
 
 To do this, we'll need the pandas library for creating our DataFrame and the io library, we need to import them.
@@ -35,7 +36,9 @@ import io
 Our strategy will be to read the file line-by-line, find the start of the data, and then pass only those lines to pandas.
 ### 1.1 Reading and Parsing the File
 First, we read the entire file into a single string, and then split that string into a list of individual lines. This gives us the flexibility to find our data "landmarks."
+
 ```python
+
 # Read in raw data as a string
 with open("./BAI_StudyProject_LuentenerWald/raw_data/TG20-01072-2025-08-15T110000.data.txt") as f:
     file_content = f.read()
@@ -43,8 +46,10 @@ with open("./BAI_StudyProject_LuentenerWald/raw_data/TG20-01072-2025-08-15T11000
 # Split the string into a list of lines. 
 # '\n' is the special character for a newline.
 lines = file_content.strip().split('\n')
-```  
+```
+
 Next, we need to find the exact line that contains our column headers. Looking at the file, we know this line always starts with the word DATAH. We can write a short command to find the index of that line.
+
 ```python
 # This code searches through our list 'lines' and gets the index of the first line that starts with 'DATAH'
 header_index = next(i for i, line in enumerate(lines) if line.startswith('DATAH'))
@@ -58,8 +63,8 @@ headers = lines[header_index].split('\t')
 ### 1.2 Using io.StringIO to Read Our Cleaned Data
 The pd.read_csv() function is built to read from a file. We don't have a clean file; we have a list of Python strings (lines) that we've already processed.
 So, how do we make pandas read from our list? We use io.StringIO to trick pandas. It takes our cleaned-up data lines and presents them to pandas as if they were a file stored in the computer's memory.
-Info:
-The Python io module helps us manage data streams. io.StringIO specifically allows us to treat a regular text string as a file. This is incredibly useful when you need to pass text data to a function that expects a file, just like we're doing with pd.read_csv().
+>Info:
+>The Python io module helps us manage data streams. io.StringIO specifically allows us to treat a regular text string as a >file. This is incredibly useful when you need to pass text data to a function that expects a file, just like we're doing >with pd.read_csv().
 
 ```python
 # Join our data lines back into a single string, separated by newlines
@@ -74,11 +79,12 @@ df_raw = pd.read_csv(
 )
 ```
 
-### 1.3 Final Data Formatting
+### 1.3 Data Formatting
 The last step is to tidy up the DataFrame. We will:
 Remove the useless DATAH column.
 Combine the separate DATE and TIME columns into a single Timestamp object. This is crucial for time-series analysis.
 Set this new Timestamp as the DataFrame's index, which makes plotting and selecting data by time much easier.
+
 ```python
 # Drop the first column which is just the 'DATAH' label
 if 'DATAH' in df_raw.columns:
@@ -146,6 +152,7 @@ Note: how it's the exact same logic as before, just defined within a def block.
 
 Now that we have our powerful load_raw_data function, we can easily handle data from multiple field trips. Instead of copying code, we can simply call our function in a loop.
 First, we create a list of all the file paths we want to load. Then, we can loop through this list, call our function for each path, and store the resulting DataFrames in a new list.
+
 ```python
 # First, let's list all the files we want to load.
 # Make sure the file paths are complete and correct.
@@ -168,22 +175,23 @@ for path in full_file_paths:
 
 print(f"\nSuccessfully loaded {len(raw_data_list)} data files.")
 ```
+
 The loop above is clear and correct. However, a more concise way to write this in Python is with a list comprehension. It achieves the exact same result in a single, readable line:
+
 ```python
 raw_data_list = [load_raw_data(path) for path in full_file_paths]
 ```
 
 For our flux calculations to be accurate, we need more than just gas concentrations. The Ideal Gas Law, which is the basis of the calculation, requires the ambient air temperature and air pressure at the time of each measurement.
 We will use the same workflow as before: load each file and then combine them.
+
 >Your Task:
 >You have two Excel files containing air temperature and two files for air pressure.
 >Create lists of the file paths for the temperature and pressure data.
 >Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!
-<br>
+
 <details>
 <summary>Click here for the solution!</summary>
-Reading Excel files is very straightforward with the pd.read_excel() function. The overall logic is the same as for the gas data.
-
 ```Python
 # We assume the base path is the same as before
 base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
@@ -249,7 +257,7 @@ df_aux = pd.merge_asof(left=df_Ta, right=df_Pa, on='Timestamp', direction='neare
 
 # Now, merge the gas data with the combined auxiliary data.
 # We use direction='backward' to find the most recent weather data for each gas measurement.
-df = pd.merge_asof(
+df_raw = pd.merge_asof(
     left=df_gas, 
     right=df_aux, 
     on='Timestamp', 
@@ -257,59 +265,16 @@ df = pd.merge_asof(
 )
 
 print("\n--- Final Merged DataFrame ---")
-display(df.head())
-df.info()
+display(df_raw.head())
+df_raw.info()
 ```
+
 Brilliant! You now have a single, clean DataFrame called df_final that contains everything you need: the high-frequency gas concentrations and the corresponding temperature and pressure for each measurement point. We are now fully prepared to move on to the flux calculation.
 
-## 2.Loading and Exploring Raw Data
-Step 1: Loading and Initial Exploration of Raw Data
-First, we need to load our data from its raw text file format into a pandas DataFrame. This file has a custom header, so we need to parse it carefully. The function below handles reading the file, skipping the metadata lines, and converting the date and time columns into a proper timestamp.
-    
-    import pandas as pd
-    import numpy as np
-    import io
-    import matplotlib.pyplot as plt
-   
-    def load_and_clean_data(filepath):
-        """
-        Loads raw data from a text file, cleans it, and returns a DataFrame.
-        """
-        
-        with open(filepath) as f:
-            file_content = f.read()
-
-        lines = file_content.strip().split('\n')
-        header_index = next(i for i, line in enumerate(lines) if line.startswith('DATAH'))
-        data_start_index = header_index + 2
-        headers = lines[header_index].split('\t')
-
-        df_raw = pd.read_csv(
-            io.StringIO('\n'.join(lines[data_start_index:])),
-            sep='\t',
-            header=None,
-            names=headers,
-            na_values='nan'
-        )
-
-        if 'DATAH' in df_raw.columns:
-            df_raw = df_raw.drop(columns=['DATAH'])
-
-        if 'DATE' in df_raw.columns and 'TIME' in df_raw.columns:
-            df_raw['Timestamp'] = pd.to_datetime(df_raw['DATE'] + ' ' + df_raw['TIME'])
-            df_raw = df_raw.drop(columns=['DATE', 'TIME'])
-            df_raw = df_raw.set_index('Timestamp')
-        
-        print("Raw data loaded and cleaned successfully.")
-        return df_raw
-
-# --- Load the data ---
-filepath = "./BAI_StudyProject_LuentenerWald/raw_data/TG20-01072-2025-08-15T110000.data.txt"
-df_raw = load_and_clean_data(filepath)
-
-print("\nFirst 5 rows of raw data:")
-print(df_raw.head())
-
+## 2.Visualizing and cleaning Raw Data
+### 2.1 Visualization of raw gas concentration data
+To get a better overview of the raw data, we are going to visualize it.
+```python
 # --- Visualize the raw data ---
 fig, ax = plt.subplots(layout='constrained', figsize=(20, 5))
 ax.plot(df_raw.index, df_raw['N2O'], label='N2O Concentration (ppb)')
@@ -317,12 +282,13 @@ ax.set_xlabel('Time')
 ax.set_ylabel('N2O Concentration (ppb)')
 ax.set_title('Raw N2O Concentration Over Time')
 plt.show()
+```
 <!-- Placeholder for image -->
 As you can see from the plot, the raw data is very noisy. There are several negative values and some extremely large spikes. These are physically impossible and are likely due to sensor errors or electrical interference. We cannot calculate meaningful fluxes from this data without cleaning it first.
 Step 2: Data Filtering and Cleaning
 To remove these outliers, we'll use a simple but effective quantile filter. We'll calculate the 10th and 90th percentiles of the N₂O concentration and discard any data points that fall outside this range. This will effectively chop off the extreme high and low noise.
-code
-Python
+
+```Python
 # Calculate the 10th and 90th percentiles
 p_10 = df_raw.N2O.quantile(0.10)
 p_90 = df_raw.N2O.quantile(0.90)
@@ -336,11 +302,12 @@ ax1.scatter(df_filtered.index, df_filtered['N2O'], label='N2O Concentration (ppb
 ax1.set_xlabel('Time')
 ax1.set_ylabel('N2O Concentration (ppb)')
 ax1.set_title('Filtered N2O Concentration Over Time')
-plt.show()```
+plt.show()
+```
 
  <!-- Placeholder for image -->
 
-This looks much better! The erratic noise is gone, and a clear pattern has emerged.
+This looks much better! The noise is gone, and a clear pattern has emerged.
 
 ## Step 3: Understanding the Data Pattern
 
