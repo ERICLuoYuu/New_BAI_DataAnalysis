@@ -1,7 +1,7 @@
 ---
-title: "1. BASICS OF PYTHON"
+title: "3. FLUX CALCULATION"
 layout: default
-nav_order: 5
+nav_order: 4
 ---
 
 # 03. **Fluxes Calculation**
@@ -20,13 +20,248 @@ In this tutorial, we're going to analyze the data you collected on your field tr
 
 
 ## 1.Read in and Merge Data Files
-Different from the file reading we did before, the file reading of the raw raw gas concentrations data is a bit more complex. Except our real data, the file also contains metadata of the measurement (timezone, device model, etc), see the following figure, which is useless for this analysis. Therefore, we need to remove it.
-![Metadata](/assets/images/05/Metadata.png)
+Different from the simple CSV files we might have worked with before, the raw data from the gas analyzer is more complex. When you open the file, you'll see it contains two parts:
+A metadata header: This block at the top contains useful information about the measurement (like timezone, device model, etc.), but we don't need it for our flux calculations.
+The data block: This is the core data we need, with columns for date, time, and gas concentrations.
+Our first challenge is to programmatically read only the data block and ignore the metadata.
+![alt text](/assets/images/python/5/Metadata.png)
 
-    with open("./BAI_StudyProject_LuentenerWald/raw_data/TG20-01072-2025-08-15T110000.data.txt") as f:
-      file_content = f.read()
+To do this, we'll need the pandas library for creating our DataFrame and the io library, we need to import them.
+```python
+import pandas as pd
+import io
+```
+    
+Our strategy will be to read the file line-by-line, find the start of the data, and then pass only those lines to pandas.
+### 1.1 Reading and Parsing the File
+First, we read the entire file into a single string, and then split that string into a list of individual lines. This gives us the flexibility to find our data "landmarks."
+```python
+# Read in raw data as a string
+with open("./BAI_StudyProject_LuentenerWald/raw_data/TG20-01072-2025-08-15T110000.data.txt") as f:
+    file_content = f.read()
 
-We will use Python with the pandas, matplotlib, seaborn, and scipy libraries.
+# Split the string into a list of lines. 
+# '\n' is the special character for a newline.
+lines = file_content.strip().split('\n')
+```  
+Next, we need to find the exact line that contains our column headers. Looking at the file, we know this line always starts with the word DATAH. We can write a short command to find the index of that line.
+```python
+# This code searches through our list 'lines' and gets the index of the first line that starts with 'DATAH'
+header_index = next(i for i, line in enumerate(lines) if line.startswith('DATAH'))
+
+# The actual data starts 2 lines after the header line (to skip the "DATAU" units line)
+data_start_index = header_index + 2
+
+# Now we can grab the headers themselves from that line. The values are separated by tabs ('\t').
+headers = lines[header_index].split('\t')
+```
+### 1.2 Using io.StringIO to Read Our Cleaned Data
+The pd.read_csv() function is built to read from a file. We don't have a clean file; we have a list of Python strings (lines) that we've already processed.
+So, how do we make pandas read from our list? We use io.StringIO to trick pandas. It takes our cleaned-up data lines and presents them to pandas as if they were a file stored in the computer's memory.
+Info:
+The Python io module helps us manage data streams. io.StringIO specifically allows us to treat a regular text string as a file. This is incredibly useful when you need to pass text data to a function that expects a file, just like we're doing with pd.read_csv().
+
+```python
+# Join our data lines back into a single string, separated by newlines
+data_string = '\n'.join(lines[data_start_index:])
+# Read the data string into a DataFrame
+df_raw = pd.read_csv(
+    io.StringIO(data_string),  # Treat our string as a file
+    sep='\t',                  # Tell pandas the data is separated by tabs
+    header=None,               # We are providing the headers ourselves, so there isn't one in the data
+    names=headers,             # Use the 'headers' list we extracted earlier
+    na_values='nan'            # Recognize 'nan' strings as missing values
+)
+```
+
+### 1.3 Final Data Formatting
+The last step is to tidy up the DataFrame. We will:
+Remove the useless DATAH column.
+Combine the separate DATE and TIME columns into a single Timestamp object. This is crucial for time-series analysis.
+Set this new Timestamp as the DataFrame's index, which makes plotting and selecting data by time much easier.
+```python
+# Drop the first column which is just the 'DATAH' label
+if 'DATAH' in df_raw.columns:
+    df_raw = df_raw.drop(columns=['DATAH'])
+
+# Combine 'DATE' and 'TIME' into a proper Timestamp and set it as the index
+if 'DATE' in df_raw.columns and 'TIME' in df_raw.columns:
+    df_raw['Timestamp'] = pd.to_datetime(df_raw['DATE'] + ' ' + df_raw['TIME'])
+    df_raw = df_raw.drop(columns=['DATE', 'TIME'])
+    df_raw = df_raw.set_index('Timestamp')
+
+print("Data loaded and formatted successfully!")
+df_raw.head()
+```
+Great! Now, we have successfully read in and formatted our raw data.
+However, think about our field campaigns. We went out several times and generate a new data file for each trip. If we wanted to analyze all of them, we would have to copy and paste our loading code multiple times.
+To avoid repetition and make our code cleaner and more reliable, it's a best practice to wrap a reusable process into a function. Let's turn our loading and cleaning steps into a function called load_raw_data.
+
+>Your Task: Try to write this function yourself!
+>
+>Tip: The function will need to accept one argument: the filepath of the file you want to open.
+
+<details><summary>Solution!</summary>
+Note: how it's the exact same logic as before, just defined within a def block.
+    
+```python
+   def load_raw_data(filepath: str) -> pd.DataFrame:
+    """
+    Loads raw data from a text file, remove metadata, and returns a DataFrame.
+
+    Parameters:
+    - filepath (str): The path to the input data file.
+
+    Returns:
+    - pd.DataFrame: A cleaned DataFrame with a DatetimeIndex.
+    """
+    with open(filepath) as f:
+        file_content = f.read()
+
+    lines = file_content.strip().split('\n')
+    header_index = next(i for i, line in enumerate(lines) if line.startswith('DATAH'))
+    data_start_index = header_index + 2
+    headers = lines[header_index].split('\t')
+
+    df_raw = pd.read_csv(
+        io.StringIO('\n'.join(lines[data_start_index:])),
+        sep='\t',
+        header=None,
+        names=headers,
+        na_values='nan'
+    )
+
+    if 'DATAH' in df_raw.columns:
+        df_raw = df_raw.drop(columns=['DATAH'])
+
+    if 'DATE' in df_raw.columns and 'TIME' in df_raw.columns:
+        df_raw['Timestamp'] = pd.to_datetime(df_raw['DATE'] + ' ' + df_raw['TIME'])
+        df_raw = df_raw.drop(columns=['DATE', 'TIME'])
+        df_raw = df_raw.set_index('Timestamp')
+    
+    print("Raw data loaded and cleaned successfully.")
+    return df_raw
+```
+</details>
+
+Now that we have our powerful load_raw_data function, we can easily handle data from multiple field trips. Instead of copying code, we can simply call our function in a loop.
+First, we create a list of all the file paths we want to load. Then, we can loop through this list, call our function for each path, and store the resulting DataFrames in a new list.
+```python
+# First, let's list all the files we want to load.
+# Make sure the file paths are complete and correct.
+base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
+file_names = [
+    'TG20-01072-2025-08-15T110000.data.txt', 
+    'TG20-01072-2025-08-16T110000.data.txt' # A hypothetical second file
+]
+
+# Create the full file paths
+full_file_paths = [base_path + name for name in file_names]
+
+# Create an empty list to hold the loaded DataFrames
+raw_data_list = []
+
+# Loop through each path, load the data, and append it to our list
+for path in full_file_paths:
+    df = load_raw_data(path)
+    raw_data_list.append(df)
+
+print(f"\nSuccessfully loaded {len(raw_data_list)} data files.")
+```
+The loop above is clear and correct. However, a more concise way to write this in Python is with a list comprehension. It achieves the exact same result in a single, readable line:
+```python
+raw_data_list = [load_raw_data(path) for path in full_file_paths]
+```
+
+For our flux calculations to be accurate, we need more than just gas concentrations. The Ideal Gas Law, which is the basis of the calculation, requires the ambient air temperature and air pressure at the time of each measurement.
+We will use the same workflow as before: load each file and then combine them.
+>Your Task:
+>You have two Excel files containing air temperature and two files for air pressure.
+>Create lists of the file paths for the temperature and pressure data.
+>Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!
+<br>
+<details>
+<summary>Click here for the solution!</summary>
+Reading Excel files is very straightforward with the pd.read_excel() function. The overall logic is the same as for the gas data.
+
+```Python
+# We assume the base path is the same as before
+base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
+
+# --- Load Air Temperature Data ---
+file_names_Ta = [
+    'air_temperature_2025-08-15.xlsx', 
+    'air_temperature_2025-08-16.xlsx' 
+]
+full_file_paths_Ta = [base_path + name for name in file_names_Ta]
+ta_data_list = [pd.read_excel(path) for path in full_file_paths_Ta]
+print(f"Successfully loaded {len(ta_data_list)} air temperature files.")
+
+# --- Load Air Pressure Data ---
+file_names_Pa = [
+    'air_pressure_2025-08-15.xlsx', 
+    'air_pressure_2025-08-16.xlsx' 
+]
+full_file_paths_Pa = [base_path + name for name in file_names_Pa]
+pa_data_list = [pd.read_excel(path) for path in full_file_paths_Pa]
+print(f"Successfully loaded {len(pa_data_list)} air pressure files.")
+```
+</details>
+
+### 1.4 Concatenating and Merging All Data
+Now that we have all our data loaded, we need to combine it into one master DataFrame for analysis. This involves two steps:
+Concatenate: Stacking the files of the same type together (e.g., all gas files into one, all temperature files into one).
+Merge: Joining the different datasets (gas, temperature, and pressure) together based on their common timestamp.
+
+**Concatenating the Datasets**
+
+First, let's use pd.concat() to combine the lists of DataFrames we created. After combining, we must format the Timestamp column and set it as the index, just as we did before.
+
+```Python
+# --- Concatenate and Clean Gas Data ---
+df_gas = pd.concat(raw_data_list) # Assumes raw_data_list is from the previous step
+
+# --- Concatenate and Clean Temperature Data ---
+df_Ta = pd.concat(ta_data_list)
+df_Ta['Timestamp'] = pd.to_datetime(df_Ta['Timestamp'])
+df_Ta = df_Ta.set_index('Timestamp')
+
+# --- Concatenate and Clean Pressure Data ---
+df_Pa = pd.concat(pa_data_list)
+df_Pa['Timestamp'] = pd.to_datetime(df_Pa['Timestamp'])
+df_Pa = df_Pa.set_index('Timestamp')
+
+print("--- Gas DataFrame Info ---")
+df_gas.info()
+print("\n--- Temperature DataFrame Info ---")
+df_Ta.info()
+print("\n--- Pressure DataFrame Info ---")
+df_Pa.info()
+```
+**Merging Gas and Auxiliary Data**
+
+Finally, we need to combine our df_gas, df_Ta, and df_Pa DataFrames. We want to add the temperature and pressure columns to the gas data, matching them by the nearest timestamp.
+The gas analyzer records data every second, while the weather station might only record every minute. A simple merge would leave many empty rows. The perfect tool for this is pd.merge_asof(). It performs a "nearest-neighbor" merge, which is ideal for combining time-series data with different frequencies.
+
+```Python
+# First, merge the two auxiliary datasets together
+df_aux = pd.merge_asof(left=df_Ta, right=df_Pa, on='Timestamp', direction='nearest')
+
+# Now, merge the gas data with the combined auxiliary data.
+# We use direction='backward' to find the most recent weather data for each gas measurement.
+df = pd.merge_asof(
+    left=df_gas, 
+    right=df_aux, 
+    on='Timestamp', 
+    direction='backward'
+)
+
+print("\n--- Final Merged DataFrame ---")
+display(df.head())
+df.info()
+```
+Brilliant! You now have a single, clean DataFrame called df_final that contains everything you need: the high-frequency gas concentrations and the corresponding temperature and pressure for each measurement point. We are now fully prepared to move on to the flux calculation.
+
 ## 2.Loading and Exploring Raw Data
 Step 1: Loading and Initial Exploration of Raw Data
 First, we need to load our data from its raw text file format into a pandas DataFrame. This file has a custom header, so we need to parse it carefully. The function below handles reading the file, skipping the metadata lines, and converting the date and time columns into a proper timestamp.
