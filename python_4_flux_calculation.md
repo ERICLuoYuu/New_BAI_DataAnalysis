@@ -21,6 +21,7 @@ In this tutorial, we're going to analyze the data you collected on your field tr
 
 ## 1.Read in and Merge Data Files
 Different from the file reading we did before, the file reading of the raw raw gas concentrations data is a bit more complex. Except our real data, the file also contains metadata of the measurement (timezone, device model, etc), see the following figure, which is useless for this analysis. Therefore, we need to remove it.
+![Metadata](/assets/images/05/Metadata.png)
 
     with open("./BAI_StudyProject_LuentenerWald/raw_data/TG20-01072-2025-08-15T110000.data.txt") as f:
       file_content = f.read()
