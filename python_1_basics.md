@@ -19,7 +19,7 @@ and run them in your IDE (e.g. Spyder).
 5. [Functions and Classes](#5-functions-and-classes)
 
 Notice that it is not at all expected that you learn all these things and they are burnt into your brain (!!!!!). 
-It is more of a broad intrdocution to all the basics so you have hard of them, but programmers do look up stuff
+It is more of a broad intrdocution to all the basics so you have herd of them, but programmers do look up stuff
 all the time! So don't worry if it is a lot of input right now, just try to understand the concepts and you 
 can always come back and find help in here, in the internet or from me directly.
   
