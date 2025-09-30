@@ -4,7 +4,7 @@ layout: default
 nav_order: 4
 ---
 
-# 03. **Fluxes Calculation**
+# **Fluxes Calculation**
 In this tutorial, we're going to analyze the data you collected on your field trip to the Lüner forest! Your instruments measured raw gas concentrations, but as ecologists, we need to turn that into gas fluxes. Why? Because fluxes represent a rate—the speed at which gases are being exchanged. With CO₂ fluxes, we can estimate crucial metrics like ecosystem respiration (RECO) and net ecosystem exchange (NEE). With fluxes of a potent greenhouse gas like Nitrous Oxide (N₂O), we can understand a key part of the nitrogen cycle. This guide will walk you through the entire process: from cleaning the raw concentration data, to calculating meaningful fluxes, and finally to comparing the results between different land cover types.
 > **Notice:**
 >
@@ -112,42 +112,42 @@ To avoid repetition and make our code cleaner and more reliable, it's a best pra
 Note: how it's the exact same logic as before, just defined within a def block.
     
 ```python
-   def load_raw_data(filepath: str) -> pd.DataFrame:
-    """
-    Loads raw data from a text file, remove metadata, and returns a DataFrame.
+def load_raw_data(filepath: str) -> pd.DataFrame:
+"""
+Loads raw data from a text file, remove metadata, and returns a DataFrame.
 
-    Parameters:
-    - filepath (str): The path to the input data file.
+Parameters:
+- filepath (str): The path to the input data file.
 
-    Returns:
-    - pd.DataFrame: A cleaned DataFrame with a DatetimeIndex.
-    """
-    with open(filepath) as f:
-        file_content = f.read()
+Returns:
+- pd.DataFrame: A cleaned DataFrame with a DatetimeIndex.
+"""
+with open(filepath) as f:
+    file_content = f.read()
 
-    lines = file_content.strip().split('\n')
-    header_index = next(i for i, line in enumerate(lines) if line.startswith('DATAH'))
-    data_start_index = header_index + 2
-    headers = lines[header_index].split('\t')
+lines = file_content.strip().split('\n')
+header_index = next(i for i, line in enumerate(lines) if line.startswith('DATAH'))
+data_start_index = header_index + 2
+headers = lines[header_index].split('\t')
 
-    df_raw = pd.read_csv(
-        io.StringIO('\n'.join(lines[data_start_index:])),
-        sep='\t',
-        header=None,
-        names=headers,
-        na_values='nan'
-    )
+df_raw = pd.read_csv(
+    io.StringIO('\n'.join(lines[data_start_index:])),
+    sep='\t',
+    header=None,
+    names=headers,
+    na_values='nan'
+)
 
-    if 'DATAH' in df_raw.columns:
-        df_raw = df_raw.drop(columns=['DATAH'])
+if 'DATAH' in df_raw.columns:
+    df_raw = df_raw.drop(columns=['DATAH'])
 
-    if 'DATE' in df_raw.columns and 'TIME' in df_raw.columns:
-        df_raw['Timestamp'] = pd.to_datetime(df_raw['DATE'] + ' ' + df_raw['TIME'])
-        df_raw = df_raw.drop(columns=['DATE', 'TIME'])
-        df_raw = df_raw.set_index('Timestamp')
-    
-    print("Raw data loaded and cleaned successfully.")
-    return df_raw
+if 'DATE' in df_raw.columns and 'TIME' in df_raw.columns:
+    df_raw['Timestamp'] = pd.to_datetime(df_raw['DATE'] + ' ' + df_raw['TIME'])
+    df_raw = df_raw.drop(columns=['DATE', 'TIME'])
+    df_raw = df_raw.set_index('Timestamp')
+
+print("Raw data loaded and cleaned successfully.")
+return df_raw
 ```
 </details>
 
@@ -192,9 +192,11 @@ We will use the same workflow as before: load each file and then combine them.
 >Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!
 
 <details markdown="1">
+    
 <summary>Click here for the solution!</summary>
     
 ```Python
+
 # We assume the base path is the same as before
 base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
 
@@ -216,6 +218,7 @@ full_file_paths_Pa = [base_path + name for name in file_names_Pa]
 pa_data_list = [pd.read_excel(path) for path in full_file_paths_Pa]
 print(f"Successfully loaded {len(pa_data_list)} air pressure files.")
 ```
+
 </details>
 
 ### 1.4 Concatenating and Merging All Data
@@ -255,8 +258,8 @@ df_Pa.info()
 Finally, we need to combine our df_gas, df_Ta, and df_Pa DataFrames. We want to add the temperature and pressure columns to the gas data, matching them by the nearest timestamp.
 The gas analyzer records data every second, while the weather station might only record every minute. A simple merge would leave many empty rows. The perfect tool for this is pd.merge_asof(). It performs a "nearest-neighbor" merge, which is ideal for combining time-series data with different frequencies.
 
-```Python
 
+```Python
 # First, merge the two auxiliary datasets together
 df_aux = pd.merge_asof(left=df_Ta, right=df_Pa, on='Timestamp', direction='nearest')
 
@@ -272,7 +275,6 @@ df_raw = pd.merge_asof(
 print("\n--- Final Merged DataFrame ---")
 display(df_raw.head())
 df_raw.info()
-
 ```
 
 Brilliant! You now have a single, clean DataFrame called df_final that contains everything you need: the high-frequency gas concentrations and the corresponding temperature and pressure for each measurement point. We are now fully prepared to move on to the flux calculation.
@@ -308,75 +310,75 @@ def plot_time_series_plotly(df, y_column, title, mode='lines'):
 ```
 
 <details markdown="1">
-    <summary>Here is the solution!</summary>
-        
-    ```Python
+<summary>Here is the solution!</summary>
     
-    import plotly.graph_objects as go
-    import plotly.io as pio
+```Python
+
+import plotly.graph_objects as go
+import plotly.io as pio
+
+# This setting forces Plotly to open plots in your default web browser,
+# which can be more stable in some environments.
+pio.renderers.default = "browser"
+
+def plot_time_series_plotly(df, y_column, title, mode='lines'):
+    """
+    Generates an interactive time-series plot using Plotly.
+    This function will automatically try to set a 'Timestamp' column as the 
+    index if the existing index is not a datetime type.
+
+    Parameters:
+    - df (pd.DataFrame): DataFrame to plot.
+    - y_column (str): The name of the column to plot on the y-axis.
+    - title (str): The title for the plot.
+    - mode (str): Plotly mode ('lines', 'markers', or 'lines+markers').
+    """
+    # --- Input Validation and Auto-Correction ---
     
-    # This setting forces Plotly to open plots in your default web browser,
-    # which can be more stable in some environments.
-    pio.renderers.default = "browser"
+    # It's good practice to work on a copy inside a function to avoid 
+    # changing the user's original DataFrame unexpectedly.
+    df_plot = df.copy()
+
+    if not pd.api.types.is_datetime64_any_dtype(df_plot.index):
+        print("Note: The DataFrame index is not a DatetimeIndex.")
+        # Attempt to fix the issue by finding a 'Timestamp' column
+        if 'Timestamp' in df_plot.columns:
+            print("--> Found a 'Timestamp' column. Attempting to set it as the index.")
+            df_plot['Timestamp'] = pd.to_datetime(df_plot['Timestamp'])
+            # CRITICAL: You must re-assign the variable to save the change.
+            df_plot = df_plot.set_index('Timestamp')
+        else:
+            # If we can't fix it automatically, then we raise an error.
+            raise TypeError(
+                "The DataFrame index is not a DatetimeIndex and a 'Timestamp' column was not found. "
+                "Please set a DatetimeIndex before plotting."
+            )
+            
+    # --- Plotting ---
+    # By this point, df_plot is guaranteed to have a valid DatetimeIndex.
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=df_plot.index, 
+        y=df_plot[y_column], 
+        mode=mode, 
+        name=y_column
+    ))
+
+    # Update layout for a clean, professional look
+    fig.update_layout(
+        title=title, 
+        xaxis_title='Time', 
+        yaxis_title=f'{y_column} Concentration (ppb)', 
+        template='plotly_white', 
+        title_font=dict(size=24),
+        xaxis=dict(tickfont=dict(size=14), title_font=dict(size=16)), 
+        yaxis=dict(tickfont=dict(size=14), title_font=dict(size=16))
+    )
     
-    def plot_time_series_plotly(df, y_column, title, mode='lines'):
-        """
-        Generates an interactive time-series plot using Plotly.
-        This function will automatically try to set a 'Timestamp' column as the 
-        index if the existing index is not a datetime type.
-    
-        Parameters:
-        - df (pd.DataFrame): DataFrame to plot.
-        - y_column (str): The name of the column to plot on the y-axis.
-        - title (str): The title for the plot.
-        - mode (str): Plotly mode ('lines', 'markers', or 'lines+markers').
-        """
-        # --- Input Validation and Auto-Correction ---
-        
-        # It's good practice to work on a copy inside a function to avoid 
-        # changing the user's original DataFrame unexpectedly.
-        df_plot = df.copy()
-    
-        if not pd.api.types.is_datetime64_any_dtype(df_plot.index):
-            print("Note: The DataFrame index is not a DatetimeIndex.")
-            # Attempt to fix the issue by finding a 'Timestamp' column
-            if 'Timestamp' in df_plot.columns:
-                print("--> Found a 'Timestamp' column. Attempting to set it as the index.")
-                df_plot['Timestamp'] = pd.to_datetime(df_plot['Timestamp'])
-                # CRITICAL: You must re-assign the variable to save the change.
-                df_plot = df_plot.set_index('Timestamp')
-            else:
-                # If we can't fix it automatically, then we raise an error.
-                raise TypeError(
-                    "The DataFrame index is not a DatetimeIndex and a 'Timestamp' column was not found. "
-                    "Please set a DatetimeIndex before plotting."
-                )
-                
-        # --- Plotting ---
-        # By this point, df_plot is guaranteed to have a valid DatetimeIndex.
-        fig = go.Figure()
-    
-        fig.add_trace(go.Scatter(
-            x=df_plot.index, 
-            y=df_plot[y_column], 
-            mode=mode, 
-            name=y_column
-        ))
-    
-        # Update layout for a clean, professional look
-        fig.update_layout(
-            title=title, 
-            xaxis_title='Time', 
-            yaxis_title=f'{y_column} Concentration (ppb)', 
-            template='plotly_white', 
-            title_font=dict(size=24),
-            xaxis=dict(tickfont=dict(size=14), title_font=dict(size=16)), 
-            yaxis=dict(tickfont=dict(size=14), title_font=dict(size=16))
-        )
-        
-        fig.show()
-    
-    ```
+    fig.show()
+
+```
 </details>
 
 
