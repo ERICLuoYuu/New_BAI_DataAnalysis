@@ -64,7 +64,7 @@ headers = lines[header_index].split('\t')
 ### 1.2 Using io.StringIO to Read Our Cleaned Data
 The pd.read_csv() function is built to read from a file. We don't have a clean file; we have a list of Python strings (lines) that we've already processed.
 So, how do we make pandas read from our list? We use io.StringIO to trick pandas. It takes our cleaned-up data lines and presents them to pandas as if they were a file stored in the computer's memory.
->Info:
+>**Info**:
 >The Python io module helps us manage data streams. io.StringIO specifically allows us to treat a regular text string as a >file. This is incredibly useful when you need to pass text data to a function that expects a file, just like we're doing >with pd.read_csv().
 
 ```python
@@ -104,9 +104,13 @@ Great! Now, we have successfully read in and formatted our raw data.
 However, think about our field campaigns. We went out several times and generate a new data file for each trip. If we wanted to analyze all of them, we would have to copy and paste our loading code multiple times.
 To avoid repetition and make our code cleaner and more reliable, it's a best practice to wrap a reusable process into a function. Let's turn our loading and cleaning steps into a function called load_raw_data.
 
->Your Task: Try to write this function yourself!
->
->Tip: The function will need to accept one argument: the filepath of the file you want to open.
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+
+{% capture exercise %}
+### Exercise
+
+Try to write this function yourself based on the code snippets we created for data loading!
+Tip: The function will need to accept one argument: the filepath of the file you want to open.
 
 <details markdown="1"><summary>Solution!</summary>
 Note: how it's the exact same logic as before, just defined within a def block.
@@ -150,6 +154,12 @@ print("Raw data loaded and cleaned successfully.")
 return df_raw
 ```
 </details>
+{% endcapture %}
+
+<div class="notice--primary">
+{{ exercise | markdownify }}
+</div>
+</div>
 
 Now that we have our powerful load_raw_data function, we can easily handle data from multiple field trips. Instead of copying code, we can simply call our function in a loop.
 First, we create a list of all the file paths we want to load. Then, we can loop through this list, call our function for each path, and store the resulting DataFrames in a new list.
@@ -186,10 +196,15 @@ raw_data_list = [load_raw_data(path) for path in full_file_paths]
 For our flux calculations to be accurate, we need more than just gas concentrations. The Ideal Gas Law, which is the basis of the calculation, requires the ambient air temperature and air pressure at the time of each measurement.
 We will use the same workflow as before: load each file and then combine them.
 
->Your Task:
->You have two Excel files containing air temperature and two files for air pressure.
->Create lists of the file paths for the temperature and pressure data.
->Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+
+{% capture exercise %}
+### Exercise
+
+You have two Excel files containing air temperature and two files for air pressure.
+Create lists of the file paths for the temperature and pressure data.
+Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!
 
 <details markdown="1">
     
@@ -219,6 +234,12 @@ print(f"Successfully loaded {len(pa_data_list)} air pressure files.")
 ```
 
 </details>
+{% endcapture %}
+
+<div class="notice--primary">
+{{ exercise | markdownify }}
+</div>
+</div>
 
 ### 1.4 Concatenating and Merging All Data
 Now that we have all our data loaded, we need to combine it into one master DataFrame for analysis. This involves two steps:
@@ -281,7 +302,11 @@ Brilliant! You now have a single, clean DataFrame called df_final that contains 
 Now that we have a single, merged DataFrame, our next step is to inspect the data quality. Raw sensor data from the field is almost never perfect. Visualizing it is the best way to diagnose issues like noise, drift, or outliers before we attempt any calculations. For this, we'll use plotly, a powerful library for creating interactive plots.
 ### 2.1 Creating a Reusable Plotting Function with Plotly
 Just as we did with data loading, we'll be plotting our time-series data multiple times. To make this efficient and keep our plots looking consistent, let's create a dedicated function. This function will take a DataFrame and some plot details as input and generate an interactive plot.
-> **Task**: now create the reusable plotting function!
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
+### Exercise
+The plooting function is partly providing in the following, now finish the function!
 
 ```python
 
@@ -377,7 +402,12 @@ def plot_time_series_plotly(df, y_column, title, mode='lines'):
 
 ```
 </details>
+{% endcapture %}
 
+<div class="notice--primary">
+{{ exercise | markdownify }}
+</div>
+</div>
 
 ### 2.2 Visualizing the Raw Gas Data
 Now, let's use our new function to look at the raw N₂O data from our combined file. You can zoom and pan on the plot to inspect the noisy areas.
@@ -685,8 +715,7 @@ metadata_df['V_over_A'] = metadata_df['chamber_volume_m3'] / metadata_df['chambe
 print("\nMetadata created successfully:")
 print(metadata_df)
 Now, let's isolate the data for the first plot and perform a linear regression to find the slope (the rate of N₂O increase).
-code
-Python
+
 # --- Select data for the first plot ---
 plot_info = metadata_df.iloc[0]
 start_time = pd.to_datetime(plot_info['start_time'])
