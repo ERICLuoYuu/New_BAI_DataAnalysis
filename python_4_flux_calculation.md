@@ -495,7 +495,7 @@ def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
     return flux
 ```
 
-<details>
+<details markdown="1">
 <summary>Solution!</summary>
 Here is the completed function:
 
