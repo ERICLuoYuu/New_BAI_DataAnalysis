@@ -492,6 +492,7 @@ $$
 
 
 Now, it is clear that the fomula only contains three components: **Flux** = **slope** * **molar_density** * **V_over_A**
+
 Okay, lets create a function of flux calculation based on the fomula for later use.
 
 
