@@ -195,8 +195,7 @@ We will use the same workflow as before: load each file and then combine them.
     
 <summary>Click here for the solution!</summary>
     
-```Python
-
+```python
 # We assume the base path is the same as before
 base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
 
@@ -230,8 +229,7 @@ Merge: Joining the different datasets (gas, temperature, and pressure) together 
 
 First, let's use pd.concat() to combine the lists of DataFrames we created. After combining, we must format the Timestamp column and set it as the index, just as we did before.
 
-```Python
-
+```python
 # --- Concatenate and Clean Gas Data ---
 df_gas = pd.concat(raw_data_list) # Assumes raw_data_list is from the previous step
 
@@ -251,15 +249,15 @@ print("\n--- Temperature DataFrame Info ---")
 df_Ta.info()
 print("\n--- Pressure DataFrame Info ---")
 df_Pa.info()
-
 ```
+
 **Merging Gas and Auxiliary Data**
 
 Finally, we need to combine our df_gas, df_Ta, and df_Pa DataFrames. We want to add the temperature and pressure columns to the gas data, matching them by the nearest timestamp.
 The gas analyzer records data every second, while the weather station might only record every minute. A simple merge would leave many empty rows. The perfect tool for this is pd.merge_asof(). It performs a "nearest-neighbor" merge, which is ideal for combining time-series data with different frequencies.
 
 
-```Python
+```python
 # First, merge the two auxiliary datasets together
 df_aux = pd.merge_asof(left=df_Ta, right=df_Pa, on='Timestamp', direction='nearest')
 
@@ -312,8 +310,7 @@ def plot_time_series_plotly(df, y_column, title, mode='lines'):
 <details markdown="1">
 <summary>Here is the solution!</summary>
     
-```Python
-
+```python
 import plotly.graph_objects as go
 import plotly.io as pio
 
@@ -385,7 +382,7 @@ def plot_time_series_plotly(df, y_column, title, mode='lines'):
 ### 2.2 Visualizing the Raw Gas Data
 Now, let's use our new function to look at the raw N₂O data from our combined file. You can zoom and pan on the plot to inspect the noisy areas.
 
-```Python
+```python
 
 # Call our function to plot the raw 'N2O' column
 plot_time_series_plotly(df_final, y_column='N2O', title='Raw N2O Concentration Over Time')
@@ -399,8 +396,7 @@ As you can see from the plot, the raw data is very noisy. There are several nega
 ### 2.3 Filtering with a Quantile Filter
 To remove these outliers, we'll use a simple but effective quantile filter. This method is robust because the extreme values we want to remove have very little influence on the calculation of percentiles. We will calculate the 10th and 90th percentiles of the N₂O concentration and discard any data points that fall outside this range.
 
-```Python
-
+```python
 # Calculate the 10th and 90th percentiles
 p_10 = df_final.N2O.quantile(0.10)
 p_90 = df_final.N2O.quantile(0.90)
