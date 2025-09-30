@@ -38,7 +38,43 @@
 
 <span class="k">print</span><span class="p">(</span><span class="s">"Data loaded and formatted successfully!"</span><span class="p">)</span>
 <span class="n">df_raw</span><span class="p">.</span><span class="n">head</span><span class="p">()</span>
-</code></pre></div></div> <p>Great! Now, we have successfully read in and formatted our raw data. However, think about our field campaigns. We went out several times and generate a new data file for each trip. If we wanted to analyze all of them, we would have to copy and paste our loading code multiple times. To avoid repetition and make our code cleaner and more reliable, it’s a best practice to wrap a reusable process into a function. Let’s turn our loading and cleaning steps into a function called load_raw_data.</p> <blockquote> <p>Your Task: Try to write this function yourself!</p> <p>Tip: The function will need to accept one argument: the filepath of the file you want to open.</p> </blockquote> <details><summary>Solution!</summary> Note: how it's the exact same logic as before, just defined within a def block. ```python def load_raw_data(filepath: str) -&gt; pd.DataFrame: """ Loads raw data from a text file, remove metadata, and returns a DataFrame. Parameters: - filepath (str): The path to the input data file. Returns: - pd.DataFrame: A cleaned DataFrame with a DatetimeIndex. """ with open(filepath) as f: file_content = f.read() lines = file_content.strip().split('\n') header_index = next(i for i, line in enumerate(lines) if line.startswith('DATAH')) data_start_index = header_index + 2 headers = lines[header_index].split('\t') df_raw = pd.read_csv( io.StringIO('\n'.join(lines[data_start_index:])), sep='\t', header=None, names=headers, na_values='nan' ) if 'DATAH' in df_raw.columns: df_raw = df_raw.drop(columns=['DATAH']) if 'DATE' in df_raw.columns and 'TIME' in df_raw.columns: df_raw['Timestamp'] = pd.to_datetime(df_raw['DATE'] + ' ' + df_raw['TIME']) df_raw = df_raw.drop(columns=['DATE', 'TIME']) df_raw = df_raw.set_index('Timestamp') print("Raw data loaded and cleaned successfully.") return df_raw ``` </details> <p>Now that we have our powerful load_raw_data function, we can easily handle data from multiple field trips. Instead of copying code, we can simply call our function in a loop. First, we create a list of all the file paths we want to load. Then, we can loop through this list, call our function for each path, and store the resulting DataFrames in a new list.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># First, let's list all the files we want to load.
+</code></pre></div></div> <p>Great! Now, we have successfully read in and formatted our raw data. However, think about our field campaigns. We went out several times and generate a new data file for each trip. If we wanted to analyze all of them, we would have to copy and paste our loading code multiple times. To avoid repetition and make our code cleaner and more reliable, it’s a best practice to wrap a reusable process into a function. Let’s turn our loading and cleaning steps into a function called load_raw_data.</p> <blockquote> <p>Your Task: Try to write this function yourself!</p> <p>Tip: The function will need to accept one argument: the filepath of the file you want to open.</p> </blockquote> <details> <summary>Solution!</summary> <p>Note: how it’s the exact same logic as before, just defined within a def block.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   <span class="k">def</span> <span class="nf">load_raw_data</span><span class="p">(</span><span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="s">"""
+    Loads raw data from a text file, remove metadata, and returns a DataFrame.
+
+    Parameters:
+    - filepath (str): The path to the input data file.
+
+    Returns:
+    - pd.DataFrame: A cleaned DataFrame with a DatetimeIndex.
+    """</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">file_content</span> <span class="o">=</span> <span class="n">f</span><span class="p">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">file_content</span><span class="p">.</span><span class="n">strip</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">'</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">header_index</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="k">if</span> <span class="n">line</span><span class="p">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">'DATAH'</span><span class="p">))</span>
+    <span class="n">data_start_index</span> <span class="o">=</span> <span class="n">header_index</span> <span class="o">+</span> <span class="mi">2</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">header_index</span><span class="p">].</span><span class="n">split</span><span class="p">(</span><span class="s">'</span><span class="se">\t</span><span class="s">'</span><span class="p">)</span>
+
+    <span class="n">df_raw</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">read_csv</span><span class="p">(</span>
+        <span class="n">io</span><span class="p">.</span><span class="n">StringIO</span><span class="p">(</span><span class="s">'</span><span class="se">\n</span><span class="s">'</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">data_start_index</span><span class="p">:])),</span>
+        <span class="n">sep</span><span class="o">=</span><span class="s">'</span><span class="se">\t</span><span class="s">'</span><span class="p">,</span>
+        <span class="n">header</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">names</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+        <span class="n">na_values</span><span class="o">=</span><span class="s">'nan'</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="s">'DATAH'</span> <span class="ow">in</span> <span class="n">df_raw</span><span class="p">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">df_raw</span> <span class="o">=</span> <span class="n">df_raw</span><span class="p">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s">'DATAH'</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="s">'DATE'</span> <span class="ow">in</span> <span class="n">df_raw</span><span class="p">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="s">'TIME'</span> <span class="ow">in</span> <span class="n">df_raw</span><span class="p">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">df_raw</span><span class="p">[</span><span class="s">'Timestamp'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df_raw</span><span class="p">[</span><span class="s">'DATE'</span><span class="p">]</span> <span class="o">+</span> <span class="s">' '</span> <span class="o">+</span> <span class="n">df_raw</span><span class="p">[</span><span class="s">'TIME'</span><span class="p">])</span>
+        <span class="n">df_raw</span> <span class="o">=</span> <span class="n">df_raw</span><span class="p">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s">'DATE'</span><span class="p">,</span> <span class="s">'TIME'</span><span class="p">])</span>
+        <span class="n">df_raw</span> <span class="o">=</span> <span class="n">df_raw</span><span class="p">.</span><span class="n">set_index</span><span class="p">(</span><span class="s">'Timestamp'</span><span class="p">)</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="s">"Raw data loaded and cleaned successfully."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">df_raw</span>
+</code></pre></div> </div> </details> <p>Now that we have our powerful load_raw_data function, we can easily handle data from multiple field trips. Instead of copying code, we can simply call our function in a loop. First, we create a list of all the file paths we want to load. Then, we can loop through this list, call our function for each path, and store the resulting DataFrames in a new list.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># First, let's list all the files we want to load.
 # Make sure the file paths are complete and correct.
 </span><span class="n">base_path</span> <span class="o">=</span> <span class="s">"./BAI_StudyProject_LuentenerWald/raw_data/"</span>
 <span class="n">file_names</span> <span class="o">=</span> <span class="p">[</span>
@@ -59,7 +95,27 @@
 
 <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="se">\n</span><span class="s">Successfully loaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">raw_data_list</span><span class="p">)</span><span class="si">}</span><span class="s"> data files."</span><span class="p">)</span>
 </code></pre></div></div> <p>The loop above is clear and correct. However, a more concise way to write this in Python is with a list comprehension. It achieves the exact same result in a single, readable line:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">raw_data_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">load_raw_data</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">full_file_paths</span><span class="p">]</span>
-</code></pre></div></div> <p>For our flux calculations to be accurate, we need more than just gas concentrations. The Ideal Gas Law, which is the basis of the calculation, requires the ambient air temperature and air pressure at the time of each measurement. We will use the same workflow as before: load each file and then combine them.</p> <blockquote> <p>Your Task: You have two Excel files containing air temperature and two files for air pressure. Create lists of the file paths for the temperature and pressure data. Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!</p> </blockquote> <details> <summary>Click here for the solution!</summary> ```Python # We assume the base path is the same as before base_path = "./BAI_StudyProject_LuentenerWald/raw_data/" # --- Load Air Temperature Data --- file_names_Ta = [ 'air_temperature_2025-08-15.xlsx', 'air_temperature_2025-08-16.xlsx' ] full_file_paths_Ta = [base_path + name for name in file_names_Ta] ta_data_list = [pd.read_excel(path) for path in full_file_paths_Ta] print(f"Successfully loaded {len(ta_data_list)} air temperature files.") # --- Load Air Pressure Data --- file_names_Pa = [ 'air_pressure_2025-08-15.xlsx', 'air_pressure_2025-08-16.xlsx' ] full_file_paths_Pa = [base_path + name for name in file_names_Pa] pa_data_list = [pd.read_excel(path) for path in full_file_paths_Pa] print(f"Successfully loaded {len(pa_data_list)} air pressure files.") ``` </details> <h3 id="14-concatenating-and-merging-all-data"> <a href="#14-concatenating-and-merging-all-data" class="anchor-heading" aria-labelledby="14-concatenating-and-merging-all-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1.4 Concatenating and Merging All Data </h3> <p>Now that we have all our data loaded, we need to combine it into one master DataFrame for analysis. This involves two steps: Concatenate: Stacking the files of the same type together (e.g., all gas files into one, all temperature files into one). Merge: Joining the different datasets (gas, temperature, and pressure) together based on their common timestamp.</p> <p><strong>Concatenating the Datasets</strong></p> <p>First, let’s use pd.concat() to combine the lists of DataFrames we created. After combining, we must format the Timestamp column and set it as the index, just as we did before.</p><pre><code class="language-Python">
+</code></pre></div></div> <p>For our flux calculations to be accurate, we need more than just gas concentrations. The Ideal Gas Law, which is the basis of the calculation, requires the ambient air temperature and air pressure at the time of each measurement. We will use the same workflow as before: load each file and then combine them.</p> <blockquote> <p>Your Task: You have two Excel files containing air temperature and two files for air pressure. Create lists of the file paths for the temperature and pressure data. Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!</p> </blockquote> <details> <summary>Click here for the solution!</summary><pre><code class="language-Python"># We assume the base path is the same as before
+base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
+
+# --- Load Air Temperature Data ---
+file_names_Ta = [
+    'air_temperature_2025-08-15.xlsx', 
+    'air_temperature_2025-08-16.xlsx' 
+]
+full_file_paths_Ta = [base_path + name for name in file_names_Ta]
+ta_data_list = [pd.read_excel(path) for path in full_file_paths_Ta]
+print(f"Successfully loaded {len(ta_data_list)} air temperature files.")
+
+# --- Load Air Pressure Data ---
+file_names_Pa = [
+    'air_pressure_2025-08-15.xlsx', 
+    'air_pressure_2025-08-16.xlsx' 
+]
+full_file_paths_Pa = [base_path + name for name in file_names_Pa]
+pa_data_list = [pd.read_excel(path) for path in full_file_paths_Pa]
+print(f"Successfully loaded {len(pa_data_list)} air pressure files.")
+</code></pre></details> <h3 id="14-concatenating-and-merging-all-data"> <a href="#14-concatenating-and-merging-all-data" class="anchor-heading" aria-labelledby="14-concatenating-and-merging-all-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1.4 Concatenating and Merging All Data </h3> <p>Now that we have all our data loaded, we need to combine it into one master DataFrame for analysis. This involves two steps: Concatenate: Stacking the files of the same type together (e.g., all gas files into one, all temperature files into one). Merge: Joining the different datasets (gas, temperature, and pressure) together based on their common timestamp.</p> <p><strong>Concatenating the Datasets</strong></p> <p>First, let’s use pd.concat() to combine the lists of DataFrames we created. After combining, we must format the Timestamp column and set it as the index, just as we did before.</p><pre><code class="language-Python">
 # --- Concatenate and Clean Gas Data ---
 df_gas = pd.concat(raw_data_list) # Assumes raw_data_list is from the previous step
 
@@ -118,7 +174,76 @@ df_raw.info()
     <span class="p">)</span>
     
     <span class="n">fig</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div></div> <details> <summary>Here is the solution!</summary> ```Python import plotly.graph_objects as go import plotly.io as pio # This setting forces Plotly to open plots in your default web browser, # which can be more stable in some environments. pio.renderers.default = "browser" def plot_time_series_plotly(df, y_column, title, mode='lines'): """ Generates an interactive time-series plot using Plotly. This function will automatically try to set a 'Timestamp' column as the index if the existing index is not a datetime type. Parameters: - df (pd.DataFrame): DataFrame to plot. - y_column (str): The name of the column to plot on the y-axis. - title (str): The title for the plot. - mode (str): Plotly mode ('lines', 'markers', or 'lines+markers'). """ # --- Input Validation and Auto-Correction --- # It's good practice to work on a copy inside a function to avoid # changing the user's original DataFrame unexpectedly. df_plot = df.copy() if not pd.api.types.is_datetime64_any_dtype(df_plot.index): print("Note: The DataFrame index is not a DatetimeIndex.") # Attempt to fix the issue by finding a 'Timestamp' column if 'Timestamp' in df_plot.columns: print("--&gt; Found a 'Timestamp' column. Attempting to set it as the index.") df_plot['Timestamp'] = pd.to_datetime(df_plot['Timestamp']) # CRITICAL: You must re-assign the variable to save the change. df_plot = df_plot.set_index('Timestamp') else: # If we can't fix it automatically, then we raise an error. raise TypeError( "The DataFrame index is not a DatetimeIndex and a 'Timestamp' column was not found. " "Please set a DatetimeIndex before plotting." ) # --- Plotting --- # By this point, df_plot is guaranteed to have a valid DatetimeIndex. fig = go.Figure() fig.add_trace(go.Scatter( x=df_plot.index, y=df_plot[y_column], mode=mode, name=y_column )) # Update layout for a clean, professional look fig.update_layout( title=title, xaxis_title='Time', yaxis_title=f'{y_column} Concentration (ppb)', template='plotly_white', title_font=dict(size=24), xaxis=dict(tickfont=dict(size=14), title_font=dict(size=16)), yaxis=dict(tickfont=dict(size=14), title_font=dict(size=16)) ) fig.show() ``` </details> <h3 id="22-visualizing-the-raw-gas-data"> <a href="#22-visualizing-the-raw-gas-data" class="anchor-heading" aria-labelledby="22-visualizing-the-raw-gas-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.2 Visualizing the Raw Gas Data </h3> <p>Now, let’s use our new function to look at the raw N₂O data from our combined file. You can zoom and pan on the plot to inspect the noisy areas.</p><pre><code class="language-Python">
+</code></pre></div></div> <details> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;summary&gt;Here is the solution!&lt;/summary&gt;
+    
+```Python
+
+import plotly.graph_objects as go
+import plotly.io as pio
+
+# This setting forces Plotly to open plots in your default web browser,
+# which can be more stable in some environments.
+pio.renderers.default = "browser"
+
+def plot_time_series_plotly(df, y_column, title, mode='lines'):
+    """
+    Generates an interactive time-series plot using Plotly.
+    This function will automatically try to set a 'Timestamp' column as the 
+    index if the existing index is not a datetime type.
+
+    Parameters:
+    - df (pd.DataFrame): DataFrame to plot.
+    - y_column (str): The name of the column to plot on the y-axis.
+    - title (str): The title for the plot.
+    - mode (str): Plotly mode ('lines', 'markers', or 'lines+markers').
+    """
+    # --- Input Validation and Auto-Correction ---
+    
+    # It's good practice to work on a copy inside a function to avoid 
+    # changing the user's original DataFrame unexpectedly.
+    df_plot = df.copy()
+
+    if not pd.api.types.is_datetime64_any_dtype(df_plot.index):
+        print("Note: The DataFrame index is not a DatetimeIndex.")
+        # Attempt to fix the issue by finding a 'Timestamp' column
+        if 'Timestamp' in df_plot.columns:
+            print("--&gt; Found a 'Timestamp' column. Attempting to set it as the index.")
+            df_plot['Timestamp'] = pd.to_datetime(df_plot['Timestamp'])
+            # CRITICAL: You must re-assign the variable to save the change.
+            df_plot = df_plot.set_index('Timestamp')
+        else:
+            # If we can't fix it automatically, then we raise an error.
+            raise TypeError(
+                "The DataFrame index is not a DatetimeIndex and a 'Timestamp' column was not found. "
+                "Please set a DatetimeIndex before plotting."
+            )
+            
+    # --- Plotting ---
+    # By this point, df_plot is guaranteed to have a valid DatetimeIndex.
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=df_plot.index, 
+        y=df_plot[y_column], 
+        mode=mode, 
+        name=y_column
+    ))
+
+    # Update layout for a clean, professional look
+    fig.update_layout(
+        title=title, 
+        xaxis_title='Time', 
+        yaxis_title=f'{y_column} Concentration (ppb)', 
+        template='plotly_white', 
+        title_font=dict(size=24),
+        xaxis=dict(tickfont=dict(size=14), title_font=dict(size=16)), 
+        yaxis=dict(tickfont=dict(size=14), title_font=dict(size=16))
+    )
+    
+    fig.show()
+
+```
+</code></pre></div> </div> </details> <h3 id="22-visualizing-the-raw-gas-data"> <a href="#22-visualizing-the-raw-gas-data" class="anchor-heading" aria-labelledby="22-visualizing-the-raw-gas-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.2 Visualizing the Raw Gas Data </h3> <p>Now, let’s use our new function to look at the raw N₂O data from our combined file. You can zoom and pan on the plot to inspect the noisy areas.</p><pre><code class="language-Python">
 # Call our function to plot the raw 'N2O' column
 plot_time_series_plotly(df_final, y_column='N2O', title='Raw N2O Concentration Over Time')
 
