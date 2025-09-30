@@ -307,75 +307,75 @@ def plot_time_series_plotly(df, y_column, title, mode='lines'):
 ```
 
 <details>
-<summary>Here is the solution!</summary>
+    <summary>Here is the solution!</summary>
+        
+    ```Python
     
-```Python
-
-import plotly.graph_objects as go
-import plotly.io as pio
-
-# This setting forces Plotly to open plots in your default web browser,
-# which can be more stable in some environments.
-pio.renderers.default = "browser"
-
-def plot_time_series_plotly(df, y_column, title, mode='lines'):
-    """
-    Generates an interactive time-series plot using Plotly.
-    This function will automatically try to set a 'Timestamp' column as the 
-    index if the existing index is not a datetime type.
-
-    Parameters:
-    - df (pd.DataFrame): DataFrame to plot.
-    - y_column (str): The name of the column to plot on the y-axis.
-    - title (str): The title for the plot.
-    - mode (str): Plotly mode ('lines', 'markers', or 'lines+markers').
-    """
-    # --- Input Validation and Auto-Correction ---
+    import plotly.graph_objects as go
+    import plotly.io as pio
     
-    # It's good practice to work on a copy inside a function to avoid 
-    # changing the user's original DataFrame unexpectedly.
-    df_plot = df.copy()
-
-    if not pd.api.types.is_datetime64_any_dtype(df_plot.index):
-        print("Note: The DataFrame index is not a DatetimeIndex.")
-        # Attempt to fix the issue by finding a 'Timestamp' column
-        if 'Timestamp' in df_plot.columns:
-            print("--> Found a 'Timestamp' column. Attempting to set it as the index.")
-            df_plot['Timestamp'] = pd.to_datetime(df_plot['Timestamp'])
-            # CRITICAL: You must re-assign the variable to save the change.
-            df_plot = df_plot.set_index('Timestamp')
-        else:
-            # If we can't fix it automatically, then we raise an error.
-            raise TypeError(
-                "The DataFrame index is not a DatetimeIndex and a 'Timestamp' column was not found. "
-                "Please set a DatetimeIndex before plotting."
-            )
-            
-    # --- Plotting ---
-    # By this point, df_plot is guaranteed to have a valid DatetimeIndex.
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatter(
-        x=df_plot.index, 
-        y=df_plot[y_column], 
-        mode=mode, 
-        name=y_column
-    ))
-
-    # Update layout for a clean, professional look
-    fig.update_layout(
-        title=title, 
-        xaxis_title='Time', 
-        yaxis_title=f'{y_column} Concentration (ppb)', 
-        template='plotly_white', 
-        title_font=dict(size=24),
-        xaxis=dict(tickfont=dict(size=14), title_font=dict(size=16)), 
-        yaxis=dict(tickfont=dict(size=14), title_font=dict(size=16))
-    )
+    # This setting forces Plotly to open plots in your default web browser,
+    # which can be more stable in some environments.
+    pio.renderers.default = "browser"
     
-    fig.show()
-
-```
+    def plot_time_series_plotly(df, y_column, title, mode='lines'):
+        """
+        Generates an interactive time-series plot using Plotly.
+        This function will automatically try to set a 'Timestamp' column as the 
+        index if the existing index is not a datetime type.
+    
+        Parameters:
+        - df (pd.DataFrame): DataFrame to plot.
+        - y_column (str): The name of the column to plot on the y-axis.
+        - title (str): The title for the plot.
+        - mode (str): Plotly mode ('lines', 'markers', or 'lines+markers').
+        """
+        # --- Input Validation and Auto-Correction ---
+        
+        # It's good practice to work on a copy inside a function to avoid 
+        # changing the user's original DataFrame unexpectedly.
+        df_plot = df.copy()
+    
+        if not pd.api.types.is_datetime64_any_dtype(df_plot.index):
+            print("Note: The DataFrame index is not a DatetimeIndex.")
+            # Attempt to fix the issue by finding a 'Timestamp' column
+            if 'Timestamp' in df_plot.columns:
+                print("--> Found a 'Timestamp' column. Attempting to set it as the index.")
+                df_plot['Timestamp'] = pd.to_datetime(df_plot['Timestamp'])
+                # CRITICAL: You must re-assign the variable to save the change.
+                df_plot = df_plot.set_index('Timestamp')
+            else:
+                # If we can't fix it automatically, then we raise an error.
+                raise TypeError(
+                    "The DataFrame index is not a DatetimeIndex and a 'Timestamp' column was not found. "
+                    "Please set a DatetimeIndex before plotting."
+                )
+                
+        # --- Plotting ---
+        # By this point, df_plot is guaranteed to have a valid DatetimeIndex.
+        fig = go.Figure()
+    
+        fig.add_trace(go.Scatter(
+            x=df_plot.index, 
+            y=df_plot[y_column], 
+            mode=mode, 
+            name=y_column
+        ))
+    
+        # Update layout for a clean, professional look
+        fig.update_layout(
+            title=title, 
+            xaxis_title='Time', 
+            yaxis_title=f'{y_column} Concentration (ppb)', 
+            template='plotly_white', 
+            title_font=dict(size=24),
+            xaxis=dict(tickfont=dict(size=14), title_font=dict(size=16)), 
+            yaxis=dict(tickfont=dict(size=14), title_font=dict(size=16))
+        )
+        
+        fig.show()
+    
+    ```
 </details>
 
 
@@ -468,14 +468,13 @@ Okay, lets create a function of flux calculation based on the fomula for later u
 
 
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
-    
+
 {% capture exercise %}
-<h3> Exercise </h3>
-<p >The function calculate_flux is provided as follow but not complete. It is your task to finish the function based on the fomula.</p>
+### Exercise
 
+The function `calculate_flux` is provided below but is not complete. It is your task to finish the function based on the formula.
 
-```Python
-
+```python
 # Define key physical constants
 R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
 
@@ -494,42 +493,35 @@ def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
     flux = ...
     return flux
 
-```
-
-{::options parse_block_html="true" /}
-
-<details><summary markdown="span">Solution!</summary>
-
-```Python
-
-# Define key physical constants
-R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
-
-def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
-    """
-    Calculates N2O flux.
-    """
-    # Convert slope from ppb/s to ppm/s for the formula
-    ppm_per_second = slope_ppb_s / 1000.0
+<details>
+    <summary>Solution!</summary>
+    Here is the completed function:
     
-    # Calculate molar density of air (n/V = P/RT) in mol/m³
-    molar_density = pressure_pa / (R * temp_k)
+    ```python
+    # Define key physical constants
+    R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
     
-    # Calculate the flux in µmol m⁻² s⁻¹
-    # The 1e6 converts from mol to µmol
-    flux = ppm_per_second * molar_density * v_over_a * 1e6
-    return flux
-
-```
-
+    def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
+        """
+        Calculates N2O flux.
+        """
+        # Convert slope from ppb/s to ppm/s for the formula
+        ppm_per_second = slope_ppb_s / 1000.0
+        
+        # Calculate molar density of air (n/V = P/RT) in mol/m³
+        molar_density = pressure_pa / (R * temp_k)
+        
+        # Calculate the flux in µmol m⁻² s⁻¹
+        # The 1e6 converts from mol to µmol
+        flux = ppm_per_second * molar_density * v_over_a * 1e6
+        return flux
+    ```
 </details>
-
-{::options parse_block_html="false" /}
 
 {% endcapture %}
 
 <div class="notice--primary">
-  {{ exercise | markdownify }}
+{{ exercise | markdownify }}
 </div>
 </div>
 
