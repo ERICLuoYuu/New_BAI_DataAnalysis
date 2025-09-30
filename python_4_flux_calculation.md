@@ -25,7 +25,7 @@ A metadata header: This block at the top contains useful information about the m
 The data block: This is the core data we need, with columns for date, time, and gas concentrations.
 Our first challenge is to programmatically read only the data block and ignore the metadata.
 
-![alt text](/assets/images/python/5/Metadata.png)
+![Metadata](/assets/images/python/5/Metadata.png)
 
 To do this, we'll need the pandas library for creating our DataFrame and the io library, we need to import them.
 ```python
@@ -192,6 +192,7 @@ We will use the same workflow as before: load each file and then combine them.
 
 <details>
 <summary>Click here for the solution!</summary>
+    
 ```Python
 # We assume the base path is the same as before
 base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
@@ -271,54 +272,148 @@ df_raw.info()
 
 Brilliant! You now have a single, clean DataFrame called df_final that contains everything you need: the high-frequency gas concentrations and the corresponding temperature and pressure for each measurement point. We are now fully prepared to move on to the flux calculation.
 
-## 2.Visualizing and cleaning Raw Data
-### 2.1 Visualization of raw gas concentration data
-To get a better overview of the raw data, we are going to visualize it.
+## 2. Visualizing and Cleaning the Data
+Now that we have a single, merged DataFrame, our next step is to inspect the data quality. Raw sensor data from the field is almost never perfect. Visualizing it is the best way to diagnose issues like noise, drift, or outliers before we attempt any calculations. For this, we'll use plotly, a powerful library for creating interactive plots.
+### 2.1 Creating a Reusable Plotting Function with Plotly
+Just as we did with data loading, we'll be plotting our time-series data multiple times. To make this efficient and keep our plots looking consistent, let's create a dedicated function. This function will take a DataFrame and some plot details as input and generate an interactive plot.
+>> **Task**: now create the reusable plotting function!
+
 ```python
-# --- Visualize the raw data ---
-fig, ax = plt.subplots(layout='constrained', figsize=(20, 5))
-ax.plot(df_raw.index, df_raw['N2O'], label='N2O Concentration (ppb)')
-ax.set_xlabel('Time')
-ax.set_ylabel('N2O Concentration (ppb)')
-ax.set_title('Raw N2O Concentration Over Time')
-plt.show()
+
+def plot_time_series_plotly(df, y_column, title, mode='lines'):
+    """
+    Generates an interactive time-series plot using Plotly.
+
+    Parameters:
+    - df (pd.DataFrame): DataFrame with a DatetimeIndex.
+    - y_column (str): The name of the column to plot on the y-axis.
+    - title (str): The title for the plot.
+    - mode (str): Plotly mode ('lines', 'markers', or 'lines+markers').
+    """
+    fig = go.Figure()
+
+    fig.add_trace(...)
+
+    # Update layout for a clean look
+    fig.update_layout(
+        ...
+    )
+    
+    fig.show()
 ```
-<!-- Placeholder for image -->
+
+<details>
+<summary>Here is the solution!</summary>
+    
+```Python
+import plotly.graph_objects as go
+import plotly.io as pio
+
+# This setting forces Plotly to open plots in your default web browser,
+# which can be more stable in some environments.
+pio.renderers.default = "browser"
+
+def plot_time_series_plotly(df, y_column, title, mode='lines'):
+    """
+    Generates an interactive time-series plot using Plotly.
+    This function will automatically try to set a 'Timestamp' column as the 
+    index if the existing index is not a datetime type.
+
+    Parameters:
+    - df (pd.DataFrame): DataFrame to plot.
+    - y_column (str): The name of the column to plot on the y-axis.
+    - title (str): The title for the plot.
+    - mode (str): Plotly mode ('lines', 'markers', or 'lines+markers').
+    """
+    # --- Input Validation and Auto-Correction ---
+    
+    # It's good practice to work on a copy inside a function to avoid 
+    # changing the user's original DataFrame unexpectedly.
+    df_plot = df.copy()
+
+    if not pd.api.types.is_datetime64_any_dtype(df_plot.index):
+        print("Note: The DataFrame index is not a DatetimeIndex.")
+        # Attempt to fix the issue by finding a 'Timestamp' column
+        if 'Timestamp' in df_plot.columns:
+            print("--> Found a 'Timestamp' column. Attempting to set it as the index.")
+            df_plot['Timestamp'] = pd.to_datetime(df_plot['Timestamp'])
+            # CRITICAL: You must re-assign the variable to save the change.
+            df_plot = df_plot.set_index('Timestamp')
+        else:
+            # If we can't fix it automatically, then we raise an error.
+            raise TypeError(
+                "The DataFrame index is not a DatetimeIndex and a 'Timestamp' column was not found. "
+                "Please set a DatetimeIndex before plotting."
+            )
+            
+    # --- Plotting ---
+    # By this point, df_plot is guaranteed to have a valid DatetimeIndex.
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=df_plot.index, 
+        y=df_plot[y_column], 
+        mode=mode, 
+        name=y_column
+    ))
+
+    # Update layout for a clean, professional look
+    fig.update_layout(
+        title=title, 
+        xaxis_title='Time', 
+        yaxis_title=f'{y_column} Concentration (ppb)', 
+        template='plotly_white', 
+        title_font=dict(size=24),
+        xaxis=dict(tickfont=dict(size=14), title_font=dict(size=16)), 
+        yaxis=dict(tickfont=dict(size=14), title_font=dict(size=16))
+    )
+    
+    fig.show()
+```
+</details>
+
+
+### 2.2 Visualizing the Raw Gas Data
+Now, let's use our new function to look at the raw N₂O data from our combined file. You can zoom and pan on the plot to inspect the noisy areas.
+
+```Python
+# Call our function to plot the raw 'N2O' column
+plot_time_series_plotly(df_final, y_column='N2O', title='Raw N2O Concentration Over Time')
+```
+
+![raw data plotting](/assets/images/python/5/raw_data_plot.png)
+
 As you can see from the plot, the raw data is very noisy. There are several negative values and some extremely large spikes. These are physically impossible and are likely due to sensor errors or electrical interference. We cannot calculate meaningful fluxes from this data without cleaning it first.
-Step 2: Data Filtering and Cleaning
-To remove these outliers, we'll use a simple but effective quantile filter. We'll calculate the 10th and 90th percentiles of the N₂O concentration and discard any data points that fall outside this range. This will effectively chop off the extreme high and low noise.
+
+### 2.3 Filtering with a Quantile Filter
+To remove these outliers, we'll use a simple but effective quantile filter. This method is robust because the extreme values we want to remove have very little influence on the calculation of percentiles. We will calculate the 10th and 90th percentiles of the N₂O concentration and discard any data points that fall outside this range.
 
 ```Python
 # Calculate the 10th and 90th percentiles
-p_10 = df_raw.N2O.quantile(0.10)
-p_90 = df_raw.N2O.quantile(0.90)
+p_10 = df_final.N2O.quantile(0.10)
+p_90 = df_final.N2O.quantile(0.90)
 
-# Apply the filter
-df_filtered = df_raw[(df_raw.N2O >= p_10) & (df_raw.N2O <= p_90)]
+print(f"Filtering data to keep N2O concentrations between {p_10:.2f} and {p_90:.2f} ppb.")
 
-# Visualize the filtered data
-fig, ax1 = plt.subplots(layout='constrained', figsize=(20, 5))
-ax1.scatter(df_filtered.index, df_filtered['N2O'], label='N2O Concentration (ppb)', s=5) # s=5 makes points smaller
-ax1.set_xlabel('Time')
-ax1.set_ylabel('N2O Concentration (ppb)')
-ax1.set_title('Filtered N2O Concentration Over Time')
-plt.show()
+# Apply the filter to create a new, clean DataFrame
+# .copy() is used here to avoid a SettingWithCopyWarning from pandas
+df_filtered = df_final[(df_final.N2O >= p_10) & (df_final.N2O <= p_90)].copy()
+
+# Visualize the filtered data using our function again, this time using 'markers'
+plot_time_series_plotly(df_filtered, y_column='N2O', title='Filtered N2O Concentration Over Time', mode='markers')
 ```
+<!-- Placeholder for filtered data image -->
 
- <!-- Placeholder for image -->
+This looks much better! The noise is gone, and a clear, meaningful pattern has emerged.
 
-This looks much better! The noise is gone, and a clear pattern has emerged.
+### 2.4 Understanding the Data Pattern
+The filtered data shows a repeating pattern which is the signature of the static chamber method:
+Baseline (Ambient Air): The long, relatively flat periods show the baseline N₂O concentration in the ambient air.
+Concentration Increase (Chamber Closed): The sections where the concentration rises steadily and linearly are the actual measurements. This occurs when the chamber is placed over the soil, trapping the gases being emitted. The rate of this increase is what we will use to calculate the flux.
+Sudden Drop (Chamber Opened): The sharp vertical drops occur when a measurement is finished, and the chamber is lifted from the ground, exposing the sensor to ambient air again.
+Leveling Off: If a chamber is left on the ground for too long, the gas concentration inside can build up, altering the pressure gradient between the soil and the chamber air. This can cause the rate of increase to slow down and "level off." For this reason, it's crucial to use only the initial, linear part of the increase for our flux calculation.
 
-## Step 3: Understanding the Data Pattern
-
-The filtered data shows a repeating pattern which is the signature of the **static chamber method**:
-
-*   **Baseline (Ambient Air)**: The long, relatively flat periods show the baseline N₂O concentration in the ambient air.
-*   **Concentration Increase (Chamber Closed)**: The sections where the concentration rises steadily and linearly are the actual measurements. This occurs when the chamber is placed over the soil, trapping the gases being emitted. The rate of this increase is what we need to calculate the flux.
-*   **Sudden Drop (Chamber Opened)**: The sharp vertical drops occur when a measurement is finished, and the chamber is lifted from the ground, exposing the sensor to ambient air again.
-*   **Leveling Off**: If a chamber is left on the ground for too long, the gas concentration inside can build up, altering the pressure gradient between the soil and the chamber air. This can cause the rate of increase to slow down and "level off." For this reason, it's crucial to use the initial, linear part of the increase for our flux calculation.
-
-## Step 4: Calculating Flux for a Single Measurement
+## 3. Calculating Flux for a Single Measurement
 
 To calculate a flux, we need to combine the gas concentration data with **metadata** about our measurement setup. This includes the start and end times of each chamber placement and the physical dimensions of the chamber (like collar height).
 
