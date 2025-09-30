@@ -402,7 +402,7 @@ df_filtered = df_final[(df_final.N2O >= p_10) & (df_final.N2O <= p_90)].copy()
 # Visualize the filtered data using our function again, this time using 'markers'
 plot_time_series_plotly(df_filtered, y_column='N2O', title='Filtered N2O Concentration Over Time', mode='markers')
 ```
-<!-- Placeholder for filtered data image -->
+![Filtered N2O](/assets/images/python/5/filtered N2O.png)
 
 This looks much better! The noise is gone, and a clear, meaningful pattern has emerged.
 
