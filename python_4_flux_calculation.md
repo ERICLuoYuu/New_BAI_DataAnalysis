@@ -456,9 +456,11 @@ A: The surface area covered by the chamber (m²).
 
 To better understand the above fomula, it can be arranged into the following:
 
+
 $$
 \text{Flux Rate (molar)} = \left( \frac{\Delta C}{t} \right) \cdot \left( \frac{p}{R \cdot (T_C + 273.15)} \right) \cdot \left( \frac{V}{A} \right)
 $$
+
 
 Now, it is clear that the fomula only contains three components: **Flux** = **slope** * **molar_density** * **V_over_A**
 Okay, lets create a function of flux calculation based on the fomula for later use.
@@ -470,6 +472,7 @@ Okay, lets create a function of flux calculation based on the fomula for later u
 {% capture exercise %}
 <h3> Exercise </h3>
 <p >The function calculate_flux is provided as follow but not complete. It is your task to finish the function based on the fomula.</p>
+
 
 ```Python
 
