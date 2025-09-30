@@ -500,6 +500,7 @@ def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
 Here is the completed function:
 
 ```python
+
 # Define key physical constants
 R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
 
@@ -517,6 +518,7 @@ def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
     # The 1e6 converts from mol to µmol
     flux = ppm_per_second * molar_density * v_over_a * 1e6
     return flux
+
 ```
 </details>
 
