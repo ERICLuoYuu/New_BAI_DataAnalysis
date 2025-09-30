@@ -463,7 +463,14 @@ $$
 Now, it is clear that the fomula only contains three components: **Flux** = **slope** * **molar_density** * **V_over_A**
 Okay, lets create a function of flux calculation based on the fomula for later use.
 
-> **Task**: the function calculate_flux is provided as follow but not complete. It is your task to finish the function.
+
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+    
+{% capture exercise %}
+<h3> Exercise </h3>
+<p >The function calculate_flux is provided as follow but not complete. It is your task to finish the function based on the fomula.</p>
+
 ```Python
 
 # Define key physical constants
@@ -471,24 +478,25 @@ R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
 
 def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
     """
-    Calculates N2O flux based on the rate of concentration change and ambient conditions.
+    Calculates N2O flux.
     """
     # Convert slope from ppb/s to ppm/s for the formula
-    ppm_per_second = slope_ppb_s / 1000.0
+    ppm_per_second = ...
     
     # Calculate molar density of air (n/V = P/RT) in mol/m³
-    molar_density = pressure_pa / (R * temp_k)
+    molar_density = ...
     
     # Calculate the flux in µmol m⁻² s⁻¹
     # The 1e6 converts from mol to µmol
-    flux = ppm_per_second * molar_density * v_over_a * 1e6
+    flux = ...
     return flux
 
 ```
 
-<details>
-<summary>solution!</summary>
-    
+{::options parse_block_html="true" /}
+
+<details><summary markdown="span">Solution!</summary>
+
 ```Python
 
 # Define key physical constants
@@ -496,7 +504,7 @@ R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
 
 def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
     """
-    Calculates N2O flux based on the rate of concentration change and ambient conditions.
+    Calculates N2O flux.
     """
     # Convert slope from ppb/s to ppm/s for the formula
     ppm_per_second = slope_ppb_s / 1000.0
@@ -512,6 +520,16 @@ def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
 ```
 
 </details>
+
+{::options parse_block_html="false" /}
+
+{% endcapture %}
+
+<div class="notice--primary">
+  {{ exercise | markdownify }}
+</div>
+</div>
+
 
 3.2 Defining Measurement Metadata
 Now, we need the physical dimensions of our chamber setup for a specific plot. This information comes from our "digital field notebook." For this example, let's define the metadata for a single plot.
