@@ -95,64 +95,61 @@ Returns:
 
 <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="se">\n</span><span class="s">Successfully loaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">raw_data_list</span><span class="p">)</span><span class="si">}</span><span class="s"> data files."</span><span class="p">)</span>
 </code></pre></div></div> <p>The loop above is clear and correct. However, a more concise way to write this in Python is with a list comprehension. It achieves the exact same result in a single, readable line:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">raw_data_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">load_raw_data</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">full_file_paths</span><span class="p">]</span>
-</code></pre></div></div> <p>For our flux calculations to be accurate, we need more than just gas concentrations. The Ideal Gas Law, which is the basis of the calculation, requires the ambient air temperature and air pressure at the time of each measurement. We will use the same workflow as before: load each file and then combine them.</p> <blockquote> <p>Your Task: You have two Excel files containing air temperature and two files for air pressure. Create lists of the file paths for the temperature and pressure data. Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!</p> </blockquote> <details> <summary>Click here for the solution!</summary><pre><code class="language-Python">
-# We assume the base path is the same as before
-base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
+</code></pre></div></div> <p>For our flux calculations to be accurate, we need more than just gas concentrations. The Ideal Gas Law, which is the basis of the calculation, requires the ambient air temperature and air pressure at the time of each measurement. We will use the same workflow as before: load each file and then combine them.</p> <blockquote> <p>Your Task: You have two Excel files containing air temperature and two files for air pressure. Create lists of the file paths for the temperature and pressure data. Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!</p> </blockquote> <details> <summary>Click here for the solution!</summary> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># We assume the base path is the same as before
+</span><span class="n">base_path</span> <span class="o">=</span> <span class="s">"./BAI_StudyProject_LuentenerWald/raw_data/"</span>
 
-# --- Load Air Temperature Data ---
-file_names_Ta = [
-    'air_temperature_2025-08-15.xlsx', 
-    'air_temperature_2025-08-16.xlsx' 
-]
-full_file_paths_Ta = [base_path + name for name in file_names_Ta]
-ta_data_list = [pd.read_excel(path) for path in full_file_paths_Ta]
-print(f"Successfully loaded {len(ta_data_list)} air temperature files.")
+<span class="c1"># --- Load Air Temperature Data ---
+</span><span class="n">file_names_Ta</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">'air_temperature_2025-08-15.xlsx'</span><span class="p">,</span> 
+    <span class="s">'air_temperature_2025-08-16.xlsx'</span> 
+<span class="p">]</span>
+<span class="n">full_file_paths_Ta</span> <span class="o">=</span> <span class="p">[</span><span class="n">base_path</span> <span class="o">+</span> <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">file_names_Ta</span><span class="p">]</span>
+<span class="n">ta_data_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">pd</span><span class="p">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">full_file_paths_Ta</span><span class="p">]</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Successfully loaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ta_data_list</span><span class="p">)</span><span class="si">}</span><span class="s"> air temperature files."</span><span class="p">)</span>
 
-# --- Load Air Pressure Data ---
-file_names_Pa = [
-    'air_pressure_2025-08-15.xlsx', 
-    'air_pressure_2025-08-16.xlsx' 
-]
-full_file_paths_Pa = [base_path + name for name in file_names_Pa]
-pa_data_list = [pd.read_excel(path) for path in full_file_paths_Pa]
-print(f"Successfully loaded {len(pa_data_list)} air pressure files.")
-</code></pre></details> <h3 id="14-concatenating-and-merging-all-data"> <a href="#14-concatenating-and-merging-all-data" class="anchor-heading" aria-labelledby="14-concatenating-and-merging-all-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1.4 Concatenating and Merging All Data </h3> <p>Now that we have all our data loaded, we need to combine it into one master DataFrame for analysis. This involves two steps: Concatenate: Stacking the files of the same type together (e.g., all gas files into one, all temperature files into one). Merge: Joining the different datasets (gas, temperature, and pressure) together based on their common timestamp.</p> <p><strong>Concatenating the Datasets</strong></p> <p>First, let’s use pd.concat() to combine the lists of DataFrames we created. After combining, we must format the Timestamp column and set it as the index, just as we did before.</p><pre><code class="language-Python">
-# --- Concatenate and Clean Gas Data ---
-df_gas = pd.concat(raw_data_list) # Assumes raw_data_list is from the previous step
+<span class="c1"># --- Load Air Pressure Data ---
+</span><span class="n">file_names_Pa</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">'air_pressure_2025-08-15.xlsx'</span><span class="p">,</span> 
+    <span class="s">'air_pressure_2025-08-16.xlsx'</span> 
+<span class="p">]</span>
+<span class="n">full_file_paths_Pa</span> <span class="o">=</span> <span class="p">[</span><span class="n">base_path</span> <span class="o">+</span> <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">file_names_Pa</span><span class="p">]</span>
+<span class="n">pa_data_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">pd</span><span class="p">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">full_file_paths_Pa</span><span class="p">]</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Successfully loaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">pa_data_list</span><span class="p">)</span><span class="si">}</span><span class="s"> air pressure files."</span><span class="p">)</span>
+</code></pre></div> </div> </details> <h3 id="14-concatenating-and-merging-all-data"> <a href="#14-concatenating-and-merging-all-data" class="anchor-heading" aria-labelledby="14-concatenating-and-merging-all-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1.4 Concatenating and Merging All Data </h3> <p>Now that we have all our data loaded, we need to combine it into one master DataFrame for analysis. This involves two steps: Concatenate: Stacking the files of the same type together (e.g., all gas files into one, all temperature files into one). Merge: Joining the different datasets (gas, temperature, and pressure) together based on their common timestamp.</p> <p><strong>Concatenating the Datasets</strong></p> <p>First, let’s use pd.concat() to combine the lists of DataFrames we created. After combining, we must format the Timestamp column and set it as the index, just as we did before.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># --- Concatenate and Clean Gas Data ---
+</span><span class="n">df_gas</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">concat</span><span class="p">(</span><span class="n">raw_data_list</span><span class="p">)</span> <span class="c1"># Assumes raw_data_list is from the previous step
+</span>
+<span class="c1"># --- Concatenate and Clean Temperature Data ---
+</span><span class="n">df_Ta</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">concat</span><span class="p">(</span><span class="n">ta_data_list</span><span class="p">)</span>
+<span class="n">df_Ta</span><span class="p">[</span><span class="s">'Timestamp'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df_Ta</span><span class="p">[</span><span class="s">'Timestamp'</span><span class="p">])</span>
+<span class="n">df_Ta</span> <span class="o">=</span> <span class="n">df_Ta</span><span class="p">.</span><span class="n">set_index</span><span class="p">(</span><span class="s">'Timestamp'</span><span class="p">)</span>
 
-# --- Concatenate and Clean Temperature Data ---
-df_Ta = pd.concat(ta_data_list)
-df_Ta['Timestamp'] = pd.to_datetime(df_Ta['Timestamp'])
-df_Ta = df_Ta.set_index('Timestamp')
+<span class="c1"># --- Concatenate and Clean Pressure Data ---
+</span><span class="n">df_Pa</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">concat</span><span class="p">(</span><span class="n">pa_data_list</span><span class="p">)</span>
+<span class="n">df_Pa</span><span class="p">[</span><span class="s">'Timestamp'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df_Pa</span><span class="p">[</span><span class="s">'Timestamp'</span><span class="p">])</span>
+<span class="n">df_Pa</span> <span class="o">=</span> <span class="n">df_Pa</span><span class="p">.</span><span class="n">set_index</span><span class="p">(</span><span class="s">'Timestamp'</span><span class="p">)</span>
 
-# --- Concatenate and Clean Pressure Data ---
-df_Pa = pd.concat(pa_data_list)
-df_Pa['Timestamp'] = pd.to_datetime(df_Pa['Timestamp'])
-df_Pa = df_Pa.set_index('Timestamp')
+<span class="k">print</span><span class="p">(</span><span class="s">"--- Gas DataFrame Info ---"</span><span class="p">)</span>
+<span class="n">df_gas</span><span class="p">.</span><span class="n">info</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">--- Temperature DataFrame Info ---"</span><span class="p">)</span>
+<span class="n">df_Ta</span><span class="p">.</span><span class="n">info</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">--- Pressure DataFrame Info ---"</span><span class="p">)</span>
+<span class="n">df_Pa</span><span class="p">.</span><span class="n">info</span><span class="p">()</span>
+</code></pre></div></div> <p><strong>Merging Gas and Auxiliary Data</strong></p> <p>Finally, we need to combine our df_gas, df_Ta, and df_Pa DataFrames. We want to add the temperature and pressure columns to the gas data, matching them by the nearest timestamp. The gas analyzer records data every second, while the weather station might only record every minute. A simple merge would leave many empty rows. The perfect tool for this is pd.merge_asof(). It performs a “nearest-neighbor” merge, which is ideal for combining time-series data with different frequencies.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># First, merge the two auxiliary datasets together
+</span><span class="n">df_aux</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">merge_asof</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">df_Ta</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">df_Pa</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s">'Timestamp'</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s">'nearest'</span><span class="p">)</span>
 
-print("--- Gas DataFrame Info ---")
-df_gas.info()
-print("\n--- Temperature DataFrame Info ---")
-df_Ta.info()
-print("\n--- Pressure DataFrame Info ---")
-df_Pa.info()
-
-</code></pre><p><strong>Merging Gas and Auxiliary Data</strong></p> <p>Finally, we need to combine our df_gas, df_Ta, and df_Pa DataFrames. We want to add the temperature and pressure columns to the gas data, matching them by the nearest timestamp. The gas analyzer records data every second, while the weather station might only record every minute. A simple merge would leave many empty rows. The perfect tool for this is pd.merge_asof(). It performs a “nearest-neighbor” merge, which is ideal for combining time-series data with different frequencies.</p><pre><code class="language-Python"># First, merge the two auxiliary datasets together
-df_aux = pd.merge_asof(left=df_Ta, right=df_Pa, on='Timestamp', direction='nearest')
-
-# Now, merge the gas data with the combined auxiliary data.
+<span class="c1"># Now, merge the gas data with the combined auxiliary data.
 # We use direction='backward' to find the most recent weather data for each gas measurement.
-df_raw = pd.merge_asof(
-    left=df_gas, 
-    right=df_aux, 
-    on='Timestamp', 
-    direction='backward'
-)
+</span><span class="n">df_raw</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">merge_asof</span><span class="p">(</span>
+    <span class="n">left</span><span class="o">=</span><span class="n">df_gas</span><span class="p">,</span> 
+    <span class="n">right</span><span class="o">=</span><span class="n">df_aux</span><span class="p">,</span> 
+    <span class="n">on</span><span class="o">=</span><span class="s">'Timestamp'</span><span class="p">,</span> 
+    <span class="n">direction</span><span class="o">=</span><span class="s">'backward'</span>
+<span class="p">)</span>
 
-print("\n--- Final Merged DataFrame ---")
-display(df_raw.head())
-df_raw.info()
-</code></pre><p>Brilliant! You now have a single, clean DataFrame called df_final that contains everything you need: the high-frequency gas concentrations and the corresponding temperature and pressure for each measurement point. We are now fully prepared to move on to the flux calculation.</p> <h2 id="2-visualizing-and-cleaning-the-data"> <a href="#2-visualizing-and-cleaning-the-data" class="anchor-heading" aria-labelledby="2-visualizing-and-cleaning-the-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Visualizing and Cleaning the Data </h2> <p>Now that we have a single, merged DataFrame, our next step is to inspect the data quality. Raw sensor data from the field is almost never perfect. Visualizing it is the best way to diagnose issues like noise, drift, or outliers before we attempt any calculations. For this, we’ll use plotly, a powerful library for creating interactive plots.</p> <h3 id="21-creating-a-reusable-plotting-function-with-plotly"> <a href="#21-creating-a-reusable-plotting-function-with-plotly" class="anchor-heading" aria-labelledby="21-creating-a-reusable-plotting-function-with-plotly"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.1 Creating a Reusable Plotting Function with Plotly </h3> <p>Just as we did with data loading, we’ll be plotting our time-series data multiple times. To make this efficient and keep our plots looking consistent, let’s create a dedicated function. This function will take a DataFrame and some plot details as input and generate an interactive plot.</p> <blockquote> <p><strong>Task</strong>: now create the reusable plotting function!</p> </blockquote> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">--- Final Merged DataFrame ---"</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">df_raw</span><span class="p">.</span><span class="n">head</span><span class="p">())</span>
+<span class="n">df_raw</span><span class="p">.</span><span class="n">info</span><span class="p">()</span>
+</code></pre></div></div> <p>Brilliant! You now have a single, clean DataFrame called df_final that contains everything you need: the high-frequency gas concentrations and the corresponding temperature and pressure for each measurement point. We are now fully prepared to move on to the flux calculation.</p> <h2 id="2-visualizing-and-cleaning-the-data"> <a href="#2-visualizing-and-cleaning-the-data" class="anchor-heading" aria-labelledby="2-visualizing-and-cleaning-the-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Visualizing and Cleaning the Data </h2> <p>Now that we have a single, merged DataFrame, our next step is to inspect the data quality. Raw sensor data from the field is almost never perfect. Visualizing it is the best way to diagnose issues like noise, drift, or outliers before we attempt any calculations. For this, we’ll use plotly, a powerful library for creating interactive plots.</p> <h3 id="21-creating-a-reusable-plotting-function-with-plotly"> <a href="#21-creating-a-reusable-plotting-function-with-plotly" class="anchor-heading" aria-labelledby="21-creating-a-reusable-plotting-function-with-plotly"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.1 Creating a Reusable Plotting Function with Plotly </h3> <p>Just as we did with data loading, we’ll be plotting our time-series data multiple times. To make this efficient and keep our plots looking consistent, let’s create a dedicated function. This function will take a DataFrame and some plot details as input and generate an interactive plot.</p> <blockquote> <p><strong>Task</strong>: now create the reusable plotting function!</p> </blockquote> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="k">def</span> <span class="nf">plot_time_series_plotly</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">y_column</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">'lines'</span><span class="p">):</span>
     <span class="s">"""
     Generates an interactive time-series plot using Plotly.
@@ -173,16 +170,15 @@ df_raw.info()
     <span class="p">)</span>
     
     <span class="n">fig</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div></div> <details> <summary>Here is the solution!</summary><pre><code class="language-Python">
-import plotly.graph_objects as go
-import plotly.io as pio
+</code></pre></div></div> <details> <summary>Here is the solution!</summary> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">plotly.graph_objects</span> <span class="k">as</span> <span class="n">go</span>
+<span class="kn">import</span> <span class="nn">plotly.io</span> <span class="k">as</span> <span class="n">pio</span>
 
-# This setting forces Plotly to open plots in your default web browser,
+<span class="c1"># This setting forces Plotly to open plots in your default web browser,
 # which can be more stable in some environments.
-pio.renderers.default = "browser"
+</span><span class="n">pio</span><span class="p">.</span><span class="n">renderers</span><span class="p">.</span><span class="n">default</span> <span class="o">=</span> <span class="s">"browser"</span>
 
-def plot_time_series_plotly(df, y_column, title, mode='lines'):
-    """
+<span class="k">def</span> <span class="nf">plot_time_series_plotly</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">y_column</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">'lines'</span><span class="p">):</span>
+    <span class="s">"""
     Generates an interactive time-series plot using Plotly.
     This function will automatically try to set a 'Timestamp' column as the 
     index if the existing index is not a datetime type.
@@ -192,70 +188,69 @@ def plot_time_series_plotly(df, y_column, title, mode='lines'):
     - y_column (str): The name of the column to plot on the y-axis.
     - title (str): The title for the plot.
     - mode (str): Plotly mode ('lines', 'markers', or 'lines+markers').
-    """
-    # --- Input Validation and Auto-Correction ---
-    
-    # It's good practice to work on a copy inside a function to avoid 
-    # changing the user's original DataFrame unexpectedly.
-    df_plot = df.copy()
+    """</span>
+    <span class="c1"># --- Input Validation and Auto-Correction ---
+</span>    
+    <span class="c1"># It's good practice to work on a copy inside a function to avoid 
+</span>    <span class="c1"># changing the user's original DataFrame unexpectedly.
+</span>    <span class="n">df_plot</span> <span class="o">=</span> <span class="n">df</span><span class="p">.</span><span class="n">copy</span><span class="p">()</span>
 
-    if not pd.api.types.is_datetime64_any_dtype(df_plot.index):
-        print("Note: The DataFrame index is not a DatetimeIndex.")
-        # Attempt to fix the issue by finding a 'Timestamp' column
-        if 'Timestamp' in df_plot.columns:
-            print("--&gt; Found a 'Timestamp' column. Attempting to set it as the index.")
-            df_plot['Timestamp'] = pd.to_datetime(df_plot['Timestamp'])
-            # CRITICAL: You must re-assign the variable to save the change.
-            df_plot = df_plot.set_index('Timestamp')
-        else:
-            # If we can't fix it automatically, then we raise an error.
-            raise TypeError(
-                "The DataFrame index is not a DatetimeIndex and a 'Timestamp' column was not found. "
-                "Please set a DatetimeIndex before plotting."
-            )
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="p">.</span><span class="n">api</span><span class="p">.</span><span class="n">types</span><span class="p">.</span><span class="n">is_datetime64_any_dtype</span><span class="p">(</span><span class="n">df_plot</span><span class="p">.</span><span class="n">index</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Note: The DataFrame index is not a DatetimeIndex."</span><span class="p">)</span>
+        <span class="c1"># Attempt to fix the issue by finding a 'Timestamp' column
+</span>        <span class="k">if</span> <span class="s">'Timestamp'</span> <span class="ow">in</span> <span class="n">df_plot</span><span class="p">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">"--&gt; Found a 'Timestamp' column. Attempting to set it as the index."</span><span class="p">)</span>
+            <span class="n">df_plot</span><span class="p">[</span><span class="s">'Timestamp'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df_plot</span><span class="p">[</span><span class="s">'Timestamp'</span><span class="p">])</span>
+            <span class="c1"># CRITICAL: You must re-assign the variable to save the change.
+</span>            <span class="n">df_plot</span> <span class="o">=</span> <span class="n">df_plot</span><span class="p">.</span><span class="n">set_index</span><span class="p">(</span><span class="s">'Timestamp'</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If we can't fix it automatically, then we raise an error.
+</span>            <span class="k">raise</span> <span class="nb">TypeError</span><span class="p">(</span>
+                <span class="s">"The DataFrame index is not a DatetimeIndex and a 'Timestamp' column was not found. "</span>
+                <span class="s">"Please set a DatetimeIndex before plotting."</span>
+            <span class="p">)</span>
             
-    # --- Plotting ---
-    # By this point, df_plot is guaranteed to have a valid DatetimeIndex.
-    fig = go.Figure()
+    <span class="c1"># --- Plotting ---
+</span>    <span class="c1"># By this point, df_plot is guaranteed to have a valid DatetimeIndex.
+</span>    <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="p">.</span><span class="n">Figure</span><span class="p">()</span>
 
-    fig.add_trace(go.Scatter(
-        x=df_plot.index, 
-        y=df_plot[y_column], 
-        mode=mode, 
-        name=y_column
-    ))
+    <span class="n">fig</span><span class="p">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="p">.</span><span class="n">Scatter</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">df_plot</span><span class="p">.</span><span class="n">index</span><span class="p">,</span> 
+        <span class="n">y</span><span class="o">=</span><span class="n">df_plot</span><span class="p">[</span><span class="n">y_column</span><span class="p">],</span> 
+        <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> 
+        <span class="n">name</span><span class="o">=</span><span class="n">y_column</span>
+    <span class="p">))</span>
 
-    # Update layout for a clean, professional look
-    fig.update_layout(
-        title=title, 
-        xaxis_title='Time', 
-        yaxis_title=f'{y_column} Concentration (ppb)', 
-        template='plotly_white', 
-        title_font=dict(size=24),
-        xaxis=dict(tickfont=dict(size=14), title_font=dict(size=16)), 
-        yaxis=dict(tickfont=dict(size=14), title_font=dict(size=16))
-    )
+    <span class="c1"># Update layout for a clean, professional look
+</span>    <span class="n">fig</span><span class="p">.</span><span class="n">update_layout</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> 
+        <span class="n">xaxis_title</span><span class="o">=</span><span class="s">'Time'</span><span class="p">,</span> 
+        <span class="n">yaxis_title</span><span class="o">=</span><span class="sa">f</span><span class="s">'</span><span class="si">{</span><span class="n">y_column</span><span class="si">}</span><span class="s"> Concentration (ppb)'</span><span class="p">,</span> 
+        <span class="n">template</span><span class="o">=</span><span class="s">'plotly_white'</span><span class="p">,</span> 
+        <span class="n">title_font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">),</span>
+        <span class="n">xaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">tickfont</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">),</span> <span class="n">title_font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">)),</span> 
+        <span class="n">yaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">tickfont</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">),</span> <span class="n">title_font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">))</span>
+    <span class="p">)</span>
     
-    fig.show()
+    <span class="n">fig</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 
-</code></pre></details> <h3 id="22-visualizing-the-raw-gas-data"> <a href="#22-visualizing-the-raw-gas-data" class="anchor-heading" aria-labelledby="22-visualizing-the-raw-gas-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.2 Visualizing the Raw Gas Data </h3> <p>Now, let’s use our new function to look at the raw N₂O data from our combined file. You can zoom and pan on the plot to inspect the noisy areas.</p><pre><code class="language-Python">
-# Call our function to plot the raw 'N2O' column
-plot_time_series_plotly(df_final, y_column='N2O', title='Raw N2O Concentration Over Time')
+</code></pre></div> </div> </details> <h3 id="22-visualizing-the-raw-gas-data"> <a href="#22-visualizing-the-raw-gas-data" class="anchor-heading" aria-labelledby="22-visualizing-the-raw-gas-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.2 Visualizing the Raw Gas Data </h3> <p>Now, let’s use our new function to look at the raw N₂O data from our combined file. You can zoom and pan on the plot to inspect the noisy areas.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="c1"># Call our function to plot the raw 'N2O' column
+</span><span class="n">plot_time_series_plotly</span><span class="p">(</span><span class="n">df_final</span><span class="p">,</span> <span class="n">y_column</span><span class="o">=</span><span class="s">'N2O'</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">'Raw N2O Concentration Over Time'</span><span class="p">)</span>
 
-</code></pre><p><img src="/New_BAI_DataAnalysis/assets/images/python/5/raw_data_plot.png" alt="raw data plotting" /></p> <p>As you can see from the plot, the raw data is very noisy. There are several negative values and some extremely large spikes. These are physically impossible and are likely due to sensor errors or electrical interference. We cannot calculate meaningful fluxes from this data without cleaning it first.</p> <h3 id="23-filtering-with-a-quantile-filter"> <a href="#23-filtering-with-a-quantile-filter" class="anchor-heading" aria-labelledby="23-filtering-with-a-quantile-filter"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.3 Filtering with a Quantile Filter </h3> <p>To remove these outliers, we’ll use a simple but effective quantile filter. This method is robust because the extreme values we want to remove have very little influence on the calculation of percentiles. We will calculate the 10th and 90th percentiles of the N₂O concentration and discard any data points that fall outside this range.</p><pre><code class="language-Python">
-# Calculate the 10th and 90th percentiles
-p_10 = df_final.N2O.quantile(0.10)
-p_90 = df_final.N2O.quantile(0.90)
+</code></pre></div></div> <p><img src="/New_BAI_DataAnalysis/assets/images/python/5/raw_data_plot.png" alt="raw data plotting" /></p> <p>As you can see from the plot, the raw data is very noisy. There are several negative values and some extremely large spikes. These are physically impossible and are likely due to sensor errors or electrical interference. We cannot calculate meaningful fluxes from this data without cleaning it first.</p> <h3 id="23-filtering-with-a-quantile-filter"> <a href="#23-filtering-with-a-quantile-filter" class="anchor-heading" aria-labelledby="23-filtering-with-a-quantile-filter"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.3 Filtering with a Quantile Filter </h3> <p>To remove these outliers, we’ll use a simple but effective quantile filter. This method is robust because the extreme values we want to remove have very little influence on the calculation of percentiles. We will calculate the 10th and 90th percentiles of the N₂O concentration and discard any data points that fall outside this range.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Calculate the 10th and 90th percentiles
+</span><span class="n">p_10</span> <span class="o">=</span> <span class="n">df_final</span><span class="p">.</span><span class="n">N2O</span><span class="p">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.10</span><span class="p">)</span>
+<span class="n">p_90</span> <span class="o">=</span> <span class="n">df_final</span><span class="p">.</span><span class="n">N2O</span><span class="p">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.90</span><span class="p">)</span>
 
-print(f"Filtering data to keep N2O concentrations between {p_10:.2f} and {p_90:.2f} ppb.")
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Filtering data to keep N2O concentrations between </span><span class="si">{</span><span class="n">p_10</span><span class="si">:</span><span class="p">.</span><span class="mi">2</span><span class="n">f</span><span class="si">}</span><span class="s"> and </span><span class="si">{</span><span class="n">p_90</span><span class="si">:</span><span class="p">.</span><span class="mi">2</span><span class="n">f</span><span class="si">}</span><span class="s"> ppb."</span><span class="p">)</span>
 
-# Apply the filter to create a new, clean DataFrame
+<span class="c1"># Apply the filter to create a new, clean DataFrame
 # .copy() is used here to avoid a SettingWithCopyWarning from pandas
-df_filtered = df_final[(df_final.N2O &gt;= p_10) &amp; (df_final.N2O &lt;= p_90)].copy()
+</span><span class="n">df_filtered</span> <span class="o">=</span> <span class="n">df_final</span><span class="p">[(</span><span class="n">df_final</span><span class="p">.</span><span class="n">N2O</span> <span class="o">&gt;=</span> <span class="n">p_10</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df_final</span><span class="p">.</span><span class="n">N2O</span> <span class="o">&lt;=</span> <span class="n">p_90</span><span class="p">)].</span><span class="n">copy</span><span class="p">()</span>
 
-# Visualize the filtered data using our function again, this time using 'markers'
-plot_time_series_plotly(df_filtered, y_column='N2O', title='Filtered N2O Concentration Over Time', mode='markers')
-</code></pre><p><img src="/New_BAI_DataAnalysis/assets/images/python/5/filtered_N2O.png" alt="Filtered N2O" /></p> <p>This looks much better! The noise is gone, and a clear, meaningful pattern has emerged.</p> <h3 id="24-understanding-the-data-pattern"> <a href="#24-understanding-the-data-pattern" class="anchor-heading" aria-labelledby="24-understanding-the-data-pattern"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.4 Understanding the Data Pattern </h3> <p>The filtered data shows a repeating pattern which is the signature of the static chamber method: Baseline (Ambient Air): The long, relatively flat periods show the baseline N₂O concentration in the ambient air. Concentration Increase (Chamber Closed): The sections where the concentration rises steadily and linearly are the actual measurements. This occurs when the chamber is placed over the soil, trapping the gases being emitted. The rate of this increase is what we will use to calculate the flux. Sudden Drop (Chamber Opened): The sharp vertical drops occur when a measurement is finished, and the chamber is lifted from the ground, exposing the sensor to ambient air again. Leveling Off: If a chamber is left on the ground for too long, the gas concentration inside can build up, altering the pressure gradient between the soil and the chamber air. This can cause the rate of increase to slow down and “level off.” For this reason, it’s crucial to use only the initial, linear part of the increase for our flux calculation.</p> <h2 id="3-calculating-flux-for-a-single-measurement"> <a href="#3-calculating-flux-for-a-single-measurement" class="anchor-heading" aria-labelledby="3-calculating-flux-for-a-single-measurement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Calculating Flux for a Single Measurement </h2> <p>After loading and filtering our raw data and getting an overview of the patterns, it’s time to calculate the fluxes. Excited? In this section, we will focus on the data for a single measurement period to understand the process in detail. We’ll break it down into a few key steps:</p> <ol> <li> Review the flux calculation formula to see what components we need. </li> <li> Define the metadata (chamber dimensions, etc.) for our specific plot. </li> <li> Isolate the data for a specific time window and visualize it. </li> <li> Perform a linear regression on the concentration data to get the rate of change. </li> <li> Combine all the pieces to calculate the final flux. </li> </ol> <h3 id="31-the-flux-calculation-formula"> <a href="#31-the-flux-calculation-formula" class="anchor-heading" aria-labelledby="31-the-flux-calculation-formula"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3.1 The Flux Calculation Formula </h3> <p>The flux is calculated based on the Ideal Gas Law (PV = nRT). It tells us how much gas (n) is in a given volume (V) at a specific pressure (P) and temperature (T). By measuring how fast the amount of gas increases, we can determine the flux from the soil. The formula of flux calculation looks like this:</p> <p>​ \(\text{Flux Rate (molar)} = \frac{\frac{\Delta C}{t} \cdot V \cdot p}{R \cdot (T_{c} + 273.15) \cdot A}\) ​</p> <p>Where: ΔC/t: The rate of change of the gas concentration in ppm/s (this is the slope from our regression). V: The total volume of the chamber headspace (m³). p: The air pressure in Pascals (Pa) during measurement. R: The ideal gas constant (8.314 J K⁻¹ mol⁻¹). T_c: The air temperature in Celsius (°C). A: The surface area covered by the chamber (m²).</p> <p>To better understand the above fomula, it can be arranged into the following:</p> \[\text{Flux Rate (molar)} = \left( \frac{\Delta C}{t} \right) \cdot \left( \frac{p}{R \cdot (T_C + 273.15)} \right) \cdot \left( \frac{V}{A} \right)\] <p>Now, it is clear that the fomula only contains three components: <strong>Flux</strong> = <strong>slope</strong> * <strong>molar_density</strong> * <strong>V_over_A</strong> Okay, lets create a function of flux calculation based on the fomula for later use.</p> <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;"> <div class="notice--primary"> <h3 id="exercise"> <a href="#exercise" class="anchor-heading" aria-labelledby="exercise"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Exercise </h3> <p>The function <code class="language-plaintext highlighter-rouge">calculate_flux</code> is provided below but is not complete. It is your task to finish the function based on the formula.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Define key physical constants
+<span class="c1"># Visualize the filtered data using our function again, this time using 'markers'
+</span><span class="n">plot_time_series_plotly</span><span class="p">(</span><span class="n">df_filtered</span><span class="p">,</span> <span class="n">y_column</span><span class="o">=</span><span class="s">'N2O'</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">'Filtered N2O Concentration Over Time'</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">'markers'</span><span class="p">)</span>
+</code></pre></div></div> <p><img src="/New_BAI_DataAnalysis/assets/images/python/5/filtered_N2O.png" alt="Filtered N2O" /></p> <p>This looks much better! The noise is gone, and a clear, meaningful pattern has emerged.</p> <h3 id="24-understanding-the-data-pattern"> <a href="#24-understanding-the-data-pattern" class="anchor-heading" aria-labelledby="24-understanding-the-data-pattern"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2.4 Understanding the Data Pattern </h3> <p>The filtered data shows a repeating pattern which is the signature of the static chamber method: Baseline (Ambient Air): The long, relatively flat periods show the baseline N₂O concentration in the ambient air. Concentration Increase (Chamber Closed): The sections where the concentration rises steadily and linearly are the actual measurements. This occurs when the chamber is placed over the soil, trapping the gases being emitted. The rate of this increase is what we will use to calculate the flux. Sudden Drop (Chamber Opened): The sharp vertical drops occur when a measurement is finished, and the chamber is lifted from the ground, exposing the sensor to ambient air again. Leveling Off: If a chamber is left on the ground for too long, the gas concentration inside can build up, altering the pressure gradient between the soil and the chamber air. This can cause the rate of increase to slow down and “level off.” For this reason, it’s crucial to use only the initial, linear part of the increase for our flux calculation.</p> <h2 id="3-calculating-flux-for-a-single-measurement"> <a href="#3-calculating-flux-for-a-single-measurement" class="anchor-heading" aria-labelledby="3-calculating-flux-for-a-single-measurement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Calculating Flux for a Single Measurement </h2> <p>After loading and filtering our raw data and getting an overview of the patterns, it’s time to calculate the fluxes. Excited? In this section, we will focus on the data for a single measurement period to understand the process in detail. We’ll break it down into a few key steps:</p> <ol> <li> Review the flux calculation formula to see what components we need. </li> <li> Define the metadata (chamber dimensions, etc.) for our specific plot. </li> <li> Isolate the data for a specific time window and visualize it. </li> <li> Perform a linear regression on the concentration data to get the rate of change. </li> <li> Combine all the pieces to calculate the final flux. </li> </ol> <h3 id="31-the-flux-calculation-formula"> <a href="#31-the-flux-calculation-formula" class="anchor-heading" aria-labelledby="31-the-flux-calculation-formula"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3.1 The Flux Calculation Formula </h3> <p>The flux is calculated based on the Ideal Gas Law (PV = nRT). It tells us how much gas (n) is in a given volume (V) at a specific pressure (P) and temperature (T). By measuring how fast the amount of gas increases, we can determine the flux from the soil. The formula of flux calculation looks like this:</p> <p>​ \(\text{Flux Rate (molar)} = \frac{\frac{\Delta C}{t} \cdot V \cdot p}{R \cdot (T_{c} + 273.15) \cdot A}\) ​</p> <p>Where: ΔC/t: The rate of change of the gas concentration in ppm/s (this is the slope from our regression). V: The total volume of the chamber headspace (m³). p: The air pressure in Pascals (Pa) during measurement. R: The ideal gas constant (8.314 J K⁻¹ mol⁻¹). T_c: The air temperature in Celsius (°C). A: The surface area covered by the chamber (m²).</p> <p>To better understand the above fomula, it can be arranged into the following:</p> \[\text{Flux Rate (molar)} = \left( \frac{\Delta C}{t} \right) \cdot \left( \frac{p}{R \cdot (T_C + 273.15)} \right) \cdot \left( \frac{V}{A} \right)\] <p>Now, it is clear that the fomula only contains three components: <strong>Flux</strong> = <strong>slope</strong> * <strong>molar_density</strong> * <strong>V_over_A</strong> Okay, lets create a function of flux calculation based on the fomula for later use.</p> <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;"> <div class="notice--primary"> <h3 id="exercise"> <a href="#exercise" class="anchor-heading" aria-labelledby="exercise"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Exercise </h3> <p>The function <code class="language-plaintext highlighter-rouge">calculate_flux</code> is provided below but is not complete. It is your task to finish the function based on the formula.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Define key physical constants
 </span><span class="n">R</span> <span class="o">=</span> <span class="mf">8.314</span>  <span class="c1"># Ideal gas constant (J K⁻¹ mol⁻¹)
 </span>
 <span class="k">def</span> <span class="nf">calculate_flux</span><span class="p">(</span><span class="n">slope_ppb_s</span><span class="p">,</span> <span class="n">temp_k</span><span class="p">,</span> <span class="n">pressure_pa</span><span class="p">,</span> <span class="n">v_over_a</span><span class="p">):</span>
