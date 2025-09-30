@@ -9,6 +9,7 @@ In this tutorial, we're going to analyze the data you collected on your field tr
 > **Notice:**
 >
 >In all following sections I will insert some code snippets. You are very much encouraged to copy and paste them with the button on the top right and run them in your IDE (e.g. Spyder, vscode).
+
 ### Table of Contents
 1. [Read in and Merge Data Files](#1-Loading-and-Exploring-Raw-Data)
 2. [Loading and Exploring Raw Data](#2-Loading-and-Exploring-Raw-Data)
