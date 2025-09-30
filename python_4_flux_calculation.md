@@ -108,7 +108,7 @@ To avoid repetition and make our code cleaner and more reliable, it's a best pra
 >
 >Tip: The function will need to accept one argument: the filepath of the file you want to open.
 
-<details><summary>Solution!</summary>
+<details markdown="1"><summary>Solution!</summary>
 Note: how it's the exact same logic as before, just defined within a def block.
     
 ```python
@@ -191,7 +191,7 @@ We will use the same workflow as before: load each file and then combine them.
 >Create lists of the file paths for the temperature and pressure data.
 >Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!
 
-<details>
+<details markdown="1">
 <summary>Click here for the solution!</summary>
     
 ```Python
@@ -307,7 +307,7 @@ def plot_time_series_plotly(df, y_column, title, mode='lines'):
     fig.show()
 ```
 
-<details>
+<details markdown="1">
     <summary>Here is the solution!</summary>
         
     ```Python
