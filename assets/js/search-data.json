@@ -218,235 +218,242 @@
   },"31": {
     "doc": "3. FLUX CALCULATION",
     "title": "3. Calculating Flux for a Single Measurement",
-    "content": "After loading and filtering our raw data and getting an overview of the patterns, it’s time to calculate the fluxes. Excited? In this section, we will focus on the data for a single measurement period to understand the process in detail. We’ll break it down into a few key steps: Review the flux calculation formula to see what components we need. Define the metadata (chamber dimensions, etc.) for our specific plot. Isolate the data for a specific time window and visualize it. Perform a linear regression on the concentration data to get the rate of change. Combine all the pieces to calculate the final flux. 3.1 The Flux Calculation Formula The flux is calculated based on the Ideal Gas Law (PV = nRT). It tells us how much gas (n) is in a given volume (V) at a specific pressure (P) and temperature (T). By measuring how fast the amount of gas increases, we can determine the flux from the soil. The final formula looks like this: . ​ \\(\\text{Flux Rate (mass)} = \\frac{\\frac{\\Delta C}{t} \\cdot V \\cdot M \\cdot p}{R \\cdot (T_{C} + 273.15) \\cdot A}\\) ​ . Where: slope (dC/dt): The rate of change of the gas concentration (in ppb/s). This is what we get from our linear regression. P: Air pressure in Pascals (Pa). R: The ideal gas constant (8.314 J K⁻¹ mol⁻¹). T: Air temperature in Kelvin (K). V_over_A: The Volume-to-Area ratio of our chamber in meters. Let’s start by defining this as a Python function so we can use it later. code Python . ",
+    "content": "After loading and filtering our raw data and getting an overview of the patterns, it’s time to calculate the fluxes. Excited? In this section, we will focus on the data for a single measurement period to understand the process in detail. We’ll break it down into a few key steps: . | Review the flux calculation formula to see what components we need. | Define the metadata (chamber dimensions, etc.) for our specific plot. | Isolate the data for a specific time window and visualize it. | Perform a linear regression on the concentration data to get the rate of change. | Combine all the pieces to calculate the final flux. | . 3.1 The Flux Calculation Formula . The flux is calculated based on the Ideal Gas Law (PV = nRT). It tells us how much gas (n) is in a given volume (V) at a specific pressure (P) and temperature (T). By measuring how fast the amount of gas increases, we can determine the flux from the soil. The formula of flux calculation looks like this: . ​ \\(\\text{Flux Rate (molar)} = \\frac{\\frac{\\Delta C}{t} \\cdot V \\cdot p}{R \\cdot (T_{c} + 273.15) \\cdot A}\\) ​ . Where: ΔC/t: The rate of change of the gas concentration in ppm/s (this is the slope from our regression). V: The total volume of the chamber headspace (m³). p: The air pressure in Pascals (Pa) during measurement. R: The ideal gas constant (8.314 J K⁻¹ mol⁻¹). T_c: The air temperature in Celsius (°C). A: The surface area covered by the chamber (m²). To better understand the above fomula, it can be arranged into the following: . \\[\\text{Flux Rate (molar)} = \\left( \\frac{\\Delta C}{t} \\right) \\cdot \\left( \\frac{p}{R \\cdot (T_C + 273.15)} \\right) \\cdot \\left( \\frac{V}{A} \\right)\\] Now, it is clear that the fomula only contains three components: Flux = slope * molar_density * V_over_A Okay, lets create a function of flux calculation based on the fomula for later use. Task: the function calculate_flux is provided as follow but not complete. It is your task to finish the function. ```Python . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#3-calculating-flux-for-a-single-measurement",
     
     "relUrl": "/python_4_flux_calculation.html#3-calculating-flux-for-a-single-measurement"
   },"32": {
     "doc": "3. FLUX CALCULATION",
     "title": "Define key physical constants",
-    "content": "R = 8.314 # Ideal gas constant (J K⁻¹ mol⁻¹) . def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a): “”” Calculates N2O flux based on the rate of concentration change and ambient conditions. “”” # Convert slope from ppb/s to ppm/s for the formula ppm_per_second = slope_ppb_s / 1000.0 . # Calculate molar density of air (n/V = P/RT) in mol/m³ molar_density = pressure_pa / (R * temp_k) # Calculate the flux in µmol m⁻² s⁻¹ # The 1e6 converts from mol to µmol flux = ppm_per_second * molar_density * v_over_a * 1e6 return flux 3.2 Defining Measurement Metadata Now, we need the physical dimensions of our chamber setup for a specific plot. This information comes from our \"digital field notebook.\" For this example, let's define the metadata for a single plot. code Python # Metadata for a single example measurement plot_metadata = pd.Series({ 'plot_id': 1, 'land_use': 'forest', 'collar_height_m': 0.055, # Height of the collar ring in the ground 'chamber_height_m': 0.40, # Height of the chamber itself 'chamber_radius_m': 0.2, # Radius of the chamber }) . ",
+    "content": "R = 8.314 # Ideal gas constant (J K⁻¹ mol⁻¹) . def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a): “”” Calculates N2O flux based on the rate of concentration change and ambient conditions. “”” # Convert slope from ppb/s to ppm/s for the formula ppm_per_second = slope_ppb_s / 1000.0 . # Calculate molar density of air (n/V = P/RT) in mol/m³ molar_density = pressure_pa / (R * temp_k) # Calculate the flux in µmol m⁻² s⁻¹ # The 1e6 converts from mol to µmol flux = ppm_per_second * molar_density * v_over_a * 1e6 return flux . &lt;details&gt; &lt;summary&gt;solution!&lt;/summary&gt; ```Python # Define key physical constants R = 8.314 # Ideal gas constant (J K⁻¹ mol⁻¹) def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a): \"\"\" Calculates N2O flux based on the rate of concentration change and ambient conditions. \"\"\" # Convert slope from ppb/s to ppm/s for the formula ppm_per_second = slope_ppb_s / 1000.0 # Calculate molar density of air (n/V = P/RT) in mol/m³ molar_density = pressure_pa / (R * temp_k) # Calculate the flux in µmol m⁻² s⁻¹ # The 1e6 converts from mol to µmol flux = ppm_per_second * molar_density * v_over_a * 1e6 return flux . &lt;/details&gt; . 3.2 Defining Measurement Metadata Now, we need the physical dimensions of our chamber setup for a specific plot. This information comes from our “digital field notebook.” For this example, let’s define the metadata for a single plot. code Python . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#define-key-physical-constants",
     
     "relUrl": "/python_4_flux_calculation.html#define-key-physical-constants"
   },"33": {
+    "doc": "3. FLUX CALCULATION",
+    "title": "Metadata for a single example measurement",
+    "content": "plot_metadata = pd.Series({ ‘plot_id’: 1, ‘land_use’: ‘forest’, ‘collar_height_m’: 0.055, # Height of the collar ring in the ground ‘chamber_height_m’: 0.40, # Height of the chamber itself ‘chamber_radius_m’: 0.2, # Radius of the chamber }) . ",
+    "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#metadata-for-a-single-example-measurement",
+    
+    "relUrl": "/python_4_flux_calculation.html#metadata-for-a-single-example-measurement"
+  },"34": {
     "doc": "3. FLUX CALCULATION",
     "title": "Calculate the Volume-to-Area (V/A) ratio from the metadata",
     "content": "chamber_area = np.pi * plot_metadata[‘chamber_radius_m’]**2 total_height = plot_metadata[‘collar_height_m’] + plot_metadata[‘chamber_height_m’] chamber_volume = total_height * chamber_area v_over_a = chamber_volume / chamber_area . print(f”The Volume-to-Area (V/A) ratio for this plot is: {v_over_a:.3f} m”) 3.3 Isolating and Visualizing the Measurement Data Let’s use your example time period: 2025-08-15 12:00:00 to 2025-08-15 12:10:00. We’ll slice our df_filtered DataFrame to get only the data within this window and then plot it to get a closer look. code Python . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#calculate-the-volume-to-area-va-ratio-from-the-metadata",
     
     "relUrl": "/python_4_flux_calculation.html#calculate-the-volume-to-area-va-ratio-from-the-metadata"
-  },"34": {
+  },"35": {
     "doc": "3. FLUX CALCULATION",
     "title": "Define the start and end times for our measurement window",
     "content": "start_time = ‘2025-08-15 12:04:00’ end_time = ‘2025-08-15 12:09:30’ . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#define-the-start-and-end-times-for-our-measurement-window",
     
     "relUrl": "/python_4_flux_calculation.html#define-the-start-and-end-times-for-our-measurement-window"
-  },"35": {
+  },"36": {
     "doc": "3. FLUX CALCULATION",
     "title": "Select the data for this specific time window",
     "content": "measurement_data = df_filtered[start_time:end_time] . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#select-the-data-for-this-specific-time-window",
     
     "relUrl": "/python_4_flux_calculation.html#select-the-data-for-this-specific-time-window"
-  },"36": {
+  },"37": {
     "doc": "3. FLUX CALCULATION",
     "title": "Use our plotting function to visualize this specific period",
     "content": "plot_time_series_plotly( measurement_data, y_column=’N2O’, title=f’N2O Concentration for Plot {plot_metadata[“plot_id”]}’, mode=’markers’ ) This plot shows the clear, linear increase in N₂O concentration after the chamber was placed on the collar. This is the exact data we need for our regression. 3.4 Linear Regression to Find the Slope Now for the most important part of the analysis. We will fit a straight line to these data points. The slope of that line is the dC/dt (rate of change) that we need for our flux formula. For the regression, our x-axis needs to be a simple number (like seconds elapsed), not a timestamp. So, our first step is to create a new column, elapsed_seconds. code Python from scipy import stats . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#use-our-plotting-function-to-visualize-this-specific-period",
     
     "relUrl": "/python_4_flux_calculation.html#use-our-plotting-function-to-visualize-this-specific-period"
-  },"37": {
+  },"38": {
     "doc": "3. FLUX CALCULATION",
     "title": "Make a copy to avoid a SettingWithCopyWarning",
     "content": "measurement_data = measurement_data.copy() . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#make-a-copy-to-avoid-a-settingwithcopywarning",
     
     "relUrl": "/python_4_flux_calculation.html#make-a-copy-to-avoid-a-settingwithcopywarning"
-  },"38": {
+  },"39": {
     "doc": "3. FLUX CALCULATION",
     "title": "Create an ‘elapsed_seconds’ column for the regression",
     "content": "start_timestamp = measurement_data.index.min() measurement_data[‘elapsed_seconds’] = (measurement_data.index - start_timestamp).total_seconds() . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#create-an-elapsed_seconds-column-for-the-regression",
     
     "relUrl": "/python_4_flux_calculation.html#create-an-elapsed_seconds-column-for-the-regression"
-  },"39": {
+  },"40": {
     "doc": "3. FLUX CALCULATION",
     "title": "Perform the linear regression using SciPy",
     "content": "slope, intercept, r_value, p_value, std_err = stats.linregress( x=measurement_data[‘elapsed_seconds’], y=measurement_data[‘N2O’] ) . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#perform-the-linear-regression-using-scipy",
     
     "relUrl": "/python_4_flux_calculation.html#perform-the-linear-regression-using-scipy"
-  },"40": {
+  },"41": {
     "doc": "3. FLUX CALCULATION",
     "title": "The R-squared value tells us how well the line fits the data (a value &gt; 0.9 is good!)",
     "content": "r_squared = r_value**2 . print(f”— Regression Results —”) print(f”Slope (dC/dt): {slope:.4f} ppb/s”) print(f”R-squared: {r_squared:.4f}”) 3.5 Visualizing the Fit and Final Calculation It’s always good practice to visualize the regression line against the data to confirm the fit is good. code Python . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#the-r-squared-value-tells-us-how-well-the-line-fits-the-data-a-value--09-is-good",
     
     "relUrl": "/python_4_flux_calculation.html#the-r-squared-value-tells-us-how-well-the-line-fits-the-data-a-value--09-is-good"
-  },"41": {
+  },"42": {
     "doc": "3. FLUX CALCULATION",
     "title": "— Visualize the regression line —",
     "content": "fig = go.Figure() . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#-visualize-the-regression-line-",
     
     "relUrl": "/python_4_flux_calculation.html#-visualize-the-regression-line-"
-  },"42": {
+  },"43": {
     "doc": "3. FLUX CALCULATION",
     "title": "Add the raw data points",
     "content": "fig.add_trace(go.Scatter(x=measurement_data[‘elapsed_seconds’], y=measurement_data[‘N2O’], mode=’markers’, name=’Raw Data’)) . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#add-the-raw-data-points",
     
     "relUrl": "/python_4_flux_calculation.html#add-the-raw-data-points"
-  },"43": {
+  },"44": {
     "doc": "3. FLUX CALCULATION",
     "title": "Add the fitted regression line",
     "content": "fig.add_trace(go.Scatter(x=measurement_data[‘elapsed_seconds’], y=intercept + slope * measurement_data[‘elapsed_seconds’], mode=’lines’, name=’Fitted Line’, line=dict(color=’red’))) . fig.update_layout(title=f’Linear Regression for Plot {plot_metadata[“plot_id”]} (R²={r_squared:.2f})’, xaxis_title=’Elapsed Time (s)’, yaxis_title=’N2O Concentration (ppb)’, template=’plotly_white’) fig.show() . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#add-the-fitted-regression-line",
     
     "relUrl": "/python_4_flux_calculation.html#add-the-fitted-regression-line"
-  },"44": {
+  },"45": {
     "doc": "3. FLUX CALCULATION",
     "title": "— Finally, Calculate the Flux! —",
     "content": " ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#-finally-calculate-the-flux-",
     
     "relUrl": "/python_4_flux_calculation.html#-finally-calculate-the-flux-"
-  },"45": {
+  },"46": {
     "doc": "3. FLUX CALCULATION",
     "title": "Get the average temperature and pressure during the measurement",
     "content": "avg_temp_c = measurement_data[‘T_air’].mean() avg_pressure_pa = measurement_data[‘P_air’].mean() * 100 # Assuming pressure is in hPa, convert to Pa . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#get-the-average-temperature-and-pressure-during-the-measurement",
     
     "relUrl": "/python_4_flux_calculation.html#get-the-average-temperature-and-pressure-during-the-measurement"
-  },"46": {
+  },"47": {
     "doc": "3. FLUX CALCULATION",
     "title": "Convert temperature to Kelvin",
     "content": "avg_temp_k = avg_temp_c + 273.15 . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#convert-temperature-to-kelvin",
     
     "relUrl": "/python_4_flux_calculation.html#convert-temperature-to-kelvin"
-  },"47": {
+  },"48": {
     "doc": "3. FLUX CALCULATION",
     "title": "Now we have all the pieces! Let’s call our function.",
     "content": "final_flux = calculate_flux( slope_ppb_s=slope, temp_k=avg_temp_k, pressure_pa=avg_pressure_pa, v_over_a=v_over_a ) . print(f”\\n— Final Flux Calculation —”) print(f”Average Temperature: {avg_temp_c:.2f} °C”) print(f”Average Pressure: {avg_pressure_pa:.2f} Pa”) print(f”Calculated N₂O Flux: {final_flux:.5f} µmol m⁻² s⁻¹”) . rate to calculate a flux, we need to combine the gas concentration data with metadata about our measurement setup. This includes the start and end times of each chamber placement and the physical dimensions of the chamber (like collar height). First, let’s define our flux calculation function, which is based on the Ideal Gas Law. ```python from scipy import stats import seaborn as sns . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#now-we-have-all-the-pieces-lets-call-our-function",
     
     "relUrl": "/python_4_flux_calculation.html#now-we-have-all-the-pieces-lets-call-our-function"
-  },"48": {
+  },"49": {
     "doc": "3. FLUX CALCULATION",
     "title": "Define key physical and experimental constants",
     "content": "R = 8.314 # Ideal gas constant (J K⁻¹ mol⁻¹) . def calculate_flux(slope_ppb_s, temp_k, pressure_pa, V_over_A): “”” Calculate the N2O flux in µmol m⁻² s⁻¹. “”” # Convert slope from ppb/s to ppm/s ppm_per_second = slope_ppb_s / 1000 . # Calculate molar density (mol/m³) using the ideal gas law (n/V = P/RT) molar_density = pressure_pa / (R * temp_k) # Flux (µmol m⁻² s⁻¹) = dC/dt [ppm/s] * V/A [m] * molar_density [mol/m³] * 1e6 [µmol/mol] flux_umol_m2_s = ppm_per_second * V_over_A * molar_density * 1e6 return flux_umol_m2_s Now, let's create a metadata DataFrame. In a real project, you would load this from a field notebook (e.g., a CSV file). This file tells us when and where each measurement took place. We also calculate the crucial Volume-to-Area (V_over_A) ratio for the chamber at each plot. code Python # --- Create Metadata --- measurement_info = { 'plot_id': [1, 2], 'land_use': ['forest', 'forest'], 'start_time': ['2025-08-15 12:04:00', '2025-08-15 12:13:00'], 'end_time': ['2025-08-15 12:09:30', '2025-08-15 12:18:30'], 'collar_height_m': [0.055, 0.061], 'chamber_height_m': [0.40, 0.40], 'chamber_radius_m': [0.2, 0.2] } metadata_df = pd.DataFrame(measurement_info) . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#define-key-physical-and-experimental-constants",
     
     "relUrl": "/python_4_flux_calculation.html#define-key-physical-and-experimental-constants"
-  },"49": {
+  },"50": {
     "doc": "3. FLUX CALCULATION",
     "title": "Calculate the volume-to-area ratio (V/A)",
     "content": "metadata_df[‘chamber_area_m2’] = np.pi * metadata_df[‘chamber_radius_m’]**2 metadata_df[‘total_height_m’] = metadata_df[‘collar_height_m’] + metadata_df[‘chamber_height_m’] metadata_df[‘chamber_volume_m3’] = metadata_df[‘total_height_m’] * metadata_df[‘chamber_area_m2’] metadata_df[‘V_over_A’] = metadata_df[‘chamber_volume_m3’] / metadata_df[‘chamber_area_m2’] . print(“\\nMetadata created successfully:”) print(metadata_df) Now, let’s isolate the data for the first plot and perform a linear regression to find the slope (the rate of N₂O increase). code Python . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#calculate-the-volume-to-area-ratio-va",
     
     "relUrl": "/python_4_flux_calculation.html#calculate-the-volume-to-area-ratio-va"
-  },"50": {
+  },"51": {
     "doc": "3. FLUX CALCULATION",
     "title": "— Select data for the first plot —",
     "content": "plot_info = metadata_df.iloc[0] start_time = pd.to_datetime(plot_info[‘start_time’]) end_time = pd.to_datetime(plot_info[‘end_time’]) . measurement_data = df_filtered[(df_filtered.index &gt;= start_time) &amp; (df_filtered.index &lt; end_time)] . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#-select-data-for-the-first-plot-",
     
     "relUrl": "/python_4_flux_calculation.html#-select-data-for-the-first-plot-"
-  },"51": {
+  },"52": {
     "doc": "3. FLUX CALCULATION",
     "title": "Create an ‘elapsed_seconds’ column for the regression",
     "content": "measurement_data[‘elapsed_seconds’] = (measurement_data.index - start_time).total_seconds() . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#create-an-elapsed_seconds-column-for-the-regression-1",
     
     "relUrl": "/python_4_flux_calculation.html#create-an-elapsed_seconds-column-for-the-regression-1"
-  },"52": {
+  },"53": {
     "doc": "3. FLUX CALCULATION",
     "title": "— Perform linear regression —",
     "content": "slope, intercept, r_value, p_value, std_err = stats.linregress( x=measurement_data[‘elapsed_seconds’], y=measurement_data[‘N2O’] ) . r_squared = r_value**2 . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#-perform-linear-regression-",
     
     "relUrl": "/python_4_flux_calculation.html#-perform-linear-regression-"
-  },"53": {
+  },"54": {
     "doc": "3. FLUX CALCULATION",
     "title": "— Plot the regression line —",
     "content": "fig, ax = plt.subplots(layout=’constrained’, figsize=(10, 5)) ax.scatter(measurement_data[‘elapsed_seconds’], measurement_data[‘N2O’], label=’N2O Data’) ax.plot(measurement_data[‘elapsed_seconds’], intercept + slope * measurement_data[‘elapsed_seconds’], ‘r’, label=’Fitted line’) ax.set_xlabel(‘Elapsed Time (s)’) ax.set_ylabel(‘N2O Concentration (ppb)’) ax.set_title(f’Linear Regression for Plot {plot_info[“plot_id”]} (R²={r_squared:.2f})’) plt.legend() plt.show() . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#-plot-the-regression-line-",
     
     "relUrl": "/python_4_flux_calculation.html#-plot-the-regression-line-"
-  },"54": {
+  },"55": {
     "doc": "3. FLUX CALCULATION",
     "title": "— Calculate the flux —",
     "content": " ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#-calculate-the-flux-",
     
     "relUrl": "/python_4_flux_calculation.html#-calculate-the-flux-"
-  },"55": {
+  },"56": {
     "doc": "3. FLUX CALCULATION",
     "title": "We’ll assume a constant temperature and pressure for this example.",
     "content": "temp_k = 293.15 # 20°C in Kelvin pressure_pa = 101325 # Standard atmospheric pressure in Pascals V_over_A = plot_info[‘V_over_A’] . flux = calculate_flux(slope, temp_k, pressure_pa, V_over_A) . print(f”\\nResults for Plot {plot_info[‘plot_id’]}:”) print(f” - Slope (ppb/s): {slope:.4f}”) print(f” - R-squared: {r_squared:.4f}”) print(f” - Calculated Flux (µmol m⁻² s⁻¹): {flux:.4f}”) The plot shows our data and the line of best fit. The R-squared value tells us how well the line fits the data (a value &gt; 0.9 is good). The slope is the crucial dC/dt (change in concentration over time) that we feed into our calculate_flux function. Step 5: Automating Flux Calculations for All Plots Now we can wrap this logic in a loop to process all the measurements defined in our metadata_df. We will also include a Quality Control (QC) step: we only accept measurements with a good linear fit (R² &gt; 0.9), a statistically significant slope (p-value &lt; 0.05), and a positive slope (since we expect emissions, not uptake). code Python . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#well-assume-a-constant-temperature-and-pressure-for-this-example",
     
     "relUrl": "/python_4_flux_calculation.html#well-assume-a-constant-temperature-and-pressure-for-this-example"
-  },"56": {
+  },"57": {
     "doc": "3. FLUX CALCULATION",
     "title": "— Flux Calculation Loop —",
     "content": "results = [] . for index, row in metadata_df.iterrows(): start_time = pd.to_datetime(row[‘start_time’]) end_time = pd.to_datetime(row[‘end_time’]) . # Select the data for this specific time window measurement_data = df_filtered[(df_filtered.index &gt;= start_time) &amp; (df_filtered.index &lt; end_time)].copy() if len(measurement_data) &lt; 10: print(f\"Skipping plot {row['plot_id']} due to insufficient data.\") continue measurement_data['elapsed_seconds'] = (measurement_data.index - start_time).total_seconds() # Perform linear regression slope, intercept, r_value, p_value, std_err = stats.linregress( x=measurement_data['elapsed_seconds'], y=measurement_data['N2O'] ) # --- Quality Control (QC) --- r_squared = r_value**2 if r_squared &lt; 0.90 or p_value &gt; 0.05 or slope &lt; 0: flux_umol_m2_s = 0 # Set flux to 0 if QC fails qc_pass = False else: qc_pass = True temp_k = 293.15 pressure_pa = 101325 V_over_A = row['V_over_A'] flux_umol_m2_s = calculate_flux(slope, temp_k, pressure_pa, V_over_A) # Store the results results.append({ 'plot_id': row['plot_id'], 'land_use': row['land_use'], 'slope_ppb_s': slope, 'r_squared': r_squared, 'p_value': p_value, 'qc_pass': qc_pass, 'N2O_flux_umol_m2_s': flux_umol_m2_s }) . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#-flux-calculation-loop-",
     
     "relUrl": "/python_4_flux_calculation.html#-flux-calculation-loop-"
-  },"57": {
+  },"58": {
     "doc": "3. FLUX CALCULATION",
     "title": "Convert the results list to a final DataFrame",
     "content": "flux_results_df = pd.DataFrame(results) . print(“\\nFlux calculation complete:”) print(flux_results_df) This final DataFrame contains all the information we need: the calculated flux for each plot, the quality of the regression, and whether it passed our QC checks. Step 6: Comparing Fluxes for Different Land Covers The final step is to visualize our results. We want to see if there is a difference in N₂O emissions between our different land uses. A boxplot is a perfect way to do this. Let’s expand our metadata to include a hypothetical “grassland” land use to make the comparison more interesting. code Python . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#convert-the-results-list-to-a-final-dataframe",
     
     "relUrl": "/python_4_flux_calculation.html#convert-the-results-list-to-a-final-dataframe"
-  },"58": {
+  },"59": {
     "doc": "3. FLUX CALCULATION",
     "title": "— Re-create metadata with two land uses for comparison —",
     "content": "measurement_info_full = { ‘plot_id’: [1, 2, 3, 4], ‘land_use’: [‘forest’, ‘forest’, ‘grassland’, ‘grassland’], ‘start_time’: [‘2025-08-15 12:04:00’, ‘2025-08-15 12:13:00’, ‘2025-08-15 12:18:00’, ‘2025-08-15 12:23:00’ ], ‘end_time’: [‘2025-08-15 12:09:30’, ‘2025-08-15 12:18:30’, ‘2025-08-15 12:21:00’, ‘2025-08-15 12:26:00’], ‘collar_height_m’: [0.055, 0.061, 0.045, 0.049], ‘chamber_height_m’: [0.40] * 4, ‘chamber_radius_m’: [0.2] * 4 } . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#-re-create-metadata-with-two-land-uses-for-comparison-",
     
     "relUrl": "/python_4_flux_calculation.html#-re-create-metadata-with-two-land-uses-for-comparison-"
-  },"59": {
+  },"60": {
     "doc": "3. FLUX CALCULATION",
     "title": "NOTE: You would need to re-run the loop in Step 5 with this new metadata",
     "content": " ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#note-you-would-need-to-re-run-the-loop-in-step-5-with-this-new-metadata",
     
     "relUrl": "/python_4_flux_calculation.html#note-you-would-need-to-re-run-the-loop-in-step-5-with-this-new-metadata"
-  },"60": {
+  },"61": {
     "doc": "3. FLUX CALCULATION",
     "title": "to generate the full flux_results_df for this plot.",
     "content": " ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#to-generate-the-full-flux_results_df-for-this-plot",
     
     "relUrl": "/python_4_flux_calculation.html#to-generate-the-full-flux_results_df-for-this-plot"
-  },"61": {
+  },"62": {
     "doc": "3. FLUX CALCULATION",
     "title": "For this tutorial, we will create a sample final DataFrame.",
     "content": " ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#for-this-tutorial-we-will-create-a-sample-final-dataframe",
     
     "relUrl": "/python_4_flux_calculation.html#for-this-tutorial-we-will-create-a-sample-final-dataframe"
-  },"62": {
+  },"63": {
     "doc": "3. FLUX CALCULATION",
     "title": "Sample final DataFrame (replace with your actual results)",
     "content": "final_data = { ‘land_use’: [‘forest’, ‘forest’, ‘grassland’, ‘grassland’], ‘N2O_flux_umol_m2_s’: [0.012, 0.015, 0.025, 0.028] # Example values } flux_results_df_sample = pd.DataFrame(final_data) . ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#sample-final-dataframe-replace-with-your-actual-results",
     
     "relUrl": "/python_4_flux_calculation.html#sample-final-dataframe-replace-with-your-actual-results"
-  },"63": {
+  },"64": {
     "doc": "3. FLUX CALCULATION",
     "title": "— Visualization —",
     "content": "plt.figure(figsize=(10, 7)) sns.boxplot(data=flux_results_df_sample, x=’land_use’, y=’N2O_flux_umol_m2_s’, palette=’viridis’) sns.stripplot(data=flux_results_df_sample, x=’land_use’, y=’N2O_flux_umol_m2_s’, color=’black’, size=8, jitter=True, alpha=0.7) . plt.title(‘N₂O Flux by Land Use Type’, fontsize=16) plt.xlabel(‘Land Use’, fontsize=12) plt.ylabel(‘N₂O Flux (µmol m⁻² s⁻¹)’, fontsize=12) plt.grid(axis=’y’, linestyle=’–’, alpha=0.7) plt.show() . ``` . This final visualization allows us to easily compare the distribution of fluxes from the forest and grassland plots. From this example plot, we could conclude that the grassland plots tend to have higher N₂O emissions than the forest plots. ",
     "url": "/New_BAI_DataAnalysis/python_4_flux_calculation.html#-visualization-",
     
     "relUrl": "/python_4_flux_calculation.html#-visualization-"
-  },"64": {
+  },"65": {
     "doc": "3. FLUX CALCULATION",
     "title": "3. FLUX CALCULATION",
     "content": " ",
