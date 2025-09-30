@@ -427,30 +427,45 @@ Leveling Off: If a chamber is left on the ground for too long, the gas concentra
 ## 3. Calculating Flux for a Single Measurement
 After loading and filtering our raw data and getting an overview of the patterns, it's time to calculate the fluxes. Excited?
 In this section, we will focus on the data for a single measurement period to understand the process in detail. We'll break it down into a few key steps:
-Review the flux calculation formula to see what components we need.
-Define the metadata (chamber dimensions, etc.) for our specific plot.
-Isolate the data for a specific time window and visualize it.
-Perform a linear regression on the concentration data to get the rate of change.
-Combine all the pieces to calculate the final flux.
-3.1 The Flux Calculation Formula
+<ol>
+<li> Review the flux calculation formula to see what components we need. </li>
+<li> Define the metadata (chamber dimensions, etc.) for our specific plot. </li>
+<li> Isolate the data for a specific time window and visualize it. </li>
+<li> Perform a linear regression on the concentration data to get the rate of change. </li>
+<li> Combine all the pieces to calculate the final flux. </li>
+</ol>
+
+### 3.1 The Flux Calculation Formula
+
 The flux is calculated based on the Ideal Gas Law (PV = nRT). It tells us how much gas (n) is in a given volume (V) at a specific pressure (P) and temperature (T). By measuring how fast the amount of gas increases, we can determine the flux from the soil.
-The final formula looks like this:
+The formula of flux calculation looks like this:
 
 ​
 $$
-\text{Flux Rate (mass)} = \frac{\frac{\Delta C}{t} \cdot V \cdot M \cdot p}{R \cdot (T_{C} + 273.15) \cdot A}
+\text{Flux Rate (molar)} = \frac{\frac{\Delta C}{t} \cdot V \cdot p}{R \cdot (T_{c} + 273.15) \cdot A}
 $$
 ​
 
 Where:
-slope (dC/dt): The rate of change of the gas concentration (in ppb/s). This is what we get from our linear regression.
-P: Air pressure in Pascals (Pa).
+ΔC/t: The rate of change of the gas concentration in ppm/s (this is the slope from our regression).
+V: The total volume of the chamber headspace (m³).
+p: The air pressure in Pascals (Pa) during measurement.
 R: The ideal gas constant (8.314 J K⁻¹ mol⁻¹).
-T: Air temperature in Kelvin (K).
-V_over_A: The Volume-to-Area ratio of our chamber in meters.
-Let's start by defining this as a Python function so we can use it later.
-code
-Python
+T_c: The air temperature in Celsius (°C).
+A: The surface area covered by the chamber (m²).
+
+To better understand the above fomula, it can be arranged into the following:
+
+$$
+\text{Flux Rate (molar)} = \left( \frac{\Delta C}{t} \right) \cdot \left( \frac{p}{R \cdot (T_C + 273.15)} \right) \cdot \left( \frac{V}{A} \right)
+$$
+
+Now, it is clear that the fomula only contains three components: **Flux** = **slope** * **molar_density** * **V_over_A**
+Okay, lets create a function of flux calculation based on the fomula for later use.
+
+> **Task**: the function calculate_flux is provided as follow but not complete. It is your task to finish the function.
+```Python
+
 # Define key physical constants
 R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
 
@@ -468,6 +483,36 @@ def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
     # The 1e6 converts from mol to µmol
     flux = ppm_per_second * molar_density * v_over_a * 1e6
     return flux
+
+```
+
+<details>
+<summary>solution!</summary>
+    
+```Python
+
+# Define key physical constants
+R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
+
+def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
+    """
+    Calculates N2O flux based on the rate of concentration change and ambient conditions.
+    """
+    # Convert slope from ppb/s to ppm/s for the formula
+    ppm_per_second = slope_ppb_s / 1000.0
+    
+    # Calculate molar density of air (n/V = P/RT) in mol/m³
+    molar_density = pressure_pa / (R * temp_k)
+    
+    # Calculate the flux in µmol m⁻² s⁻¹
+    # The 1e6 converts from mol to µmol
+    flux = ppm_per_second * molar_density * v_over_a * 1e6
+    return flux
+
+```
+
+</details>
+
 3.2 Defining Measurement Metadata
 Now, we need the physical dimensions of our chamber setup for a specific plot. This information comes from our "digital field notebook." For this example, let's define the metadata for a single plot.
 code
