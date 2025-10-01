@@ -466,8 +466,7 @@ In this section, we will focus on the data for a single measurement period to un
 
 ### 3.1 The Flux Calculation Formula
 
-The flux is calculated based on the Ideal Gas Law (PV = nRT). It tells us how much gas (n) is in a given volume (V) at a specific pressure (P) and temperature (T). By measuring how fast the amount of gas increases, we can determine the flux from the soil.
-The formula of flux calculation looks like this:
+First, let's have a look on the fomula of flux calculation.
 
 ​
 $$
@@ -477,7 +476,7 @@ $$
 
 Where:
 
-ΔC/t: The rate of change of the gas concentration in ppm/s (this is the slope from our regression).
+ΔC/t: The rate of change of the gas concentration in ppm/s (this will be the slope from our regression).
 
 V: The total volume of the chamber headspace (m³).
 
@@ -488,6 +487,8 @@ R: The ideal gas constant (8.314 J K⁻¹ mol⁻¹).
 T_c: The air temperature in Celsius (°C).
 
 A: The surface area covered by the chamber (m²).
+
+To understand this fomula, we need to figure out the meaning of 'flux'. In the context of climate change, greenhouse gas flux specifically refers to the exchange of greenhouse gases (GHGs) like carbon dioxide (CO₂), methane (CH₄), and nitrous oxide (N₂O) between different parts of the Earth system (https://climate.sustainability-directory.com/term/greenhouse-gas-fluxes/#:~:text=In%20the%20context%20of%20climate,parts%20of%20the%20Earth%20system). Under the context of this analysis, 'flux' means gases exchange between soil and our measurement chamber. You might ask, "Doesn't the rate of concentration change, ΔC/t (in ppb/s), already represent this flux?" Actually, ΔC/t is the raw evidence of a flux, but it is not a standardized, comparable measurement. It only describes what's happening inside our specific chamber, under the specific conditions of that one measurement. We are not able to compare flux by simply comparing change rate of gas concentration. Under different temperature and pressure, gas molar density vary, the amount of gas molecular can be different even the gas volume is the same. Therefore, we need to utilize Gas Law (PV = nRT) to calculate the amount of molecular. Besides, a chamber covering a large area of soil will naturally capture more gas than one covering a small area. To make the measurement independent of our chamber's specifications, we must divide by the soil Area (A) it covers. By applying the full formula, We convert our raw observation (ΔC/t) into a robust, standardized unit: micromoles per square meter per second (µmol m⁻² s⁻¹).
 
 To better understand the above fomula, it can be arranged into the following:
 
@@ -587,15 +588,15 @@ print(f"The Volume-to-Area (V/A) ratio for this plot is: {v_over_a:.3f} m")
 ```
 
 ### 3.3 Isolating and Visualizing the Measurement Data
-Let's use your example time period: 2025-08-15 12:00:00 to 2025-08-15 12:10:00. We'll slice our df_filtered DataFrame to get only the data within this window and then plot it to get a closer look.
-code
-Python
+Let's use an example time period of measurement: 2025-08-15 12:04:00 to 2025-08-15 12:10:00. We'll slice our df_filtered DataFrame to get only the data within this window and then plot it to get a closer look.
+
+```python
 # Define the start and end times for our measurement window
 start_time = '2025-08-15 12:04:00'
 end_time = '2025-08-15 12:09:30'
 
 # Select the data for this specific time window
-measurement_data = df_filtered[start_time:end_time]
+measurement_data = df_filtered[(df_filtered.index >= start_time) & (df_filtered.index < end_time)]
 
 # Use our plotting function to visualize this specific period
 plot_time_series_plotly(
@@ -604,8 +605,57 @@ plot_time_series_plotly(
     title=f'N2O Concentration for Plot {plot_metadata["plot_id"]}',
     mode='markers'
 )
-This plot shows the clear, linear increase in N₂O concentration after the chamber was placed on the collar. This is the exact data we need for our regression.
-3.4 Linear Regression to Find the Slope
+```
+As you can see from the plot, the data in our 5-minute window 2025-08-15 12:04:00 - 2025-08-15 12:09:30 contains more than just the measurement itself. 
+
+We can identify three distinct phases:
+
+Pre-measurement Baseline: A flat period at the beginning. This is when the sensor was measuring ambient air before the chamber was placed on the collar.
+The Measurement (Linear Increase): This is the part we want. The chamber is sealed, and N₂O from the soil is accumulating, causing a steady, linear increase in concentration.
+Post-measurement Drop: The sharp, sudden drop at the end. This occurred when the chamber was lifted, and the sensor was exposed to ambient air again.
+
+Our flux calculation relies on the slope (ΔC/t) from a linear regression. If we include the flat baseline or the sharp drop in our regression, the line of best fit will not represent the true rate of accumulation, leading to a highly inaccurate flux calculation.
+
+Therefore, To get an accurate flux, visual inspection is necessary to include only the linear increase phase. Zoom in on the interactive Plotly graph. We can see that the clean, linear increase happens approximately between 12:05:30 and 12:09:00.
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+
+{% capture exercise %}
+### Exercise
+Try to slice the dataframe based on your refined time window, and plot it to see our refined result.
+
+<details markdown="1">
+<summary>Solution!</summary>
+Here is the completed function:
+
+```python
+# Define the refined, visually inspected time window
+start_reg = '2025-08-15 12:05:30'
+end_reg = '2025-08-15 12:09:00'
+
+# Create a new DataFrame with data only from this refined window
+# We use .copy() to create a completely new object for the regression
+regression_data = df_filtered[start_reg:end_reg].copy()
+
+# Visualize the refined data to confirm our selection
+plot_time_series_plotly(
+    regression_data, 
+    y_column='N2O', 
+    title=f'Refined Regression Window for Plot {plot_metadata["plot_id"]}',
+    mode='markers'
+)
+```
+</details>
+
+{% endcapture %}
+
+<div class="notice--primary">
+{{ exercise | markdownify }}
+</div>
+</div>
+Great! This plot shows the clear, linear increase in N₂O concentration after the chamber was placed on the collar. This is the exact data we need for our regression.
+
+## 3.4 Linear Regression to Find the Slope
 Now for the most important part of the analysis. We will fit a straight line to these data points. The slope of that line is the dC/dt (rate of change) that we need for our flux formula.
 For the regression, our x-axis needs to be a simple number (like seconds elapsed), not a timestamp. So, our first step is to create a new column, elapsed_seconds.
 code
