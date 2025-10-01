@@ -476,11 +476,17 @@ $$
 ​
 
 Where:
+
 ΔC/t: The rate of change of the gas concentration in ppm/s (this is the slope from our regression).
+
 V: The total volume of the chamber headspace (m³).
+
 p: The air pressure in Pascals (Pa) during measurement.
+
 R: The ideal gas constant (8.314 J K⁻¹ mol⁻¹).
+
 T_c: The air temperature in Celsius (°C).
+
 A: The surface area covered by the chamber (m²).
 
 To better understand the above fomula, it can be arranged into the following:
@@ -559,14 +565,13 @@ def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
 </div>
 
 
-3.2 Defining Measurement Metadata
+### 3.2 Defining Measurement Metadata
 Now, we need the physical dimensions of our chamber setup for a specific plot. This information comes from our "digital field notebook." For this example, let's define the metadata for a single plot.
-code
-Python
+
+```python
 # Metadata for a single example measurement
 plot_metadata = pd.Series({
     'plot_id': 1,
-    'land_use': 'forest',
     'collar_height_m': 0.055,  # Height of the collar ring in the ground
     'chamber_height_m': 0.40,  # Height of the chamber itself
     'chamber_radius_m': 0.2,   # Radius of the chamber
@@ -579,7 +584,9 @@ chamber_volume = total_height * chamber_area
 v_over_a = chamber_volume / chamber_area
 
 print(f"The Volume-to-Area (V/A) ratio for this plot is: {v_over_a:.3f} m")
-3.3 Isolating and Visualizing the Measurement Data
+```
+
+### 3.3 Isolating and Visualizing the Measurement Data
 Let's use your example time period: 2025-08-15 12:00:00 to 2025-08-15 12:10:00. We'll slice our df_filtered DataFrame to get only the data within this window and then plot it to get a closer look.
 code
 Python
