@@ -689,7 +689,7 @@ First, we need to get the average chamber air temperature and air pressure durin
 avg_temp_c = 
 avg_pressure_pa = 
 ```
-<details>
+<details markdown="1">
 <summary>Solution!</summary>
 ```python
 # Get the average temperature and pressure during the measurement
@@ -712,7 +712,7 @@ flux_N2O = ...
 
 print(...)
 ```
-<details>
+<details markdown="1">
 <summary>Solution!</summary>
 ```python
 # Now we have all the pieces! Let's call our function.
