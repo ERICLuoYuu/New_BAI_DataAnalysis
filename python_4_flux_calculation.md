@@ -636,19 +636,19 @@ Great! This plot shows the clear, linear increase in N₂O concentration after t
 ### 3.3 Linear Regression to derive the rate of gas concentration change
 Now, as we talked before, we will fit a linear line to these data points. The slope of that line is the dC/dt (rate of change) that we need for our flux formula. As we expect the unit of our regression slope to be ppb/s our x-axis needs to be seconds elapsed (it means the seconds passed compared to the start of the measurement) instead of a timestamp. So, our first step is to create a new column, elapsed_seconds.
 
-```Python
+```python
 from scipy import stats
-
 measurement_data = measurement_data.copy()
-
 # Create an 'elapsed_seconds' column for the regression
 # First, we get the start time of the measurement
 start_timestamp = measurement_data.index.min()
 # Then we get the time difference for each time point and the start of measurement, and use function total_seconds convert this time difference into seconds
 measurement_data['elapsed_seconds'] = (measurement_data.index - start_timestamp).total_seconds()
 ```
+
 Then, we are going to actually fit the regression using scipy library. R2 represents the strength of the relationship that we detected. In here, we are going to use r2 = 0.7 as a threshold. If R2 of a regression is lower than 0.7, the change of gas concentration as time is not significant enough to be recognize as a flux (no flux is detected from the data), otherwise a gas flux can be deceted from the data.
-```Python
+
+```python
 # Perform the linear regression using SciPy
 slope, intercept, r_value, p_value, std_err = stats.linregress(
     x=measurement_data['elapsed_seconds'],
@@ -665,7 +665,7 @@ print(f"R-squared: {r_squared:.4f}")
 ### 3.4 Visualizing the Fit and Final Calculation
 It's always good practice to visualize the regression line against the data to confirm the fit is good.
 
-```Python
+```python
 # --- Visualize the regression line ---
 fig = go.Figure()
 
@@ -684,6 +684,7 @@ fig.show()
 ```
 Good! If the regression is well fitted into our data, we are able to calculate the flux now! Before we call the calculate_flux function, there are still some steps to go. 
 First, we need to get the average chamber air temperature and air pressure during the measurement and convert them into desired unit respectively (K for air temperature and Pa for air pressure). The unit conversion is very important, as when we wrote the calculate_flux function, we assumed units of our inputs. The mismatch of units will introduce systematic errors and leading to inaccuracy. 
+
 ```python
 # try to get the average air temperature and air temperature value, don't forget the unit conversion.
 avg_temp_c = 
