@@ -494,11 +494,11 @@ To better understand the above fomula, it can be arranged into the following:
 
 
 $$
-\text{Flux Rate (molar)} = \left( \frac{\Delta C}{t} \right) \cdot \left( \frac{p}{R \cdot (T_C + 273.15)} \right) \cdot \left( \frac{V}{A} \right)
+\text{Flux Rate (molar)} = ( \frac{\Delta C}{t} \right) \cdot ( \frac{p \cdot V} {R \cdot (T_C + 273.15)} \right) \cdot ( \frac{1}{A} \right)
 $$
 
 
-Now, it is clear that the fomula only contains three components: **Flux** = **slope** * **molar_density** * **V_over_A**
+Now, it is clear that the fomula only contains three components: **Flux** = **slope** * **gas_mole** * **A⁻¹**
 
 Okay, lets create a function of flux calculation based on the fomula for later use.
 
@@ -540,7 +540,7 @@ Here is the completed function:
 # Define key physical constants
 R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
 
-def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
+def calculate_flux(slope_ppb_s, temp_k, pressure_pa, V, A):
     """
     Calculates N2O flux.
     """
@@ -548,11 +548,11 @@ def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
     ppm_per_second = slope_ppb_s / 1000.0
     
     # Calculate molar density of air (n/V = P/RT) in mol/m³
-    molar_density = pressure_pa / (R * temp_k)
+    gas_mole = (pressure_pa * V)/ (R * temp_k)
     
     # Calculate the flux in µmol m⁻² s⁻¹
     # The 1e6 converts from mol to µmol
-    flux = ppm_per_second * molar_density * v_over_a * 1e6
+    flux = ppm_per_second * gas_mole / A * 1e6
     return flux
 
 ```
@@ -565,29 +565,7 @@ def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
 </div>
 </div>
 
-
-### 3.2 Defining Measurement Metadata
-Now, we need the physical dimensions of our chamber setup for a specific plot. This information comes from our "digital field notebook." For this example, let's define the metadata for a single plot.
-
-```python
-# Metadata for a single example measurement
-plot_metadata = pd.Series({
-    'plot_id': 1,
-    'collar_height_m': 0.055,  # Height of the collar ring in the ground
-    'chamber_height_m': 0.40,  # Height of the chamber itself
-    'chamber_radius_m': 0.2,   # Radius of the chamber
-})
-
-# Calculate the Volume-to-Area (V/A) ratio from the metadata
-chamber_area = np.pi * plot_metadata['chamber_radius_m']**2
-total_height = plot_metadata['collar_height_m'] + plot_metadata['chamber_height_m']
-chamber_volume = total_height * chamber_area
-v_over_a = chamber_volume / chamber_area
-
-print(f"The Volume-to-Area (V/A) ratio for this plot is: {v_over_a:.3f} m")
-```
-
-### 3.3 Isolating and Visualizing the Measurement Data
+### 3.2 Isolating and Visualizing the Measurement Data
 Let's use an example time period of measurement: 2025-08-15 12:04:00 to 2025-08-15 12:10:00. We'll slice our df_filtered DataFrame to get only the data within this window and then plot it to get a closer look.
 
 ```python
@@ -630,12 +608,12 @@ Here is the completed function:
 
 ```python
 # Define the refined, visually inspected time window
-start_reg = '2025-08-15 12:05:30'
-end_reg = '2025-08-15 12:09:00'
+start_mea = '2025-08-15 12:05:30'
+end_mea = '2025-08-15 12:09:00'
 
 # Create a new DataFrame with data only from this refined window
 # We use .copy() to create a completely new object for the regression
-regression_data = df_filtered[start_reg:end_reg].copy()
+measurement_data = df_filtered[df_filtered.index > start_mea & df_filtered.index < end_mea].copy()
 
 # Visualize the refined data to confirm our selection
 plot_time_series_plotly(
@@ -655,36 +633,39 @@ plot_time_series_plotly(
 </div>
 Great! This plot shows the clear, linear increase in N₂O concentration after the chamber was placed on the collar. This is the exact data we need for our regression.
 
-## 3.4 Linear Regression to Find the Slope
-Now for the most important part of the analysis. We will fit a straight line to these data points. The slope of that line is the dC/dt (rate of change) that we need for our flux formula.
-For the regression, our x-axis needs to be a simple number (like seconds elapsed), not a timestamp. So, our first step is to create a new column, elapsed_seconds.
-code
-Python
+### 3.3 Linear Regression to derive the rate of gas concentration change
+Now, as we talked before, we will fit a linear line to these data points. The slope of that line is the dC/dt (rate of change) that we need for our flux formula. As we expect the unit of our regression slope to be ppb/s our x-axis needs to be seconds elapsed (it means the seconds passed compared to the start of the measurement) instead of a timestamp. So, our first step is to create a new column, elapsed_seconds.
+
+```Python
 from scipy import stats
 
-# Make a copy to avoid a SettingWithCopyWarning
 measurement_data = measurement_data.copy()
 
 # Create an 'elapsed_seconds' column for the regression
+# First, we get the start time of the measurement
 start_timestamp = measurement_data.index.min()
+# Then we get the time difference for each time point and the start of measurement, and use function total_seconds convert this time difference into seconds
 measurement_data['elapsed_seconds'] = (measurement_data.index - start_timestamp).total_seconds()
-
+```
+Then, we are going to actually fit the regression using scipy library. R2 represents the strength of the relationship that we detected. In here, we are going to use r2 = 0.7 as a threshold. If R2 of a regression is lower than 0.7, the change of gas concentration as time is not significant enough to be recognize as a flux (no flux is detected from the data), otherwise a gas flux can be deceted from the data.
+```Python
 # Perform the linear regression using SciPy
 slope, intercept, r_value, p_value, std_err = stats.linregress(
     x=measurement_data['elapsed_seconds'],
     y=measurement_data['N2O']
 )
 
-# The R-squared value tells us how well the line fits the data (a value > 0.9 is good!)
+# The R-squared value tells us how well the line fits the data (a value > 0.7 is good!)
 r_squared = r_value**2
 
 print(f"--- Regression Results ---")
 print(f"Slope (dC/dt): {slope:.4f} ppb/s")
 print(f"R-squared: {r_squared:.4f}")
-3.5 Visualizing the Fit and Final Calculation
+```
+### 3.4 Visualizing the Fit and Final Calculation
 It's always good practice to visualize the regression line against the data to confirm the fit is good.
-code
-Python
+
+```Python
 # --- Visualize the regression line ---
 fig = go.Figure()
 
@@ -700,30 +681,62 @@ fig.add_trace(go.Scatter(x=measurement_data['elapsed_seconds'],
 fig.update_layout(title=f'Linear Regression for Plot {plot_metadata["plot_id"]} (R²={r_squared:.2f})',
                   xaxis_title='Elapsed Time (s)', yaxis_title='N2O Concentration (ppb)', template='plotly_white')
 fig.show()
-
-# --- Finally, Calculate the Flux! ---
+```
+Good! If the regression is well fitted into our data, we are able to calculate the flux now! Before we call the calculate_flux function, there are still some steps to go. 
+First, we need to get the average chamber air temperature and air pressure during the measurement and convert them into desired unit respectively (K for air temperature and Pa for air pressure). The unit conversion is very important, as when we wrote the calculate_flux function, we assumed units of our inputs. The mismatch of units will introduce systematic errors and leading to inaccuracy. 
+```python
+# try to get the average air temperature and air temperature value, don't forget the unit conversion.
+avg_temp_c = 
+avg_pressure_pa = 
+```
+<details>
+<summary>Solution!</summary>
+```python
 # Get the average temperature and pressure during the measurement
-avg_temp_c = measurement_data['T_air'].mean()
+avg_temp_c = measurement_data['T_air'].mean() + 273.15 # convert from °C to K
 avg_pressure_pa = measurement_data['P_air'].mean() * 100 # Assuming pressure is in hPa, convert to Pa
+```
+</details>
+Then, we still need the total volume of the chamber headspace (m³) and the surface area covered by the chamber (m²). As they are independent of time and the same for all plots, we can simply define them as constants. 
 
-# Convert temperature to Kelvin
-avg_temp_k = avg_temp_c + 273.15
+```python
+# --- Finally, Calculate the Flux! ---
+VOLUME = 0.126 # 
+AREA = 0.13 # the radias of the collar ring is 0.2m, so the area is 0.2*0.2*PI
+```
+Finally, call our calculate_flux function and we can get the result!
 
+```python
+# Now try to call the function using all the inputs we have and print out to check the result.
+flux_N2O = ...
+
+print(...)
+```
+<details>
+<summary>Solution!</summary>
+```python
 # Now we have all the pieces! Let's call our function.
-final_flux = calculate_flux(
+flux_N2O = calculate_flux(
     slope_ppb_s=slope,
     temp_k=avg_temp_k,
     pressure_pa=avg_pressure_pa,
-    v_over_a=v_over_a
+    V=VOLUME,
+    A=AREA
+
 )
 
 print(f"\n--- Final Flux Calculation ---")
 print(f"Average Temperature: {avg_temp_c:.2f} °C")
 print(f"Average Pressure: {avg_pressure_pa:.2f} Pa")
-print(f"Calculated N₂O Flux: {final_flux:.5f} µmol m⁻² s⁻¹")
+print(f"Calculated N₂O Flux: {flux_N2O:.5f} µmol m⁻² s⁻¹")
+```
+</details>
 
+Brilliant! Now you successfuly turn the raw gas concentration data into gas fulx!
 
-
+### 3.4 Visualizing the Fit and Final Calculation
+## 4. Automating gas flux calculation
+ 
 rate to calculate a flux, we need to combine the gas concentration data with **metadata** about our measurement setup. This includes the start and end times of each chamber placement and the physical dimensions of the chamber (like collar height).
 
 First, let's define our flux calculation function, which is based on the Ideal Gas Law.
