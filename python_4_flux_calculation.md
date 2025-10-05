@@ -310,7 +310,7 @@ The plooting function is partly providing in the following, now finish the funct
 
 ```python
 
-def plot_time_series_plotly(df, y_column, title, mode='lines'):
+def plot_time_series(df, y_column, title, mode='lines'):
     """
     Generates an interactive time-series plot using Plotly.
 
@@ -343,7 +343,7 @@ import plotly.io as pio
 # which can be more stable in some environments.
 pio.renderers.default = "browser"
 
-def plot_time_series_plotly(df, y_column, title, mode='lines'):
+def plot_time_series(df, y_column, title, mode='lines'):
     """
     Generates an interactive time-series plot using Plotly.
     This function will automatically try to set a 'Timestamp' column as the 
@@ -415,7 +415,7 @@ Now, let's use our new function to look at the raw N₂O data from our combined 
 ```python
 
 # Call our function to plot the raw 'N2O' column
-plot_time_series_plotly(df_final, y_column='N2O', title='Raw N2O Concentration Over Time')
+plot_time_series(df_final, y_column='N2O', title='Raw N2O Concentration Over Time')
 
 ```
 
@@ -438,7 +438,7 @@ print(f"Filtering data to keep N2O concentrations between {p_10:.2f} and {p_90:.
 df_filtered = df_final[(df_final.N2O >= p_10) & (df_final.N2O <= p_90)].copy()
 
 # Visualize the filtered data using our function again, this time using 'markers'
-plot_time_series_plotly(df_filtered, y_column='N2O', title='Filtered N2O Concentration Over Time', mode='markers')
+plot_time_series(df_filtered, y_column='N2O', title='Filtered N2O Concentration Over Time', mode='markers')
 ```
 
 ![Filtered N2O](/assets/images/python/5/filtered_N2O.png)
@@ -591,7 +591,7 @@ end_time = '2025-08-15 12:09:30'
 measurement_data = df_filtered[(df_filtered.index >= start_time) & (df_filtered.index < end_time)]
 
 # Use our plotting function to visualize this specific period
-plot_time_series_plotly(
+plot_time_series(
     measurement_data, 
     y_column='N2O', 
     title=f'N2O Concentration for Plot {plot_metadata["plot_id"]}',
@@ -630,7 +630,7 @@ end_mea = '2025-08-15 12:09:00'
 measurement_data = df_filtered[df_filtered.index > start_mea & df_filtered.index < end_mea].copy()
 
 # Visualize the refined data to confirm our selection
-plot_time_series_plotly(
+plot_time_series(
     regression_data, 
     y_column='N2O', 
     title=f'Refined Regression Window for Plot {plot_metadata["plot_id"]}',
@@ -735,8 +735,8 @@ flux_N2O = calculate_flux(
     slope_ppb_s=slope,
     temp_k=avg_temp_k,
     pressure_pa=avg_pressure_pa,
-    V=VOLUME,
-    A=AREA
+    volume=VOLUME,
+    area=AREA
 
 )
 
@@ -855,12 +855,13 @@ In the 'solution', we used the handler ValueError to indicate the input value is
 
 
 ## 4. Automating gas flux calculation
+### 4.1 Store and structure measurement info 
  
 The first and crucial step of automation is to store the key information (metadata) for each measurement in a structured way that a program can loop through. For this, we will use a Python dictionary. The dictionary keys will be our data "columns" (e.g., 'plot_id', 'land_use'), and the values will be lists containing the data for each plot.
 Now, there is an issue: we take multiple measurements at the same plot, perhaps on different days or at different times. How can we store this information efficiently?
 We can store the multiple start and end times for a single plot as a single string, with each timestamp separated by a semicolon (;). Of course, the order of the multiple starttime and endtime for a plot should match. By doing this, we can keep the metadata table concise and still tell our program to perform multiple calculations for that plot.
 
-```python
+
 
 ```python
 # --- Create Metadata ---
@@ -872,96 +873,102 @@ measurement_info = {
 }
 metadata_df = pd.DataFrame(measurement_info)
 ```
-
-# --- Flux Calculation Loop ---
+### 4.2 Automation Calculation
+Now we can build a for loop that iterates through each row (Each row contains infomation for a single plot) of our metadata_df. In here, we are going to use 'iterrow()' to iterate through metadata_df. 'iterrow()' is a method of data frame object, it generates an iterator object of the DataFrame, allowing us to iterate each row in the DataFrame. Each iteration produces an index object and a row object (a Pandas Series object). Inside the loop, we will split start_time and end_time string for each plot using 'split()' method and build a inner loop to iterate all measurements for the plot. Within the inner loop, we will perform the exact same steps we did manually in the last section.
+```python
 results = []
-
 for index, row in metadata_df.iterrows():
-    start_time = pd.to_datetime(row['start_time'])
-    end_time = pd.to_datetime(row['end_time'])
+    start_times = row['start_time'].strip().split(';')  # Handle potential multiple times
+    end_times = row['end_time'].strip().split(';')  # Handle potential multiple times
 
-    # Select the data for this specific time window
-    measurement_data = df_filtered[(df_filtered.index >= start_time) & (df_filtered.index < end_time)].copy()
-    
-    if len(measurement_data) < 10:
-        print(f"Skipping plot {row['plot_id']} due to insufficient data.")
-        continue
+    for start_time, end_time in zip(start_times, end_times):
+        start_time = pd.to_datetime(start_time.strip())
+        end_time = pd.to_datetime(end_time.strip())
+```
 
-    measurement_data['elapsed_seconds'] = (measurement_data.index - start_time).total_seconds()
+        # Select the data for this specific time window
+        measurement_data = df_filtered[(df_filtered.index >= start_time) & (df_filtered.index < end_time)]
+        # Plot the raw data for visual inspection
+        plot_time_series(measurement_data, y_column='N2O', title=f'N2O Concentration Over Time}', mode='markers')
+        # Mannually selcect the start and end time for regression
+        start_time_reg = input("Enter the start time for regression (YYYY-MM-DD HH:MM:SS): ").strip()
+        end_time_reg = input("Enter the end time for regression (YYYY-MM-DD HH:MM:SS): ").strip()
+        # Use the original start and end time if no input is given
+        if not start_time_reg:
+            start_time_reg = start_time
+        if not end_time_reg:
+            end_time_reg = end_time
+        start_time = pd.to_datetime(start_time_reg)
+        end_time = pd.to_datetime(end_time_reg)
+        measurement_data = measurement_data[(measurement_data.index >= start_time) & (measurement_data.index <= end_time)]
+        # Ensure there is enough data to perform a regression
+        if len(measurement_data) < 10:
+            print(f"Skipping plot {row['plot_id']} due to insufficient data.")
+            continue
 
-    # Perform linear regression
-    slope, intercept, r_value, p_value, std_err = stats.linregress(
-        x=measurement_data['elapsed_seconds'],
-        y=measurement_data['N2O']
-    )
+        # Create an 'elapsed_seconds' column for the regression
+        measurement_data['elapsed_seconds'] = (measurement_data.index - start_time).total_seconds()
 
-    # --- Quality Control (QC) ---
-    r_squared = r_value**2
-    if r_squared < 0.90 or p_value > 0.05 or slope < 0:
-        flux_umol_m2_s = 0  # Set flux to 0 if QC fails
-        qc_pass = False
-    else:
-        qc_pass = True
-        temp_k = 293.15
-        pressure_pa = 101325
-        V_over_A = row['V_over_A']
-        flux_umol_m2_s = calculate_flux(slope, temp_k, pressure_pa, V_over_A)
+        # Perform linear regression: N2O concentration vs. time
+        slope, intercept, r_value, p_value, std_err = stats.linregress(
+            x=measurement_data['elapsed_seconds'],
+            y=measurement_data['N2O']
+        )
 
-    # Store the results
-    results.append({
-        'plot_id': row['plot_id'],
-        'land_use': row['land_use'],
-        'slope_ppb_s': slope,
-        'r_squared': r_squared,
-        'p_value': p_value,
-        'qc_pass': qc_pass,
-        'N2O_flux_umol_m2_s': flux_umol_m2_s
-    })
+        # --- Quality Control (QC) ---
+        # We only accept measurements with a good linear fit and a positive slope
+        r_squared = r_value**2
+        # plot the regression line
+        fig, ax = plt.subplots(layout='constrained', figsize=(10, 5))
+        ax.scatter(measurement_data['elapsed_seconds'], measurement_data['N2O'], label='N2O Concentration (ppb)')
+        ax.plot(measurement_data['elapsed_seconds'], intercept + slope * measurement_data['elapsed_seconds'], 'r', label='Fitted line')
+        ax.set_xlabel('Elapsed Time (s)')
+        ax.set_ylabel('N2O Concentration (ppb)')
+        ax.set_title(f'Linear Regression for Plot {row["plot_id"]} (R²={r_squared:.2f})')
+        plt.legend()
+        plt.show()
+
+        if r_squared < 0.70 or p_value > 0.05 or slope < 0:
+            flux_umol_m2_s = 0  # Set flux to 0 if QC fails
+            qc_pass = False
+        else:
+            qc_pass = True
+            
+            # --- Flux Calculation Formula ---
+            # This formula converts the rate of change in concentration (slope) to a flux rate.
+            # It corrects for ambient pressure and temperature.
+            
+            temp_k = measurement_data['temperature'].mean() + 273.15  # Convert °C to Kelvin
+            pressure_pa = measurement_data['pressure'].mean() * 100  # Convert hPa to Pascals
+
+            flux_umol_m2_s = calculate_flux(slope, temp_k, pressure_pa, VOLUME, AREA)
+
+        # Store the results
+        results.append({
+            'plot_id': row['plot_id'],
+            'land_use': row['land_use'],
+            'measurement_date': f'{start_time.year}-{start_time.month:02d}-{start_time.day:02d}',
+            'slope_ppb_s': slope,
+            'r_squared': r_squared,
+            'p_value': p_value,
+            'qc_pass': qc_pass,
+            'N2O_flux_umol_m2_s': flux_umol_m2_s
+        })
 
 # Convert the results list to a final DataFrame
 flux_results_df = pd.DataFrame(results)
 
 print("\nFlux calculation complete:")
 print(flux_results_df)
-This final DataFrame contains all the information we need: the calculated flux for each plot, the quality of the regression, and whether it passed our QC checks.
-Step 6: Comparing Fluxes for Different Land Covers
-The final step is to visualize our results. We want to see if there is a difference in N₂O emissions between our different land uses. A boxplot is a perfect way to do this.
-Let's expand our metadata to include a hypothetical "grassland" land use to make the comparison more interesting.
-code
-Python
-# --- Re-create metadata with two land uses for comparison ---
-measurement_info_full = {
-    'plot_id': [1, 2, 3, 4],
-    'land_use': ['forest', 'forest', 'grassland', 'grassland'],
-    'start_time': ['2025-08-15 12:04:00', '2025-08-15 12:13:00', '2025-08-15 12:18:00', '2025-08-15 12:23:00' ],
-    'end_time': ['2025-08-15 12:09:30', '2025-08-15 12:18:30', '2025-08-15 12:21:00', '2025-08-15 12:26:00'],
-    'collar_height_m': [0.055, 0.061, 0.045, 0.049],
-    'chamber_height_m': [0.40] * 4,
-    'chamber_radius_m': [0.2] * 4
-}
-# NOTE: You would need to re-run the loop in Step 5 with this new metadata
-# to generate the full flux_results_df for this plot.
-# For this tutorial, we will create a sample final DataFrame.
-
-# Sample final DataFrame (replace with your actual results)
-final_data = {
-    'land_use': ['forest', 'forest', 'grassland', 'grassland'],
-    'N2O_flux_umol_m2_s': [0.012, 0.015, 0.025, 0.028] # Example values
-}
-flux_results_df_sample = pd.DataFrame(final_data)
-
 
 # --- Visualization ---
 plt.figure(figsize=(10, 7))
-sns.boxplot(data=flux_results_df_sample, x='land_use', y='N2O_flux_umol_m2_s', palette='viridis')
-sns.stripplot(data=flux_results_df_sample, x='land_use', y='N2O_flux_umol_m2_s', color='black', size=8, jitter=True, alpha=0.7)
+sns.boxplot(data=flux_results_df, x='land_use', y='N2O_flux_umol_m2_s', palette='viridis')
+sns.stripplot(data=flux_results_df, x='land_use', y='N2O_flux_umol_m2_s', color='black', size=8, jitter=True, alpha=0.7)
 
 plt.title('N₂O Flux by Land Use Type', fontsize=16)
 plt.xlabel('Land Use', fontsize=12)
 plt.ylabel('N₂O Flux (µmol m⁻² s⁻¹)', fontsize=12)
 plt.grid(axis='y', linestyle='--', alpha=0.7)
 plt.show()
-
-``` <!-- Placeholder for image -->
-
-This final visualization allows us to easily compare the distribution of fluxes from the forest and grassland plots. From this example plot, we could conclude that the grassland plots tend to have higher N₂O emissions than the forest plots.
+```
