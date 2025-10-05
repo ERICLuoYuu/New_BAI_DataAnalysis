@@ -515,15 +515,22 @@ The function `calculate_flux` is provided below but is not complete. It is your 
 # Define key physical constants
 R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
 
-def calculate_flux(slope_ppb_s, temp_k, pressure_pa, v_over_a):
+def calculate_flux(slope_ppb_s, temp_k, pressure_pa, volume, area):
     """
     Calculates N2O flux.
+
+    Parameters:
+    - slope_ppb_s (float): Rate of change in ppb/s.
+    - temperature (float): Temperature, assumed to be in Celsius or Kelvin.
+    - pressure (float): Pressure, assumed to be in Pascals (Pa) or hectopascals (hPa).
+    - volume (float): Chamber volume, assumed to be in cubic meters (m³) or Liters (L).
+    - area (float): Chamber area, assumed to be in square meters (m²) or square cm (cm²).
     """
     # Convert slope from ppb/s to ppm/s for the formula
     ppm_per_second = ...
     
     # Calculate molar density of air (n/V = P/RT) in mol/m³
-    molar_density = ...
+    gas_model = ...
     
     # Calculate the flux in µmol m⁻² s⁻¹
     # The 1e6 converts from mol to µmol
@@ -540,19 +547,26 @@ Here is the completed function:
 # Define key physical constants
 R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
 
-def calculate_flux(slope_ppb_s, temp_k, pressure_pa, V, A):
+def calculate_flux(slope_ppb_s, temp_k, pressure_pa, volume, area):
     """
     Calculates N2O flux.
+
+    Parameters:
+    - slope_ppb_s (float): Rate of change in ppb/s.
+    - temperature (float): Temperature, assumed to be in Celsius or Kelvin.
+    - pressure (float): Pressure, assumed to be in Pascals (Pa) or hectopascals (hPa).
+    - volume (float): Chamber volume, assumed to be in cubic meters (m³) or Liters (L).
+    - area (float): Chamber area, assumed to be in square meters (m²) or square cm (cm²).
     """
     # Convert slope from ppb/s to ppm/s for the formula
     ppm_per_second = slope_ppb_s / 1000.0
     
     # Calculate molar density of air (n/V = P/RT) in mol/m³
-    gas_mole = (pressure_pa * V)/ (R * temp_k)
+    gas_mole = (pressure_pa * volume)/ (R * temp_k)
     
     # Calculate the flux in µmol m⁻² s⁻¹
     # The 1e6 converts from mol to µmol
-    flux = ppm_per_second * gas_mole / A * 1e6
+    flux = ppm_per_second * gas_mole / area * 1e6
     return flux
 
 ```
@@ -735,104 +749,130 @@ print(f"Calculated N₂O Flux: {flux_N2O:.5f} µmol m⁻² s⁻¹")
 
 Brilliant! Now you successfuly turn the raw gas concentration data into gas fulx!
 
-### 3.4 Visualizing the Fit and Final Calculation
-## 4. Automating gas flux calculation
- 
-rate to calculate a flux, we need to combine the gas concentration data with **metadata** about our measurement setup. This includes the start and end times of each chamber placement and the physical dimensions of the chamber (like collar height).
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 
-First, let's define our flux calculation function, which is based on the Ideal Gas Law.
+{% capture exercise %}
+### Challenge
+Our current calculate_flux function works well, but it has a hidden weakness. It assumes the units of the inputs are correct. For example, it blindly assumes the temp_k argument is already in Kelvin. What if a user accidentally passes in a temperature in Celsius? The function would run without an error but produce a wildly incorrect result.
+Code that relies on such hidden assumptions is sometimes called "hard-coded." A much better practice is to write more flexible code that can handle different situations or at least warn the user when something is wrong.
+
+**Task**: upgrade the calculate_flux function to be more robust. It should:
+1. Add Unit Checks: Check the input values to make a reasonable guess about their units.
+2. Perform Automatic Unit Conversion: If it detects a value in a common but incorrect unit (like Celsius for temperature), it should automatically convert it to the required unit (Kelvin).
+3. Raise Errors: If a value is completely outside a plausible range, it should stop and raise an error with a helpful message.
+
+**Tip**: You can determine units by checking the physical range of a variable. For example, for a terrestrial field measurement, if a temperature value is between -50 and 50, it's almost certainly Celsius. If it's between 223 and 323, it's likely already in Kelvin.
+
+<details markdown="1">
+<summary>Solution!</summary>
+
 
 ```python
-from scipy import stats
-import seaborn as sns
 
-# Define key physical and experimental constants
+# Define key physical constants
 R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
 
-def calculate_flux(slope_ppb_s, temp_k, pressure_pa, V_over_A):
+def calculate_flux(slope_ppb_s, temperature, pressure, volume, area):
     """
-    Calculate the N2O flux in µmol m⁻² s⁻¹.
-    """
-    # Convert slope from ppb/s to ppm/s
-    ppm_per_second = slope_ppb_s / 1000
+    Calculates N2O flux with extensive unit checks and auto-conversion for all inputs.
 
-    # Calculate molar density (mol/m³) using the ideal gas law (n/V = P/RT)
+    Parameters:
+    - slope_ppb_s (float): Rate of change in ppb/s.
+    - temperature (float): Temperature, assumed to be in Celsius or Kelvin.
+    - pressure (float): Pressure, assumed to be in Pascals (Pa) or hectopascals (hPa).
+    - volume (float): Chamber volume, assumed to be in cubic meters (m³) or Liters (L).
+    - area (float): Chamber area, assumed to be in square meters (m²) or square cm (cm²).
+    """
+    # --- 1. Input Validation and Unit Conversion ---
+    
+    # Check Temperature (Celsius vs. Kelvin)
+    if -50 <= temperature <= 50:
+        print(f"Note: Temperature ({temperature}) detected as Celsius. Converting to Kelvin.")
+        temp_k = temperature + 273.15
+    elif 223 <= temperature <= 323:
+        temp_k = temperature
+    else:
+        raise ValueError(f"Temperature value ({temperature}) is outside a plausible range.")
+
+    # Check Pressure (Pascals vs. hPa)
+    if 800 <= pressure <= 1100:
+        print(f"Note: Pressure ({pressure}) detected as hPa/mbar. Converting to Pascals.")
+        pressure_pa = pressure * 100
+    elif 80000 <= pressure <= 110000:
+        pressure_pa = pressure
+    else:
+        raise ValueError(f"Pressure value ({pressure}) is outside a plausible range.")
+        
+    # Check Volume (m³ vs. Liters)
+    if 10000 <= volume <= 2000000
+        print(f"Note: Volume ({volume}) detected as cm³. Converting to m³.")
+        volume_m3 = volume / 1e6
+    elif 10 <= volume <= 2000: # Plausible range for Liters
+        print(f"Note: Volume ({volume}) detected as Liters. Converting to m³.")
+        volume_m3 = volume / 1000.0
+    elif 0.01 <= volume <= 2: # Plausible range for m³
+        volume_m3 = volume
+    else:
+        raise ValueError(f"Volume value ({volume}) is outside a plausible range for m³ or Liters.")
+
+    # Check Area (m² vs. cm²)
+    if 100 <= area <= 20000: # Plausible range for cm²
+        print(f"Note: Area ({area}) detected as cm². Converting to m².")
+        area_m2 = area / 10000.0
+    elif 1 <= area <= 200:  # Plausible range for dm²
+        area_m2 = area / 100.0
+        print(f"Note: Area ({area}) detected as dm². Converting to m².")
+    elif 0.01 <= area <= 2: # Plausible range for m²
+        area_m2 = area
+    else:
+        raise ValueError(f"Area value ({area}) is outside a plausible range for m², dm² or cm².")
+
+    # --- 2. Core Calculation ---
+    v_over_a = volume_m3 / area_m2
+    ppm_per_second = slope_ppb_s / 1000.0
     molar_density = pressure_pa / (R * temp_k)
+    flux = ppm_per_second * molar_density * v_over_a * 1e6
+    
+    return flux
+```
+**Info**: Python raise Keyword is used to raise exceptions or errors. The raise keyword raises an error and stops the control flow of the program. It is used to bring up the current exception in an exception handler (an exception handler indicates the error type) so that it can be handled further up the call stack ([Go to geeksforgeeks for more information](https://www.geeksforgeeks.org/python/python-raise-keyword/)). 
 
-    # Flux (µmol m⁻² s⁻¹) = dC/dt [ppm/s] * V/A [m] * molar_density [mol/m³] * 1e6 [µmol/mol]
-    flux_umol_m2_s = ppm_per_second * V_over_A * molar_density * 1e6
+The basic way to raise an exception is 
+```python
+raise Exception ('...') # In here, Exception is an exception handler (it is actually a function), which indicate a general exception. It takes a string used to reminder                            # users what errors happen in here and the potential reasons. 
+```
 
-    return flux_umol_m2_s
-Now, let's create a metadata DataFrame. In a real project, you would load this from a field notebook (e.g., a CSV file). This file tells us when and where each measurement took place. We also calculate the crucial Volume-to-Area (V_over_A) ratio for the chamber at each plot.
-code
-Python
+In the 'solution', we used the handler ValueError to indicate the input value is outside a plausible range, and pass a string showing to users to further explain the error.
+</details>
+
+{% endcapture %}
+
+<div class="notice--primary">
+{{ exercise | markdownify }}
+</div>
+</div>
+
+
+
+## 4. Automating gas flux calculation
+ 
+The first and crucial step of automation is to store the key information (metadata) for each measurement in a structured way that a program can loop through. For this, we will use a Python dictionary. The dictionary keys will be our data "columns" (e.g., 'plot_id', 'land_use'), and the values will be lists containing the data for each plot.
+Now, there is an issue: we take multiple measurements at the same plot, perhaps on different days or at different times. How can we store this information efficiently?
+We can store the multiple start and end times for a single plot as a single string, with each timestamp separated by a semicolon (;). Of course, the order of the multiple starttime and endtime for a plot should match. By doing this, we can keep the metadata table concise and still tell our program to perform multiple calculations for that plot.
+
+```python
+
+```python
 # --- Create Metadata ---
 measurement_info = {
     'plot_id': [1, 2],
     'land_use': ['forest', 'forest'],
-    'start_time': ['2025-08-15 12:04:00', '2025-08-15 12:13:00'],
-    'end_time': ['2025-08-15 12:09:30', '2025-08-15 12:18:30'],
-    'collar_height_m': [0.055, 0.061],
-    'chamber_height_m': [0.40, 0.40],
-    'chamber_radius_m': [0.2, 0.2]
+    'start_time': ['2025-08-15 12:06:00; 2025-08-15 12:14:00', '2025-08-15 12:13:00'],
+    'end_time': ['2025-08-15 12:09:00; 2025-08-15 12:17:00', '2025-08-15 12:18:30'],
 }
 metadata_df = pd.DataFrame(measurement_info)
+```
 
-# Calculate the volume-to-area ratio (V/A)
-metadata_df['chamber_area_m2'] = np.pi * metadata_df['chamber_radius_m']**2
-metadata_df['total_height_m'] = metadata_df['collar_height_m'] + metadata_df['chamber_height_m']
-metadata_df['chamber_volume_m3'] = metadata_df['total_height_m'] * metadata_df['chamber_area_m2']
-metadata_df['V_over_A'] = metadata_df['chamber_volume_m3'] / metadata_df['chamber_area_m2']
-
-print("\nMetadata created successfully:")
-print(metadata_df)
-Now, let's isolate the data for the first plot and perform a linear regression to find the slope (the rate of N₂O increase).
-
-# --- Select data for the first plot ---
-plot_info = metadata_df.iloc[0]
-start_time = pd.to_datetime(plot_info['start_time'])
-end_time = pd.to_datetime(plot_info['end_time'])
-
-measurement_data = df_filtered[(df_filtered.index >= start_time) & (df_filtered.index < end_time)]
-
-# Create an 'elapsed_seconds' column for the regression
-measurement_data['elapsed_seconds'] = (measurement_data.index - start_time).total_seconds()
-
-# --- Perform linear regression ---
-slope, intercept, r_value, p_value, std_err = stats.linregress(
-    x=measurement_data['elapsed_seconds'],
-    y=measurement_data['N2O']
-)
-
-r_squared = r_value**2
-
-# --- Plot the regression line ---
-fig, ax = plt.subplots(layout='constrained', figsize=(10, 5))
-ax.scatter(measurement_data['elapsed_seconds'], measurement_data['N2O'], label='N2O Data')
-ax.plot(measurement_data['elapsed_seconds'], intercept + slope * measurement_data['elapsed_seconds'], 'r', label='Fitted line')
-ax.set_xlabel('Elapsed Time (s)')
-ax.set_ylabel('N2O Concentration (ppb)')
-ax.set_title(f'Linear Regression for Plot {plot_info["plot_id"]} (R²={r_squared:.2f})')
-plt.legend()
-plt.show()
-
-# --- Calculate the flux ---
-# We'll assume a constant temperature and pressure for this example.
-temp_k = 293.15      # 20°C in Kelvin
-pressure_pa = 101325 # Standard atmospheric pressure in Pascals
-V_over_A = plot_info['V_over_A']
-
-flux = calculate_flux(slope, temp_k, pressure_pa, V_over_A)
-
-print(f"\nResults for Plot {plot_info['plot_id']}:")
-print(f"  - Slope (ppb/s): {slope:.4f}")
-print(f"  - R-squared: {r_squared:.4f}")
-print(f"  - Calculated Flux (µmol m⁻² s⁻¹): {flux:.4f}")
-The plot shows our data and the line of best fit. The R-squared value tells us how well the line fits the data (a value > 0.9 is good). The slope is the crucial dC/dt (change in concentration over time) that we feed into our calculate_flux function.
-Step 5: Automating Flux Calculations for All Plots
-Now we can wrap this logic in a loop to process all the measurements defined in our metadata_df. We will also include a Quality Control (QC) step: we only accept measurements with a good linear fit (R² > 0.9), a statistically significant slope (p-value < 0.05), and a positive slope (since we expect emissions, not uptake).
-code
-Python
 # --- Flux Calculation Loop ---
 results = []
 
