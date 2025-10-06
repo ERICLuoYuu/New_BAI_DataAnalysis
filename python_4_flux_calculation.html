@@ -456,7 +456,7 @@ Returns:
     <span class="n">flux</span> <span class="o">=</span> <span class="n">ppm_per_second</span> <span class="o">*</span> <span class="n">molar_density</span> <span class="o">*</span> <span class="n">v_over_a</span> <span class="o">*</span> <span class="mf">1e6</span>
     
     <span class="k">return</span> <span class="n">flux</span>
-</code></pre></div> </div> <p><strong>Info</strong>: Python raise Keyword is used to raise exceptions or errors. The raise keyword raises an error and stops the control flow of the program. It is used to bring up the current exception in an exception handler (an exception handler indicates the error type) so that it can be handled further up the call stack (<a href="https://www.geeksforgeeks.org/python/python-raise-keyword/">Go to geeksforgeeks for more information</a>).</p> <p>The basic way to raise an exception is</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">raise</span> <span class="nb">Exception</span> <span class="p">(</span><span class="s">'...'</span><span class="p">)</span> <span class="c1"># In here, Exception is an exception handler (it is actually a function), which indicate a general exception. It takes a string used to reminder                            # users what errors happen in here and the potential reasons. 
+</code></pre></div> </div> <p><strong>Info</strong>: Python (<a href="https://www.geeksforgeeks.org/python/python-raise-keyword/">raise keywords</a>) is used to raise exceptions or errors. The raise keyword raises an error and stops the control flow of the program. It is used to bring up the current exception in an exception handler (an exception handler indicates the error type) so that it can be handled further up the call stack.</p> <p>The basic way to raise an exception is</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">raise</span> <span class="nb">Exception</span> <span class="p">(</span><span class="s">'...'</span><span class="p">)</span> <span class="c1"># In here, Exception is an exception handler (it is actually a function), which indicate a general exception. It takes a string used to reminder                            # users what errors happen in here and the potential reasons. 
 </span></code></pre></div> </div> <p>In the ‘solution’, we used the handler ValueError to indicate the input value is outside a plausible range, and pass a string showing to users to further explain the error.</p> </details> </div> </div> <h2 id="4-automating-gas-flux-calculation"> <a href="#4-automating-gas-flux-calculation" class="anchor-heading" aria-labelledby="4-automating-gas-flux-calculation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Automating gas flux calculation </h2> <h3 id="41-store-and-structure-measurement-info"> <a href="#41-store-and-structure-measurement-info" class="anchor-heading" aria-labelledby="41-store-and-structure-measurement-info"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 Store and structure measurement info </h3> <p>The first and crucial step of automation is to store the key information (metadata) for each measurement in a structured way that a program can loop through. For this, we will use a Python dictionary. The dictionary keys will be our data “columns” (e.g., ‘plot_id’, ‘land_use’), and the values will be lists containing the data for each plot. Now, there is an issue: we take multiple measurements at the same plot, perhaps on different days or at different times. How can we store this information efficiently? We can store the multiple start and end times for a single plot as a single string, with each timestamp separated by a semicolon (;). Of course, the order of the multiple starttime and endtime for a plot should match. By doing this, we can keep the metadata table concise and still tell our program to perform multiple calculations for that plot.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># --- Create Metadata ---
 </span><span class="n">measurement_info</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s">'plot_id'</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
@@ -465,7 +465,7 @@ Returns:
     <span class="s">'end_time'</span><span class="p">:</span> <span class="p">[</span><span class="s">'2025-08-15 12:09:00; 2025-08-15 12:17:00'</span><span class="p">,</span> <span class="s">'2025-08-15 12:18:30'</span><span class="p">],</span>
 <span class="p">}</span>
 <span class="n">metadata_df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">measurement_info</span><span class="p">)</span>
-</code></pre></div></div> <h3 id="42-automation-calculation"> <a href="#42-automation-calculation" class="anchor-heading" aria-labelledby="42-automation-calculation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Automation Calculation </h3> <p>Now we can build a for loop that iterates through each row (Each row contains infomation for a single plot) of our metadata_df. In here, we are going to use ‘iterrow()’ to iterate through metadata_df. ‘iterrow()’ is a method of data frame object, it generates an iterator object of the DataFrame, allowing us to iterate each row in the DataFrame. Each iteration produces an index object and a row object (a Pandas Series object). Inside the loop, we will split start_time and end_time string for each plot using ‘split()’ method and build a inner loop to iterate all measurements for the plot. Within the inner loop, we will perform the exact same steps we did manually in the last section.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+</code></pre></div></div> <h3 id="42-automation-calculation"> <a href="#42-automation-calculation" class="anchor-heading" aria-labelledby="42-automation-calculation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Automation Calculation </h3> <p>Now we can build a for loop that iterates through each row (Each row contains infomation for a single plot) of our metadata_df. In here, we are going to use <a href="https://www.geeksforgeeks.org/pandas/pandas-dataframe-iterrows/">‘iterrow()’</a> to iterate through metadata_df. ‘iterrow()’ is a method of data frame object, it generates an iterator object of the DataFrame, allowing us to iterate each row in the DataFrame. Each iteration produces an index object and a row object (a Pandas Series object). Inside the loop, we will split start_time and end_time string for each plot using ‘split()’ method and build a inner loop to iterate all measurements for the plot.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">metadata_df</span><span class="p">.</span><span class="n">iterrows</span><span class="p">():</span>
     <span class="n">start_times</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s">'start_time'</span><span class="p">].</span><span class="n">strip</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">';'</span><span class="p">)</span>  <span class="c1"># Handle potential multiple times
 </span>    <span class="n">end_times</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s">'end_time'</span><span class="p">].</span><span class="n">strip</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">';'</span><span class="p">)</span>  <span class="c1"># Handle potential multiple times
@@ -473,72 +473,91 @@ Returns:
     <span class="k">for</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">start_times</span><span class="p">,</span> <span class="n">end_times</span><span class="p">):</span>
         <span class="n">start_time</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">start_time</span><span class="p">.</span><span class="n">strip</span><span class="p">())</span>
         <span class="n">end_time</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">end_time</span><span class="p">.</span><span class="n">strip</span><span class="p">())</span>
-</code></pre></div></div> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    # Select the data for this specific time window
-    measurement_data = df_filtered[(df_filtered.index &gt;= start_time) &amp; (df_filtered.index &lt; end_time)]
-    # Plot the raw data for visual inspection
-    plot_time_series(measurement_data, y_column='N2O', title=f'N2O Concentration Over Time}', mode='markers')
-    # Mannually selcect the start and end time for regression
-    start_time_reg = input("Enter the start time for regression (YYYY-MM-DD HH:MM:SS): ").strip()
-    end_time_reg = input("Enter the end time for regression (YYYY-MM-DD HH:MM:SS): ").strip()
-    # Use the original start and end time if no input is given
-    if not start_time_reg:
-        start_time_reg = start_time
-    if not end_time_reg:
-        end_time_reg = end_time
-    start_time = pd.to_datetime(start_time_reg)
-    end_time = pd.to_datetime(end_time_reg)
-    measurement_data = measurement_data[(measurement_data.index &gt;= start_time) &amp; (measurement_data.index &lt;= end_time)]
-    # Ensure there is enough data to perform a regression
-    if len(measurement_data) &lt; 10:
-        print(f"Skipping plot {row['plot_id']} due to insufficient data.")
-        continue
+        <span class="n">measurement_date</span> <span class="o">=</span> <span class="sa">f</span><span class="s">'</span><span class="si">{</span><span class="n">start_time</span><span class="p">.</span><span class="n">year</span><span class="si">}</span><span class="s">-</span><span class="si">{</span><span class="n">start_time</span><span class="p">.</span><span class="n">month</span><span class="si">:</span><span class="mi">02</span><span class="n">d</span><span class="si">}</span><span class="s">-</span><span class="si">{</span><span class="n">start_time</span><span class="p">.</span><span class="n">day</span><span class="si">:</span><span class="mi">02</span><span class="n">d</span><span class="si">}</span><span class="s">'</span>
+</code></pre></div></div> <p>Within the inner loop, we will perform the exact same steps we did manually in the last section. However, there is one key difference in the visual inspection step. In the manual section, we looked at the plot and then assigned our refined start and end times into variables. To keep the program flowing without needing to stop and edit the script each time, we will use the built-in input() function. This will pause the script, show us a plot, and allow us to enter our refined time window directly into the terminal before the program continues.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        <span class="c1">## step 1: Visual inspection ##
+</span>        <span class="c1"># Select the data for this specific time window
+</span>        <span class="n">measurement_data</span> <span class="o">=</span> <span class="n">df_filtered</span><span class="p">[(</span><span class="n">df_filtered</span><span class="p">.</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df_filtered</span><span class="p">.</span><span class="n">index</span> <span class="o">&lt;</span> <span class="n">end_time</span><span class="p">)]</span>
+        <span class="c1"># Plot the raw data for visual inspection
+</span>        <span class="n">plot_time_series</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">,</span> <span class="n">y_column</span><span class="o">=</span><span class="s">'N2O'</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s">'N2O Concentration Over Time}'</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">'markers'</span><span class="p">)</span>
+        <span class="c1"># Mannually selcect the start and end time for regression
+</span>        <span class="n">start_mea</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s">"Enter the start time for regression (YYYY-MM-DD HH:MM:SS): "</span><span class="p">).</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">end_mea</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s">"Enter the end time for regression (YYYY-MM-DD HH:MM:SS): "</span><span class="p">).</span><span class="n">strip</span><span class="p">()</span>
+        <span class="c1"># Use the original start and end time if no input is given
+</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">start_mea</span><span class="p">:</span>
+            <span class="n">start_mea</span> <span class="o">=</span> <span class="n">start_time</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">end_mea</span><span class="p">:</span>
+            <span class="n">end_mea</span> <span class="o">=</span> <span class="n">end_time</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">start_mea</span><span class="p">)</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">end_mea</span><span class="p">)</span>
+        <span class="n">measurement_data</span> <span class="o">=</span> <span class="n">measurement_data</span><span class="p">[(</span><span class="n">measurement_data</span><span class="p">.</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">measurement_data</span><span class="p">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">end_time</span><span class="p">)]</span>
+        <span class="c1">## step 2: Linear regression ## 
+</span>        <span class="c1"># Ensure there is enough data to perform a regression
+</span>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Skipping plot </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s">'plot_id'</span><span class="p">]</span><span class="si">}</span><span class="s"> on </span><span class="si">{</span><span class="n">measurement_date</span><span class="si">}</span><span class="s"> due to insufficient data."</span><span class="p">)</span>
+            <span class="k">continue</span>
 
-    # Create an 'elapsed_seconds' column for the regression
-    measurement_data['elapsed_seconds'] = (measurement_data.index - start_time).total_seconds()
+        <span class="c1"># Create an 'elapsed_seconds' column for the regression
+</span>        <span class="n">measurement_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">measurement_data</span><span class="p">.</span><span class="n">index</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">).</span><span class="n">total_seconds</span><span class="p">()</span>
 
-    # Perform linear regression: N2O concentration vs. time
-    slope, intercept, r_value, p_value, std_err = stats.linregress(
-        x=measurement_data['elapsed_seconds'],
-        y=measurement_data['N2O']
-    )
+        <span class="c1"># Perform linear regression: N2O concentration vs. time
+</span>        <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">r_value</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">std_err</span> <span class="o">=</span> <span class="n">stats</span><span class="p">.</span><span class="n">linregress</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">measurement_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">],</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">measurement_data</span><span class="p">[</span><span class="s">'N2O'</span><span class="p">]</span>
+        <span class="p">)</span>
 
-    # --- Quality Control (QC) ---
-    # We only accept measurements with a good linear fit and a positive slope
-    r_squared = r_value**2
-    # plot the regression line
-    fig, ax = plt.subplots(layout='constrained', figsize=(10, 5))
-    ax.scatter(measurement_data['elapsed_seconds'], measurement_data['N2O'], label='N2O Concentration (ppb)')
-    ax.plot(measurement_data['elapsed_seconds'], intercept + slope * measurement_data['elapsed_seconds'], 'r', label='Fitted line')
-    ax.set_xlabel('Elapsed Time (s)')
-    ax.set_ylabel('N2O Concentration (ppb)')
-    ax.set_title(f'Linear Regression for Plot {row["plot_id"]} (R²={r_squared:.2f})')
-    plt.legend()
-    plt.show()
+        <span class="c1"># --- Quality Control (QC) ---
+</span>        <span class="c1"># We only accept measurements with a good linear fit and a positive slope
+</span>        <span class="n">r_squared</span> <span class="o">=</span> <span class="n">r_value</span><span class="o">**</span><span class="mi">2</span>
+        <span class="c1"># plot the regression line
+</span>        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="p">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="s">'constrained'</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="n">ax</span><span class="p">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">],</span> <span class="n">measurement_data</span><span class="p">[</span><span class="s">'N2O'</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s">'N2O Concentration (ppb)'</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">],</span> <span class="n">intercept</span> <span class="o">+</span> <span class="n">slope</span> <span class="o">*</span> <span class="n">measurement_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">],</span> <span class="s">'r'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">'Fitted line'</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">'Elapsed Time (s)'</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">'N2O Concentration (ppb)'</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s">'Linear Regression for Plot </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s">"plot_id"</span><span class="p">]</span><span class="si">}</span><span class="s"> (R²=</span><span class="si">{</span><span class="n">r_squared</span><span class="si">:</span><span class="p">.</span><span class="mi">2</span><span class="n">f</span><span class="si">}</span><span class="s">)'</span><span class="p">)</span>
+        <span class="n">plt</span><span class="p">.</span><span class="n">legend</span><span class="p">()</span>
+        <span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 
-    if r_squared &lt; 0.70 or p_value &gt; 0.05 or slope &lt; 0:
-        flux_umol_m2_s = 0  # Set flux to 0 if QC fails
-        qc_pass = False
-    else:
-        qc_pass = True
-        
-        # --- Flux Calculation Formula ---
-        # This formula converts the rate of change in concentration (slope) to a flux rate.
-        # It corrects for ambient pressure and temperature.
-        
-        temp_k = measurement_data['temperature'].mean() + 273.15  # Convert °C to Kelvin
-        pressure_pa = measurement_data['pressure'].mean() * 100  # Convert hPa to Pascals
+        <span class="k">if</span> <span class="n">r_squared</span> <span class="o">&lt;</span> <span class="mf">0.70</span> <span class="ow">or</span> <span class="n">p_value</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>
+            <span class="n">flux_umol_m2_s</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Set flux to 0 if QC fails
+</span>            <span class="n">qc_pass</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">qc_pass</span> <span class="o">=</span> <span class="bp">True</span>
+            
+            <span class="c1">## step 3: Flux Calculation Formula ##
+</span>            <span class="c1"># This formula converts the rate of change in concentration (slope) to a flux rate.
+</span>            <span class="c1"># It corrects for ambient pressure and temperature.
+</span>            
+            <span class="n">temp_k</span> <span class="o">=</span> <span class="n">measurement_data</span><span class="p">[</span><span class="s">'temperature'</span><span class="p">].</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="mf">273.15</span>  <span class="c1"># Convert °C to Kelvin
+</span>            <span class="n">pressure_pa</span> <span class="o">=</span> <span class="n">measurement_data</span><span class="p">[</span><span class="s">'pressure'</span><span class="p">].</span><span class="n">mean</span><span class="p">()</span> <span class="o">*</span> <span class="mi">100</span>  <span class="c1"># Convert hPa to Pascals
+</span>
+            <span class="n">flux_umol_m2_s</span> <span class="o">=</span> <span class="n">calculate_flux</span><span class="p">(</span><span class="n">slope</span><span class="p">,</span> <span class="n">temp_k</span><span class="p">,</span> <span class="n">pressure_pa</span><span class="p">,</span> <span class="n">VOLUME</span><span class="p">,</span> <span class="n">AREA</span><span class="p">)</span>
 
-        flux_umol_m2_s = calculate_flux(slope, temp_k, pressure_pa, VOLUME, AREA)
+        <span class="c1"># Store the results
+</span>        <span class="n">results</span><span class="p">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s">'plot_id'</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s">'plot_id'</span><span class="p">],</span>
+            <span class="s">'land_use'</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s">'land_use'</span><span class="p">],</span>
+            <span class="s">'measurement_date'</span><span class="p">:</span> <span class="n">measurement_date</span><span class="p">,</span>
+            <span class="s">'slope_ppb_s'</span><span class="p">:</span> <span class="n">slope</span><span class="p">,</span>
+            <span class="s">'r_squared'</span><span class="p">:</span> <span class="n">r_squared</span><span class="p">,</span>
+            <span class="s">'p_value'</span><span class="p">:</span> <span class="n">p_value</span><span class="p">,</span>
+            <span class="s">'qc_pass'</span><span class="p">:</span> <span class="n">qc_pass</span><span class="p">,</span>
+            <span class="s">'N2O_flux_umol_m2_s'</span><span class="p">:</span> <span class="n">flux_umol_m2_s</span>
+        <span class="p">})</span>
 
-    # Store the results
-    results.append({
-        'plot_id': row['plot_id'],
-        'land_use': row['land_use'],
-        'measurement_date': f'{start_time.year}-{start_time.month:02d}-{start_time.day:02d}',
-        'slope_ppb_s': slope,
-        'r_squared': r_squared,
-        'p_value': p_value,
-        'qc_pass': qc_pass,
-        'N2O_flux_umol_m2_s': flux_umol_m2_s
-    })
-</code></pre></div></div> <h1 id="convert-the-results-list-to-a-final-dataframe"> <a href="#convert-the-results-list-to-a-final-dataframe" class="anchor-heading" aria-labelledby="convert-the-results-list-to-a-final-dataframe"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Convert the results list to a final DataFrame </h1> <p>flux_results_df = pd.DataFrame(results)</p> <p>print(“\nFlux calculation complete:”) print(flux_results_df)</p> <h1 id="-visualization-"> <a href="#-visualization-" class="anchor-heading" aria-labelledby="-visualization-"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> — Visualization — </h1> <p>plt.figure(figsize=(10, 7)) sns.boxplot(data=flux_results_df, x=’land_use’, y=’N2O_flux_umol_m2_s’, palette=’viridis’) sns.stripplot(data=flux_results_df, x=’land_use’, y=’N2O_flux_umol_m2_s’, color=’black’, size=8, jitter=True, alpha=0.7)</p> <p>plt.title(‘N₂O Flux by Land Use Type’, fontsize=16) plt.xlabel(‘Land Use’, fontsize=12) plt.ylabel(‘N₂O Flux (µmol m⁻² s⁻¹)’, fontsize=12) plt.grid(axis=’y’, linestyle=’–’, alpha=0.7) plt.show() ```</p> </main> </div> </div> <div class="search-overlay"></div> </div> </body> </html>
+<span class="c1"># Convert the results list to a final DataFrame
+</span><span class="n">flux_results_df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Flux calculation complete:"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">flux_results_df</span><span class="p">)</span>
+</code></pre></div></div> <h3 id="42-flux-comparison"> <a href="#42-flux-comparison" class="anchor-heading" aria-labelledby="42-flux-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Flux comparison </h3> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># --- Visualization ---
+</span><span class="n">plt</span><span class="p">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+<span class="n">sns</span><span class="p">.</span><span class="n">boxplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">flux_results_df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s">'land_use'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s">'N2O_flux_umol_m2_s'</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="s">'viridis'</span><span class="p">)</span>
+<span class="n">sns</span><span class="p">.</span><span class="n">stripplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">flux_results_df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s">'land_use'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s">'N2O_flux_umol_m2_s'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">'black'</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">jitter</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="p">.</span><span class="n">title</span><span class="p">(</span><span class="s">'N₂O Flux by Land Use Type'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">'Land Use'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">'N₂O Flux (µmol m⁻² s⁻¹)'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s">'y'</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">'--'</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div></div> </main> </div> </div> <div class="search-overlay"></div> </div> </body> </html>
