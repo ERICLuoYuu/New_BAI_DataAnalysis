@@ -13,7 +13,7 @@ In this tutorial, we're going to analyze the data you collected on your field tr
 ### Table of Contents
 1. [Read in and merge data files](#1-read-in-and-merge-data-files)
 2. [Visualizing and cleaning the data](#2-visualizing-and-cleaning-the-data)
-3. [Calculating flux for a single measurement](#3-calculating flux-for-a-single-measurement)
+3. [Calculating flux for a single measurement](#3-calculating-flux-for-a-single-measurement)
 4. [Automating gas flux calculation](#4-automating-gas-flux-calculation)
 
 
