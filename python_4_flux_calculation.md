@@ -4,15 +4,15 @@ layout: default
 nav_order: 4
 ---
 
-# **Fluxes Calculation**
+# **Flux Calculation**
 In this tutorial, we're going to analyze the data you collected on your field trip to the Lüner forest! Your instruments measured raw gas concentrations, but as ecologists, we need to turn that into gas fluxes. Why? Because fluxes represent a rate—the speed at which gases are being exchanged. With CO₂ fluxes, we can estimate crucial metrics like ecosystem respiration (RECO) and net ecosystem exchange (NEE). With fluxes of a potent greenhouse gas like Nitrous Oxide (N₂O), we can understand a key part of the nitrogen cycle. This guide will walk you through the entire process: from cleaning the raw concentration data, to calculating meaningful fluxes, and finally to comparing the results between different land cover types.
 > **Notice:**
 >In the following sections, we will start using new functions and libraries that we haven't introduced yet. Don't worry or feel overwhelmed! This is a normal part of learning to code. For each new tool we use, I will:     Briefly explain what it is and why we are using it. Provide a link to its official documentation if you're curious and want to learn more. Think of it as adding new tools to your data analysis toolbox. We'll introduce them one at a time, right when we need them.
 
 
 ### Table of Contents
-1. [Read in and Merge Data Files](#1-Loading-and-Exploring-Raw-Data)
-2. [Loading and Exploring Raw Data](#2-Loading-and-Exploring-Raw-Data)
+1. [Read in and Merge Data Files](#1-Read-in-and-Merge-Data-Files)
+2. [Visualizing and cleaning the data](#2-Visualizing-and-cleaning-the-Data)
 3. [Filtering and Cleaning](#3-Filtering-and-Cleaning)
 4. [Understanding the Data Pattern](#4-Understanding-the-Data-Pattern)
 5. [Calculating Flux for a Single Plot](#5-Calculating-Flux-for-a-Single-Plot)
