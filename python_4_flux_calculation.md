@@ -835,7 +835,7 @@ def calculate_flux(slope_ppb_s, temperature, pressure, volume, area):
     
     return flux
 ```
-**Info**: Python raise Keyword is used to raise exceptions or errors. The raise keyword raises an error and stops the control flow of the program. It is used to bring up the current exception in an exception handler (an exception handler indicates the error type) so that it can be handled further up the call stack ([Go to geeksforgeeks for more information](https://www.geeksforgeeks.org/python/python-raise-keyword/)). 
+**Info**: Python ([raise keywords](https://www.geeksforgeeks.org/python/python-raise-keyword/)) is used to raise exceptions or errors. The raise keyword raises an error and stops the control flow of the program. It is used to bring up the current exception in an exception handler (an exception handler indicates the error type) so that it can be handled further up the call stack. 
 
 The basic way to raise an exception is 
 ```python
@@ -874,7 +874,7 @@ measurement_info = {
 metadata_df = pd.DataFrame(measurement_info)
 ```
 ### 4.2 Automation Calculation
-Now we can build a for loop that iterates through each row (Each row contains infomation for a single plot) of our metadata_df. In here, we are going to use 'iterrow()' to iterate through metadata_df. 'iterrow()' is a method of data frame object, it generates an iterator object of the DataFrame, allowing us to iterate each row in the DataFrame. Each iteration produces an index object and a row object (a Pandas Series object). Inside the loop, we will split start_time and end_time string for each plot using 'split()' method and build a inner loop to iterate all measurements for the plot. Within the inner loop, we will perform the exact same steps we did manually in the last section.
+Now we can build a for loop that iterates through each row (Each row contains infomation for a single plot) of our metadata_df. In here, we are going to use ['iterrow()'](https://www.geeksforgeeks.org/pandas/pandas-dataframe-iterrows/) to iterate through metadata_df. 'iterrow()' is a method of data frame object, it generates an iterator object of the DataFrame, allowing us to iterate each row in the DataFrame. Each iteration produces an index object and a row object (a Pandas Series object). Inside the loop, we will split start_time and end_time string for each plot using 'split()' method and build a inner loop to iterate all measurements for the plot.
 ```python
 results = []
 for index, row in metadata_df.iterrows():
@@ -884,26 +884,30 @@ for index, row in metadata_df.iterrows():
     for start_time, end_time in zip(start_times, end_times):
         start_time = pd.to_datetime(start_time.strip())
         end_time = pd.to_datetime(end_time.strip())
+        measurement_date = f'{start_time.year}-{start_time.month:02d}-{start_time.day:02d}'
 ```
-
+Within the inner loop, we will perform the exact same steps we did manually in the last section. However, there is one key difference in the visual inspection step. In the manual section, we looked at the plot and then assigned our refined start and end times into variables. To keep the program flowing without needing to stop and edit the script each time, we will use the built-in input() function. This will pause the script, show us a plot, and allow us to enter our refined time window directly into the terminal before the program continues.
+```python
+        ## step 1: Visual inspection ##
         # Select the data for this specific time window
         measurement_data = df_filtered[(df_filtered.index >= start_time) & (df_filtered.index < end_time)]
         # Plot the raw data for visual inspection
         plot_time_series(measurement_data, y_column='N2O', title=f'N2O Concentration Over Time}', mode='markers')
         # Mannually selcect the start and end time for regression
-        start_time_reg = input("Enter the start time for regression (YYYY-MM-DD HH:MM:SS): ").strip()
-        end_time_reg = input("Enter the end time for regression (YYYY-MM-DD HH:MM:SS): ").strip()
+        start_mea = input("Enter the start time for regression (YYYY-MM-DD HH:MM:SS): ").strip()
+        end_mea = input("Enter the end time for regression (YYYY-MM-DD HH:MM:SS): ").strip()
         # Use the original start and end time if no input is given
-        if not start_time_reg:
-            start_time_reg = start_time
-        if not end_time_reg:
-            end_time_reg = end_time
-        start_time = pd.to_datetime(start_time_reg)
-        end_time = pd.to_datetime(end_time_reg)
+        if not start_mea:
+            start_mea = start_time
+        if not end_mea:
+            end_mea = end_time
+        start_time = pd.to_datetime(start_mea)
+        end_time = pd.to_datetime(end_mea)
         measurement_data = measurement_data[(measurement_data.index >= start_time) & (measurement_data.index <= end_time)]
+        ## step 2: Linear regression ## 
         # Ensure there is enough data to perform a regression
         if len(measurement_data) < 10:
-            print(f"Skipping plot {row['plot_id']} due to insufficient data.")
+            print(f"Skipping plot {row['plot_id']} on {measurement_date} due to insufficient data.")
             continue
 
         # Create an 'elapsed_seconds' column for the regression
@@ -928,13 +932,13 @@ for index, row in metadata_df.iterrows():
         plt.legend()
         plt.show()
 
-        if r_squared < 0.70 or p_value > 0.05 or slope < 0:
+        if r_squared < 0.70 or p_value > 0.05:
             flux_umol_m2_s = 0  # Set flux to 0 if QC fails
             qc_pass = False
         else:
             qc_pass = True
             
-            # --- Flux Calculation Formula ---
+            ## step 3: Flux Calculation Formula ##
             # This formula converts the rate of change in concentration (slope) to a flux rate.
             # It corrects for ambient pressure and temperature.
             
@@ -947,7 +951,7 @@ for index, row in metadata_df.iterrows():
         results.append({
             'plot_id': row['plot_id'],
             'land_use': row['land_use'],
-            'measurement_date': f'{start_time.year}-{start_time.month:02d}-{start_time.day:02d}',
+            'measurement_date': measurement_date,
             'slope_ppb_s': slope,
             'r_squared': r_squared,
             'p_value': p_value,
@@ -960,7 +964,9 @@ flux_results_df = pd.DataFrame(results)
 
 print("\nFlux calculation complete:")
 print(flux_results_df)
-
+```
+### 4.2 Flux comparison
+```python
 # --- Visualization ---
 plt.figure(figsize=(10, 7))
 sns.boxplot(data=flux_results_df, x='land_use', y='N2O_flux_umol_m2_s', palette='viridis')
