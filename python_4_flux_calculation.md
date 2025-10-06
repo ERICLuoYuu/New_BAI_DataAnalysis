@@ -876,7 +876,7 @@ metadata_df = pd.DataFrame(measurement_info)
 ### 4.2 Automation Calculation
 Now we can build a for loop that iterates through each row (Each row contains infomation for a single plot) of our metadata_df. In here, we are going to use ['iterrow()'](https://www.geeksforgeeks.org/pandas/pandas-dataframe-iterrows/) to iterate through metadata_df. 'iterrow()' is a method of data frame object, it generates an iterator object of the DataFrame, allowing us to iterate each row in the DataFrame. Each iteration produces an index object and a row object (a Pandas Series object). Inside the loop, we will split start_time and end_time string for each plot using 'split()' method and build a inner loop to iterate all measurements for the plot.
 ```python
-results = []
+results = [] # Create a empty list we can use to store all calculated fluxes.
 for index, row in metadata_df.iterrows():
     start_times = row['start_time'].strip().split(';')  # Handle potential multiple times
     end_times = row['end_time'].strip().split(';')  # Handle potential multiple times
@@ -886,7 +886,7 @@ for index, row in metadata_df.iterrows():
         end_time = pd.to_datetime(end_time.strip())
         measurement_date = f'{start_time.year}-{start_time.month:02d}-{start_time.day:02d}'
 ```
-Within the inner loop, we will perform the exact same steps we did manually in the last section. However, there is one key difference in the visual inspection step. In the manual section, we looked at the plot and then assigned our refined start and end times into variables. To keep the program flowing without needing to stop and edit the script each time, we will use the built-in input() function. This will pause the script, show us a plot, and allow us to enter our refined time window directly into the terminal before the program continues.
+Within the inner loop, we will perform the exact same steps we did manually in the last section. However, there is one key difference in the visual inspection step. In the manual section, we looked at the plot and then assigned our refined start and end times into variables. To keep the program continuing without needing to stop and edit the script each time, we will use the built-in input() function. This will pause the script, show us a plot, and allow us to enter our refined time window directly into the terminal before the program continues.
 ```python
         ## step 1: Visual inspection ##
         # Select the data for this specific time window
@@ -914,7 +914,7 @@ Within the inner loop, we will perform the exact same steps we did manually in t
         measurement_data['elapsed_seconds'] = (measurement_data.index - start_time).total_seconds()
 
         # Perform linear regression: N2O concentration vs. time
-        slope, intercept, r_value, p_value, std_err = stats.linregress(
+        slope, intercept, r_value, p_value = stats.linregress(
             x=measurement_data['elapsed_seconds'],
             y=measurement_data['N2O']
         )
@@ -946,7 +946,9 @@ Within the inner loop, we will perform the exact same steps we did manually in t
             pressure_pa = measurement_data['pressure'].mean() * 100  # Convert hPa to Pascals
 
             flux_umol_m2_s = calculate_flux(slope, temp_k, pressure_pa, VOLUME, AREA)
-
+```
+At the end of the iteration, we need to save the results of each calculation. Only the flux value is not enough, we also need to save its metadata (e.g., plot_id, 'land_use'), which are essential for flux analysis and visualization we are going to do later.
+```python
         # Store the results
         results.append({
             'plot_id': row['plot_id'],
@@ -965,7 +967,7 @@ flux_results_df = pd.DataFrame(results)
 print("\nFlux calculation complete:")
 print(flux_results_df)
 ```
-### 4.2 Flux comparison
+### 4.3 Flux comparison
 ```python
 # --- Visualization ---
 plt.figure(figsize=(10, 7))
