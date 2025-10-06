@@ -11,16 +11,14 @@ In this tutorial, we're going to analyze the data you collected on your field tr
 
 
 ### Table of Contents
-1. [Read in and Merge Data Files](#1-Read-in-and-Merge-Data-Files)
-2. [Visualizing and cleaning the data](#2-Visualizing-and-cleaning-the-Data)
-3. [Filtering and Cleaning](#3-Filtering-and-Cleaning)
-4. [Understanding the Data Pattern](#4-Understanding-the-Data-Pattern)
-5. [Calculating Flux for a Single Plot](#5-Calculating-Flux-for-a-Single-Plot)
-6. [Automating Calculations for all plots](#6-Automating-Calculations-for-all-plots)
-7. [Comparing Results](#7-Comparing-Results)
+1. [Read in and merge data files](#1-read-in-and-merge-data-files)
+2. [Visualizing and cleaning the data](#2-visualizing-and-cleaning-the-data)
+3. [Calculating flux for a single measurement](#3-calculating flux-for-a-single-measurement)
+4. [Automating gas flux calculation](#4-automating-gas-flux-calculation)
 
 
-## 1.Read in and Merge Data Files
+
+## 1.Read in and merge data files
 Different from the simple CSV files we might have worked with before, the raw data from the gas analyzer is more complex. When you open the file, you'll see it contains two parts:
 A metadata header: This block at the top contains useful information about the measurement (like timezone, device model, etc.), but we don't need it for our flux calculations.
 The data block: This is the core data we need, with columns for date, time, and gas concentrations.
@@ -298,7 +296,7 @@ df_raw.info()
 
 Brilliant! You now have a single, clean DataFrame called df_final that contains everything you need: the high-frequency gas concentrations and the corresponding temperature and pressure for each measurement point. We are now fully prepared to move on to the flux calculation.
 
-## 2. Visualizing and Cleaning the Data
+## 2. Visualizing and cleaning the data
 Now that we have a single, merged DataFrame, our next step is to inspect the data quality. Raw sensor data from the field is almost never perfect. Visualizing it is the best way to diagnose issues like noise, drift, or outliers before we attempt any calculations. For this, we'll use plotly, a powerful library for creating interactive plots.
 ### 2.1 Creating a Reusable Plotting Function with Plotly
 Just as we did with data loading, we'll be plotting our time-series data multiple times. To make this efficient and keep our plots looking consistent, let's create a dedicated function. This function will take a DataFrame and some plot details as input and generate an interactive plot.
@@ -453,7 +451,7 @@ Concentration Increase (Chamber Closed): The sections where the concentration ri
 Sudden Drop (Chamber Opened): The sharp vertical drops occur when a measurement is finished, and the chamber is lifted from the ground, exposing the sensor to ambient air again.
 Leveling Off: If a chamber is left on the ground for too long, the gas concentration inside can build up, altering the pressure gradient between the soil and the chamber air. This can cause the rate of increase to slow down and "level off." For this reason, it's crucial to use only the initial, linear part of the increase for our flux calculation.
 
-## 3. Calculating Flux for a Single Measurement
+## 3. Calculating flux for a single measurement
 After loading and filtering our raw data and getting an overview of the patterns, it's time to calculate the fluxes. Excited?
 In this section, we will focus on the data for a single measurement period to understand the process in detail. We'll break it down into a few key steps:
 <ol>
