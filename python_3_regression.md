@@ -137,19 +137,11 @@ How do you know if your model is any good? A few key metrics:
 <div>$$ R^2 = 1 - \frac{SS_{res}}{SS_{tot}} = 1 - \frac{\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}{\sum_{i=1}^{n}(y_i - \bar{y})^2} $$</div>
 Where:
 
-y_i​ is the observed value
-
-
-hat{y}_i​ is the predicted value
-
-
-bar{y}​ is the mean of observed values
-
-
-SS_{res}​ is the sum of squared residuals
-
-
-SS_{tot}​ is the total sum of squares
+$y_i$ is the observed value
+$\hat{y}_i$ is the predicted value  
+$\bar{y}$ is the mean of observed values
+$SS_{res}$ is the sum of squared residuals
+$SS_{tot}$ is the total sum of squares
 
 
 RMSE (Root Mean Square Error): This is the average size of your prediction errors, in the same units as your response variable. An RMSE of 2.5°C for a temperature model means your predictions are typically off by about 2.5 degrees.
