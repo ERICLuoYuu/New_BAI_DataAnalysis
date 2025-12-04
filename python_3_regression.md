@@ -7,42 +7,11 @@ nav_order: 4
 
 ## Table of Contents
 
-- [Chapter 1: What's Regression All About?](#chapter-1-whats-regression-all-about)
-  - [The Basic Idea](#the-basic-idea)
-  - [Why Can Regression Achieve?](#what-can-regression-achieve)
-  - [Terminology](#terminology)
-  - [How Does Regression Actually Work?](#how-does-regression-actually-work)
-  - [Evaluating Your Model](#evaluating-your-model)
-
-- [Chapter 2: Simple Linear Regression](#chapter-2-simple-linear-regression)
-  - [The Model](#the-model)
-  - [Let's Try It: Tree Growth and Temperature](#lets-try-it-tree-growth-and-temperature)
-  - [What Do These Numbers Mean?](#what-do-these-numbers-mean)
-  - [A Word of Caution](#a-word-of-caution)
-
-- [Chapter 3: Multiple Regression](#chapter-3-multiple-regression)
-  - [Why Go Multiple?](#why-go-multiple)
-  - [The Model](#the-model-1)
-  - [Example: Forest Carbon Flux](#example-forest-carbon-flux)
-  - [Interpreting the Results](#interpreting-the-results)
-  - [Does Adding Variables Help?](#does-adding-variables-help)
-  - [Limitations](#limitations)
-
-- [Chapter 4: Machine Learning with Random Forests](#chapter-4-machine-learning-with-random-forests)
-  - [Why Machine Learning?](#why-machine-learning)
-  - [Decision Trees: The Building Block](#decision-trees-the-building-block)
-  - [Random Forests: Many Trees Are Better Than One](#random-forests-many-trees-are-better-than-one)
-  - [Comparing All Our Methods](#comparing-all-our-methods)
-  - [What's Driving the Patterns?](#whats-driving-the-patterns)
-  - [When to Use What?](#when-to-use-what)
-
-- [Chapter 5: Filling Gaps in Time Series](#chapter-5-filling-gaps-in-time-series)
-  - [The Problem](#the-problem)
-  - [Loading Messy Data](#loading-messy-data)
-  - [Method 1: Linear Interpolation](#method-1-linear-interpolation)
-  - [Method 2: Regression-Based Gap Filling](#method-2-regression-based-gap-filling)
-  - [Method 3: Random Forest Gap Filling](#method-3-random-forest-gap-filling)
-  - [Which Method When?](#which-method-when)
+- [1. What's Regression All About?](#chapter-1-whats-regression-all-about)
+- [2. Simple Linear Regression](#chapter-2-simple-linear-regression)
+- [3. Multiple Regression](#chapter-3-multiple-regression)
+- [4. Machine Learning with Random Forests](#chapter-4-machine-learning-with-random-forests)
+- [5. Filling Gaps in Time Series](#chapter-5-filling-gaps-in-time-series)
 
 Welcome! This tutorial will walk you through regression analysis - one of the most useful tools you'll encounter for making sense of ecological data. We'll start from the basics and work our way up to more advanced machine learning methods.
 Don't worry if statistics isn't your strong suit. We'll take it step by step, and by the end you should feel comfortable applying these techniques to your own data.
