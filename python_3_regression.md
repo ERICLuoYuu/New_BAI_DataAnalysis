@@ -107,15 +107,20 @@ How do you know if your model is any good? A few key metrics:
 Where:
 
 $y_i$ is the observed value
+
 $\hat{y}_i$ is the predicted value  
+
 $\bar{y}$ is the mean of observed values
+
 $SS_{res}$ is the sum of squared residuals
+
 $SS_{tot}$ is the total sum of squares
 
 
-RMSE (Root Mean Square Error): This is the average size of your prediction errors, in the same units as your response variable. An RMSE of 2.5°C for a temperature model means your predictions are typically off by about 2.5 degrees.
+**RMSE (Root Mean Square Error)**: This is the average size of your prediction errors, in the same units as your response variable. An RMSE of 2.5°C for a temperature model means your predictions are typically off by about 2.5 degrees.
 <div>$$ RMSE = \sqrt{\frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2} $$</div>
-MAE (Mean Absolute Error): Similar to RMSE but less sensitive to outliers. Useful when you have some weird extreme values in your data.
+
+**MAE (Mean Absolute Error)**: Similar to RMSE but less sensitive to outliers. Useful when you have some weird extreme values in your data.
 <div>$$ MAE = \frac{1}{n}\sum_{i=1}^{n}|y_i - \hat{y}_i| $$</div>
 The difference between RMSE and MAE? RMSE penalizes large errors more heavily because of the squaring. If you have a few really bad predictions, RMSE will be much higher than MAE. This can be useful for detecting outliers or problematic predictions.
 
