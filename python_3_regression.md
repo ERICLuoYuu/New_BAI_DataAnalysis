@@ -137,8 +137,8 @@ Simple linear regression fits this equation:
 **y = β₀ + β₁x**
 
 Where:
-- β₀ is the intercept (value of y when x is zero)
-- β₁ is the slope (how much y changes for each unit increase in x)
+- **β₀** is the intercept (value of y when x is zero)
+- **β₁** is the slope (how much y changes for each unit increase in x)
 
 That's it. We're just fitting a line through our data points.
 
@@ -289,7 +289,7 @@ print(f"R-squared: {model.score(precip.reshape(-1,1), biomass):.3f}")
 </div>
 </div>
 
-## A Word of Caution
+## Limitations
 
 Simple regression is great, but it has obvious limitations. Ecological systems are complex - tree growth isn't just about temperature. There's precipitation, soil nutrients, competition, pests, genetics... 
 
