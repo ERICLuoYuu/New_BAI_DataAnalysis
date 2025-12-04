@@ -217,11 +217,11 @@
     "relUrl": "/python_3_regression.html#lets-try-it-tree-growth-and-temperature"
   },"31": {
     "doc": "3. REGRESSION",
-    "title": "A Word of Caution",
+    "title": "Limitations",
     "content": "Simple regression is great, but it has obvious limitations. Ecological systems are complex - tree growth isn’t just about temperature. There’s precipitation, soil nutrients, competition, pests, genetics… . Also, the relationship might not be linear. Many ecological relationships have thresholds or optima. Trees don’t just keep growing faster forever as temperature increases - at some point it gets too hot. That’s where multiple regression and machine learning come in. ",
-    "url": "/New_BAI_DataAnalysis/python_3_regression.html#a-word-of-caution",
+    "url": "/New_BAI_DataAnalysis/python_3_regression.html#limitations",
     
-    "relUrl": "/python_3_regression.html#a-word-of-caution"
+    "relUrl": "/python_3_regression.html#limitations"
   },"32": {
     "doc": "3. REGRESSION",
     "title": "3. Multiple Regression",
@@ -254,9 +254,9 @@
     "doc": "3. REGRESSION",
     "title": "Limitations",
     "content": "Multiple regression is powerful but has some important limitations: . It assumes linear relationships. If temperature has an optimum (growth increases up to 25°C then decreases), a linear model won’t capture that properly. It assumes additive effects. The model says the effect of temperature is the same regardless of moisture levels. In reality, these factors often interact. It can struggle with many predictors. If you have 50 environmental variables and only 100 observations, you’re going to have problems. These limitations bring us to machine learning approaches, which can handle more complexity. ",
-    "url": "/New_BAI_DataAnalysis/python_3_regression.html#limitations",
+    "url": "/New_BAI_DataAnalysis/python_3_regression.html#limitations-1",
     
-    "relUrl": "/python_3_regression.html#limitations"
+    "relUrl": "/python_3_regression.html#limitations-1"
   },"37": {
     "doc": "3. REGRESSION",
     "title": "4. Machine Learning with Random Forests",
