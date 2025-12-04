@@ -9,9 +9,8 @@ nav_order: 4
 
 - [Chapter 1: What's Regression All About?](#chapter-1-whats-regression-all-about)
   - [The Basic Idea](#the-basic-idea)
-  - [A Quick Example](#a-quick-example)
-  - [Why Bother With Regression?](#why-bother-with-regression)
-  - [Some Terminology](#some-terminology)
+  - [Why Can Regression Achieve?](#what-can-regression-achieve)
+  - [Terminology](#terminology)
   - [How Does Regression Actually Work?](#how-does-regression-actually-work)
   - [Evaluating Your Model](#evaluating-your-model)
 
