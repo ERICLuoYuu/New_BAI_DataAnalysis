@@ -5,58 +5,47 @@ nav_order: 4
 ---
 # **Regression**
 
-Table of Contents
+## Table of Contents
 
-1. What's Regression All About?
+- [Chapter 1: What's Regression All About?](#chapter-1-whats-regression-all-about)
+  - [The Basic Idea](#the-basic-idea)
+  - [A Quick Example](#a-quick-example)
+  - [Why Bother With Regression?](#why-bother-with-regression)
+  - [Some Terminology](#some-terminology)
+  - [How Does Regression Actually Work?](#how-does-regression-actually-work)
+  - [Evaluating Your Model](#evaluating-your-model)
 
-The Basic Idea
-What Regression Can Achieve?
-Terminology
-How Does Regression Actually Work?
-Evaluating Your Model
+- [Chapter 2: Simple Linear Regression](#chapter-2-simple-linear-regression)
+  - [The Model](#the-model)
+  - [Let's Try It: Tree Growth and Temperature](#lets-try-it-tree-growth-and-temperature)
+  - [What Do These Numbers Mean?](#what-do-these-numbers-mean)
+  - [A Word of Caution](#a-word-of-caution)
 
+- [Chapter 3: Multiple Regression](#chapter-3-multiple-regression)
+  - [Why Go Multiple?](#why-go-multiple)
+  - [The Model](#the-model-1)
+  - [Example: Forest Carbon Flux](#example-forest-carbon-flux)
+  - [Interpreting the Results](#interpreting-the-results)
+  - [Does Adding Variables Help?](#does-adding-variables-help)
+  - [Limitations](#limitations)
 
-2. Simple Linear Regression
+- [Chapter 4: Machine Learning with Random Forests](#chapter-4-machine-learning-with-random-forests)
+  - [Why Machine Learning?](#why-machine-learning)
+  - [Decision Trees: The Building Block](#decision-trees-the-building-block)
+  - [Random Forests: Many Trees Are Better Than One](#random-forests-many-trees-are-better-than-one)
+  - [Comparing All Our Methods](#comparing-all-our-methods)
+  - [What's Driving the Patterns?](#whats-driving-the-patterns)
+  - [When to Use What?](#when-to-use-what)
 
-The Model
-Let's Try It: Tree Growth and Temperature
-What Do These Numbers Mean?
-A Word of Caution
+- [Chapter 5: Filling Gaps in Time Series](#chapter-5-filling-gaps-in-time-series)
+  - [The Problem](#the-problem)
+  - [Loading Messy Data](#loading-messy-data)
+  - [Method 1: Linear Interpolation](#method-1-linear-interpolation)
+  - [Method 2: Regression-Based Gap Filling](#method-2-regression-based-gap-filling)
+  - [Method 3: Random Forest Gap Filling](#method-3-random-forest-gap-filling)
+  - [Which Method When?](#which-method-when)
 
-
-Chapter 3: Multiple Regression
-
-Why Go Multiple?
-The Model
-Example: Forest Carbon Flux
-Interpreting the Results
-Does Adding Variables Help?
-Limitations
-
-
-Chapter 4: Machine Learning with Random Forests
-
-Why Machine Learning?
-Decision Trees: The Building Block
-Random Forests: Many Trees Are Better Than One
-Comparing All Our Methods
-What's Driving the Patterns?
-When to Use What?
-
-
-Chapter 5: Filling Gaps in Time Series
-
-The Problem
-Loading Messy Data
-Method 1: Linear Interpolation
-Method 2: Regression-Based Gap Filling
-Method 3: Random Forest Gap Filling
-Which Method When?
-
-
-Wrapping Up
 Welcome! This tutorial will walk you through regression analysis - one of the most useful tools you'll encounter for making sense of ecological data. We'll start from the basics and work our way up to more advanced machine learning methods.
-
 Don't worry if statistics isn't your strong suit. We'll take it step by step, and by the end you should feel comfortable applying these techniques to your own data.
 
 
@@ -145,24 +134,23 @@ The most common approach for step 2 is called "least squares" - we find the coef
 
 How do you know if your model is any good? A few key metrics:
 
-R² (R-squared): This tells you what fraction of the variation in your data is explained by the model. An R² of 0.7 means your model explains 70% of the variance. What's "good" depends entirely on your system - in controlled experiments 0.9 might be expected, while in field ecology 0.3 might be excellent.
+**R² (R-squared)**: This tells you what fraction of the variation in your data is explained by the model. An R² of 0.7 means your model explains 70% of the variance. What's "good" depends entirely on your system - in controlled experiments 0.9 might be expected, while in field ecology 0.3 might be excellent.
 <div>$$ R^2 = 1 - \frac{SS_{res}}{SS_{tot}} = 1 - \frac{\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}{\sum_{i=1}^{n}(y_i - \bar{y})^2} $$</div>
 Where:
 
-yiy_i
-yi​ is the observed value
+y_i​ is the observed value
 
-y^i\hat{y}_i
-y^​i​ is the predicted value
 
-yˉ\bar{y}
-yˉ​ is the mean of observed values
+hat{y}_i​ is the predicted value
 
-SSresSS_{res}
-SSres​ is the sum of squared residuals
 
-SStotSS_{tot}
-SStot​ is the total sum of squares
+bar{y}​ is the mean of observed values
+
+
+SS_{res}​ is the sum of squared residuals
+
+
+SS_{tot}​ is the total sum of squares
 
 
 RMSE (Root Mean Square Error): This is the average size of your prediction errors, in the same units as your response variable. An RMSE of 2.5°C for a temperature model means your predictions are typically off by about 2.5 degrees.
