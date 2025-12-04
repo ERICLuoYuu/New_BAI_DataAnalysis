@@ -4,11 +4,61 @@ layout: default
 nav_order: 4
 ---
 # **Regression**
+
+Table of Contents
+
+1. What's Regression All About?
+
+The Basic Idea
+What Regression Can Achieve?
+Terminology
+How Does Regression Actually Work?
+Evaluating Your Model
+
+
+2. Simple Linear Regression
+
+The Model
+Let's Try It: Tree Growth and Temperature
+What Do These Numbers Mean?
+A Word of Caution
+
+
+Chapter 3: Multiple Regression
+
+Why Go Multiple?
+The Model
+Example: Forest Carbon Flux
+Interpreting the Results
+Does Adding Variables Help?
+Limitations
+
+
+Chapter 4: Machine Learning with Random Forests
+
+Why Machine Learning?
+Decision Trees: The Building Block
+Random Forests: Many Trees Are Better Than One
+Comparing All Our Methods
+What's Driving the Patterns?
+When to Use What?
+
+
+Chapter 5: Filling Gaps in Time Series
+
+The Problem
+Loading Messy Data
+Method 1: Linear Interpolation
+Method 2: Regression-Based Gap Filling
+Method 3: Random Forest Gap Filling
+Which Method When?
+
+
+Wrapping Up
 Welcome! This tutorial will walk you through regression analysis - one of the most useful tools you'll encounter for making sense of ecological data. We'll start from the basics and work our way up to more advanced machine learning methods.
 
 Don't worry if statistics isn't your strong suit. We'll take it step by step, and by the end you should feel comfortable applying these techniques to your own data.
 
-**What you'll need:** Some basic Python knowledge, and familiarity with pandas and numpy. If you've done some data wrangling before, you're good to go.
 
 ---
 
@@ -36,7 +86,7 @@ Let's say you're studying tree growth across a temperature gradient. You measure
 
 You can see there's a pattern - warmer sites have wider rings. But how strong is this relationship? Can we predict growth at a site with 11°C mean temperature? Regression helps us answer these questions.
 
-## Why Bother With Regression?
+## What Can Regression Achieve?
 
 In ecological research, regression is useful for:
 
@@ -48,17 +98,19 @@ In ecological research, regression is useful for:
 
 **Supporting management decisions** - If you know how much habitat area affects population size, you can make informed recommendations about reserve design.
 
-## Some Terminology
+## Terminology
 
 Before we dive in, let's get our vocabulary straight. Different fields use different terms for the same things, which can be confusing.
 
-**The thing you're trying to predict or explain:**
-- Target variable, response variable, dependent variable, outcome
+**Target variable**
+- You can also call it response variable, dependent variable, outcome
+- The variable you're trying to predict or explain
 - We usually call it **y**
 - Examples: species richness, biomass, survival rate, carbon flux
 
-**The things you use to make predictions:**
-- Predictors, features, independent variables, explanatory variables
+**independent variables**
+- Can also be termed predictors, features, independent variables, explanatory variables
+- The variable you use to make predictions or explain target variables 
 - We call these **x** (or x₁, x₂, etc. when there are several)
 - Examples: temperature, precipitation, soil pH, elevation
 
@@ -81,7 +133,7 @@ Before we dive in, let's get our vocabulary straight. Different fields use diffe
 
 The basic process goes like this:
 
-1. **Choose a model form.** Are you assuming a straight line relationship? A curve? Multiple predictors?
+1. **Choose a model type.** Are you assuming a straight line relationship? A curve? Multiple predictors?
 
 2. **Fit the model to your data.** This means finding the coefficient values that make your predictions as close to the observations as possible.
 
@@ -93,11 +145,31 @@ The most common approach for step 2 is called "least squares" - we find the coef
 
 How do you know if your model is any good? A few key metrics:
 
-**R² (R-squared):** This tells you what fraction of the variation in your data is explained by the model. An R² of 0.7 means your model explains 70% of the variance. What's "good" depends entirely on your system - in controlled experiments 0.9 might be expected, while in field ecology 0.3 might be excellent.
+R² (R-squared): This tells you what fraction of the variation in your data is explained by the model. An R² of 0.7 means your model explains 70% of the variance. What's "good" depends entirely on your system - in controlled experiments 0.9 might be expected, while in field ecology 0.3 might be excellent.
+<div>$$ R^2 = 1 - \frac{SS_{res}}{SS_{tot}} = 1 - \frac{\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}{\sum_{i=1}^{n}(y_i - \bar{y})^2} $$</div>
+Where:
 
-**RMSE (Root Mean Square Error):** This is the average size of your prediction errors, in the same units as your response variable. An RMSE of 2.5°C for a temperature model means your predictions are typically off by about 2.5 degrees.
+yiy_i
+yi​ is the observed value
 
-**MAE (Mean Absolute Error):** Similar to RMSE but less sensitive to outliers. Useful when you have some weird extreme values in your data.
+y^i\hat{y}_i
+y^​i​ is the predicted value
+
+yˉ\bar{y}
+yˉ​ is the mean of observed values
+
+SSresSS_{res}
+SSres​ is the sum of squared residuals
+
+SStotSS_{tot}
+SStot​ is the total sum of squares
+
+
+RMSE (Root Mean Square Error): This is the average size of your prediction errors, in the same units as your response variable. An RMSE of 2.5°C for a temperature model means your predictions are typically off by about 2.5 degrees.
+<div>$$ RMSE = \sqrt{\frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2} $$</div>
+MAE (Mean Absolute Error): Similar to RMSE but less sensitive to outliers. Useful when you have some weird extreme values in your data.
+<div>$$ MAE = \frac{1}{n}\sum_{i=1}^{n}|y_i - \hat{y}_i| $$</div>
+The difference between RMSE and MAE? RMSE penalizes large errors more heavily because of the squaring. If you have a few really bad predictions, RMSE will be much higher than MAE. This can be useful for detecting outliers or problematic predictions.
 
 ---
 
