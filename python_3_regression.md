@@ -489,37 +489,17 @@ for name, coef in zip(X.columns, model.coef_):
 
 ## Interpreting the Results
 
-What do these coefficients actually mean? This is where multiple regression differs fundamentally from simple regression:
+What do these coefficients actually mean? This is where multiple regression differs fundamentally from simple regression.
 
-```python
-print("""
-Interpreting the coefficients:
+**flipper_length_mm**: Each additional mm of flipper length adds about 17g to body mass, *after controlling for* other variables. Note this is smaller than in simple regression (~50g). Why? Because some of that apparent flipper effect was actually due to species differences—Gentoo penguins have both longer flippers AND higher mass. Once we account for species, the "pure" flipper effect is smaller.
 
-flipper_length_mm: Each additional mm of flipper length adds about 
-  17g to body mass, AFTER CONTROLLING FOR other variables. 
-  
-  Note this is smaller than in simple regression (~50g). Why? Because 
-  some of that apparent flipper effect was actually due to species 
-  differences - Gentoo penguins have both longer flippers AND higher 
-  mass. Once we account for species, the "pure" flipper effect is smaller.
+**bill_length_mm**: Longer bills are associated with slightly higher mass, holding other variables constant.
 
-bill_length_mm: Longer bills are associated with slightly higher mass,
-  holding other variables constant.
+**bill_depth_mm**: Deeper bills are associated with higher mass. This makes sense—it's a measure of overall head size.
 
-bill_depth_mm: Deeper bills are associated with higher mass. This makes
-  sense - it's a measure of overall head size.
+**species_code**: The coefficient shows average difference between species (encoded as 0, 1, 2). Interpretation is tricky with encoded categories because we're treating it as a continuous variable. This is a limitation of our simple encoding approach.
 
-species_code: The coefficient shows average difference between species
-  (encoded as 0, 1, 2). Interpretation is tricky with encoded categories
-  because we're treating it as a continuous variable. This is a limitation
-  of our simple encoding approach.
-
-sex_code: Males (coded as 1) are heavier than females (coded as 0) by
-  about this many grams, controlling for body measurements. This is 
-  the easiest to interpret - it's the male-female difference in mass
-  after accounting for differences in flipper length, bill size, etc.
-""")
-```
+**sex_code**: Males (coded as 1) are heavier than females (coded as 0) by about this many grams, controlling for body measurements. This is the easiest to interpret—it's the male-female difference in mass after accounting for differences in flipper length, bill size, etc.
 
 ### The Key Insight: "Controlling For" Other Variables
 
