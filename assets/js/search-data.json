@@ -330,7 +330,7 @@
   },"47": {
     "doc": "3. REGRESSION",
     "title": "When to Use What?",
-    "content": "Here’s a practical guide: . | Method | Use When | Advantages | Disadvantages | . | Simple Regression | One predictor, linear relationship, need interpretability | Simple, coefficients are meaningful | Can’t handle multiple predictors or non-linearity | . | Multiple Regression | Multiple predictors, linear relationships, need to understand effects | Coefficients are interpretable, can control for confounders | Assumes linearity and additivity | . | Decision Tree | Need interpretable rules, non-linear relationships | Easy to explain, handles non-linearity | Prone to overfitting, unstable | . | Random Forest | Prediction is main goal, complex non-linear relationships | Excellent predictive performance, robust | Less interpretable, slower to train | . ",
+    "content": "| Method | Use When | Advantages | Disadvantages | . | Simple Regression | One predictor, linear relationship, need interpretability | Simple, coefficients are meaningful | Can’t handle multiple predictors or non-linearity | . | Multiple Regression | Multiple predictors, linear relationships, need to understand effects | Coefficients are interpretable, can control for confounders | Assumes linearity and additivity | . | Decision Tree | Need interpretable rules, non-linear relationships | Easy to explain, handles non-linearity | Prone to overfitting, unstable | . | Random Forest | Prediction is main goal, complex non-linear relationships | Excellent predictive performance, robust | Less interpretable, slower to train | . ",
     "url": "/New_BAI_DataAnalysis/python_3_regression.html#when-to-use-what",
     
     "relUrl": "/python_3_regression.html#when-to-use-what"
