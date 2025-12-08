@@ -970,62 +970,7 @@ print("\nPermutation importance:")
 print(perm_imp_df.to_string(index=False))
 ```
 
----
 
-<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
-{% capture exercise %}
-
-<h3> Exercise </h3>
-<p>Use Random Forest to predict penguin species (as a classification problem) from the morphological 
-measurements. Which measurements are most useful for distinguishing species?</p>
-
-<p><strong>Hint:</strong> Use <code>RandomForestClassifier</code> instead of <code>RandomForestRegressor</code></p>
-
-{::options parse_block_html="true" /}
-
-<details><summary markdown="span">Solution!</summary>
-
-```python
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
-
-penguins = load_penguins().dropna()
-
-# Prepare data - predict species from measurements
-X = penguins[['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g']]
-y = penguins['species']
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-
-# Fit classifier
-rf_clf = RandomForestClassifier(n_estimators=100, random_state=42)
-rf_clf.fit(X_train, y_train)
-
-# Evaluate
-y_pred = rf_clf.predict(X_test)
-print(f"Accuracy: {accuracy_score(y_test, y_pred):.3f}")
-print("\nClassification Report:")
-print(classification_report(y_test, y_pred))
-
-# Feature importance
-print("\nFeature importance for species classification:")
-for name, imp in sorted(zip(X.columns, rf_clf.feature_importances_), 
-                        key=lambda x: x[1], reverse=True):
-    print(f"  {name}: {imp:.3f}")
-
-# Bill length and bill depth are typically most important -
-# they differ most clearly between species
-```
-</details>
-
-{::options parse_block_html="false" /}
-
-{% endcapture %}
-
-<div class="notice--primary">
-  {{ exercise | markdownify }}
-</div>
-</div>
 
 ---
 
