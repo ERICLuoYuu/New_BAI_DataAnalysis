@@ -141,7 +141,7 @@
   },"20": {
     "doc": "3. REGRESSION",
     "title": "Table of Contents",
-    "content": "1. What’s Regression All About? . 2. Simple Linear Regression . 3. Multiple Regression . 4. Machine Learning with Random Forests . 5. Gap-filling in Time Series . Welcome! This tutorial will walk you through regression analysis - one of the most useful tools you’ll encounter for making sense of ecological data. We’ll start from the basics and work our way up to more advanced machine learning methods. Don’t worry if statistics isn’t your strong suit. We’ll take it step by step, and by the end you should feel comfortable applying these techniques to your own data. ",
+    "content": "1.What’s Regression All About? 2.Simple Linear Regression 3.Multiple Regression 4.Machine Learning with Random Forests 5.Gap-filling in Time Series . Welcome! This tutorial will walk you through regression analysis - one of the most useful tools you’ll encounter for making sense of ecological data. We’ll start from the basics and work our way up to more advanced machine learning methods. Don’t worry if statistics isn’t your strong suit. We’ll take it step by step, and by the end you should feel comfortable applying these techniques to your own data. ",
     "url": "/New_BAI_DataAnalysis/python_3_regression.html#table-of-contents",
     
     "relUrl": "/python_3_regression.html#table-of-contents"
