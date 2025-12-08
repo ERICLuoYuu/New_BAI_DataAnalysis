@@ -972,14 +972,18 @@ print(perm_imp_df.to_string(index=False))
 
 ---
 
-## Exercise
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
 
-Use Random Forest to predict penguin species (as a classification problem) from the morphological measurements. Which measurements are most useful for distinguishing species?
+<h3> Exercise </h3>
+<p>Use Random Forest to predict penguin species (as a classification problem) from the morphological 
+measurements. Which measurements are most useful for distinguishing species?</p>
 
-**Hint:** Use `RandomForestClassifier` instead of `RandomForestRegressor`
+<p><strong>Hint:</strong> Use <code>RandomForestClassifier</code> instead of <code>RandomForestRegressor</code></p>
 
-<details>
-<summary>Solution</summary>
+{::options parse_block_html="true" /}
+
+<details><summary markdown="span">Solution!</summary>
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
@@ -1012,8 +1016,16 @@ for name, imp in sorted(zip(X.columns, rf_clf.feature_importances_),
 # Bill length and bill depth are typically most important -
 # they differ most clearly between species
 ```
-
 </details>
+
+{::options parse_block_html="false" /}
+
+{% endcapture %}
+
+<div class="notice--primary">
+  {{ exercise | markdownify }}
+</div>
+</div>
 
 ---
 
