@@ -849,24 +849,6 @@ print(f"Random Forest RMSE: {np.sqrt(metrics.mean_squared_error(y_test, y_pred))
 
 - **max_features**: Number of features to consider at each split. Default is sqrt(n_features) for classification, n_features/3 for regression. Lower values increase randomness between trees.
 
-### Out-of-Bag Error: Free Cross-Validation
-
-Here's a neat trick: because each tree only sees about 63% of the data (due to bootstrap sampling), the remaining 37% can be used to evaluate that tree. This "out-of-bag" (OOB) error gives you a built-in estimate of test performance without needing a separate test set!
-
-```python
-rf_oob = RandomForestRegressor(
-    n_estimators=100,
-    max_depth=10,
-    oob_score=True,  # Enable OOB scoring
-    random_state=42
-)
-rf_oob.fit(X_train, y_train)
-print(f"OOB R²: {rf_oob.oob_score_:.3f}")
-print(f"Test R²: {rf_oob.score(X_test, y_test):.3f}")
-```
-
-The OOB score should be close to your test score - it's a good sanity check.
-
 ## Comparing All Our Methods
 
 Let's see how everything stacks up on the penguin data:
