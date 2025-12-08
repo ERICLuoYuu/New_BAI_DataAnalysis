@@ -951,7 +951,79 @@ perm_imp_df = pd.DataFrame({
 print("\nPermutation importance:")
 print(perm_imp_df.to_string(index=False))
 ```
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
 
+<h3> Try It Yourself </h3>
+<p>Remember the Simpson's paradox problem from Chapter 2? Simple regression showed a <em>negative</em> relationship between bill depth and bill length, but within each species the relationship was positive.</p>
+
+<p>Use Random Forest to predict <code>bill_length_mm</code> from bill_depth_mm, flipper_length_mm, body_mass_g, species, and sex. Compare its performance to the multiple regression model. Does Random Forest handle this complexity better?</p>
+
+{::options parse_block_html="true" /}
+
+<details><summary markdown="span">Solution!</summary>
+```python
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+import sklearn.metrics as metrics
+from palmerpenguins import load_penguins
+import numpy as np
+
+penguins = load_penguins().dropna()
+
+# Encode categorical variables
+le_species = LabelEncoder()
+le_sex = LabelEncoder()
+penguins['species_code'] = le_species.fit_transform(penguins['species'])
+penguins['sex_code'] = le_sex.fit_transform(penguins['sex'])
+
+# Prepare data - predict bill_length from other features
+X = penguins[['bill_depth_mm', 'flipper_length_mm', 'body_mass_g', 
+              'species_code', 'sex_code']]
+y = penguins['bill_length_mm']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Fit both models
+lr = LinearRegression()
+lr.fit(X_train, y_train)
+
+rf = RandomForestRegressor(n_estimators=100, max_depth=10, random_state=42)
+rf.fit(X_train, y_train)
+
+# Compare performance
+print("Model Comparison for Predicting Bill Length:")
+print("-" * 50)
+
+for name, model in [("Linear Regression", lr), ("Random Forest", rf)]:
+    pred = model.predict(X_test)
+    r2 = metrics.r2_score(y_test, pred)
+    rmse = np.sqrt(metrics.mean_squared_error(y_test, pred))
+    print(f"{name}: R² = {r2:.3f}, RMSE = {rmse:.2f} mm")
+
+# Feature importance from Random Forest
+print("\nRandom Forest Feature Importance:")
+for name, imp in sorted(zip(X.columns, rf.feature_importances_), 
+                        key=lambda x: x[1], reverse=True):
+    print(f"  {name}: {imp:.3f}")
+
+# Key insight: bill_depth now shows POSITIVE importance!
+# Both methods handle the confounding by controlling for species.
+```
+
+</details>
+
+{::options parse_block_html="false" /}
+
+{% endcapture %}
+
+<div class="notice--primary">
+  {{ exercise | markdownify }}
+</div>
+
+</div>
 
 
 ---
