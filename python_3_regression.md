@@ -627,46 +627,51 @@ This is why we evaluate on a **test set** - on new data, useless predictors will
 {% capture exercise %}
 
 <h3> Exercise </h3>
-<p>Build a model predicting fish species richness in lakes based on: lake area, maximum depth, 
-water temperature, and dissolved oxygen. Which factor matters most?</p>
+<p>Build a multiple regression model predicting bill length from bill depth, flipper length, species, and sex. 
+Which predictors have the strongest effects? Does the bill depth coefficient change from the simple regression?</p>
 
 {::options parse_block_html="true" /}
 
 <details><summary markdown="span">Solution!</summary>
 
 ```python
-np.random.seed(42)
-n = 150
+from palmerpenguins import load_penguins
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 
-area = np.random.uniform(10, 5000, n)          # hectares
-depth = np.random.uniform(2, 50, n)            # meters  
-temp = np.random.uniform(10, 28, n)            # °C
-oxygen = np.random.uniform(4, 12, n)           # mg/L
+penguins = load_penguins().dropna()
 
-# Species richness - larger, deeper lakes with good oxygen have more species
-richness = (
-    5 + 0.005 * area + 0.3 * depth + 
-    -0.1 * (temp - 18)**2 +  # optimum around 18°C
-    1.5 * oxygen + 
-    np.random.normal(0, 3, n)
-).clip(min=1)
+# Encode categoricals
+le_species = LabelEncoder()
+le_sex = LabelEncoder()
+penguins['species_code'] = le_species.fit_transform(penguins['species'])
+penguins['sex_code'] = le_sex.fit_transform(penguins['sex'])
 
-X = pd.DataFrame({'area': area, 'depth': depth, 'temp': temp, 'oxygen': oxygen})
-y = richness
+# Prepare data
+X = penguins[['bill_depth_mm', 'flipper_length_mm', 'species_code', 'sex_code']]
+y = penguins['bill_length_mm']
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
+# Full model
 model = LinearRegression()
 model.fit(X_train, y_train)
 
 print(f"R²: {model.score(X_test, y_test):.3f}\n")
-print("Coefficients (larger absolute value = more important):")
-for name, coef in sorted(zip(X.columns, model.coef_), 
-                         key=lambda x: abs(x[1]), reverse=True):
-    print(f"  {name}: {coef:.4f}")
+print("Coefficients:")
+for name, coef in zip(X.columns, model.coef_):
+    print(f"  {name}: {coef:.3f}")
 
-# Oxygen usually comes out strongest - makes ecological sense
-# since it's essential for fish survival
+# Compare to simple regression
+simple = LinearRegression()
+simple.fit(penguins[['bill_depth_mm']], penguins['bill_length_mm'])
+print(f"\nSimple regression bill_depth coefficient: {simple.coef_[0]:.3f}")
+print(f"Multiple regression bill_depth coefficient: {model.coef_[0]:.3f}")
+
+# The bill_depth coefficient changes dramatically - in simple regression
+# it's negative (Simpson's paradox), but in multiple regression 
+# controlling for species, it becomes positive as expected.
 ```
 </details>
 
