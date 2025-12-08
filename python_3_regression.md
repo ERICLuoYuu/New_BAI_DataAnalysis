@@ -8,9 +8,13 @@ nav_order: 4
 ## Table of Contents
 
 [1. What's Regression All About?](#1-whats-regression-all-about)
+
 [2. Simple Linear Regression](#2-simple-linear-regression)
+
 [3. Multiple Regression](#3-multiple-regression)
+
 [4. Machine Learning with Random Forests](#4-machine-learning-with-random-forests)
+
 [5. Filling Gaps in Time Series](#5-filling-gaps-in-time-series)
 
 Welcome! This tutorial will walk you through regression analysis - one of the most useful tools you'll encounter for making sense of ecological data. We'll start from the basics and work our way up to more advanced machine learning methods.
