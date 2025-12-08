@@ -134,14 +134,28 @@ Alright, let's actually do some regression. We'll start with the simplest case: 
 
 Simple linear regression fits this equation:
 
-**y = β₀ + β₁x**
+**ŷ = β₀ + β₁x**
 
 Where:
 
-- β₀ is the intercept (value of y when x is zero)
-- β₁ is the slope (how much y changes for each unit increase in x)
+- **ŷ** (y-hat) is our *predicted* value of the response variable
+- **β₀** (beta-zero) is the intercept (value of y when x is zero)
+- **β₁** (beta-one) is the slope (how much y changes for each unit increase in x)
+- **x** is our predictor variable
 
 That's it. We're just fitting a line through our data points.
+
+### What's Actually Happening?
+
+When we fit a regression, we're looking for the line that minimizes the total squared distance between our observed data points and the line. These distances are called **residuals** - the difference between what we actually observed and what our model predicted.
+
+The full model, including the error, is:
+
+**y = β₀ + β₁x + ε**
+
+Where **ε** (epsilon) represents the residual error - all the variation in y that our model doesn't capture. In a perfect world with a perfect model, ε would be zero. In reality, it never is.
+
+**Why squared distances?** Squaring does two things: (1) it treats positive and negative errors equally (a prediction 10g too high is just as bad as 10g too low), and (2) it penalizes large errors more heavily than small ones. This method is called **Ordinary Least Squares (OLS)**.
 
 ## Let's Try It: Penguin Body Mass and Flipper Length
 
@@ -187,7 +201,10 @@ You'll see there's clearly a positive relationship - longer flippers go with hea
 from sklearn.linear_model import LinearRegression
 
 # Prepare the data
-X = penguins_clean[['flipper_length_mm']].values  # sklearn wants 2D array
+# sklearn expects X to be a 2D array (rows = samples, columns = features)
+# Even with one feature, we need shape (n_samples, 1), not (n_samples,)
+# That's why we use [['flipper_length_mm']] (double brackets) instead of ['flipper_length_mm']
+X = penguins_clean[['flipper_length_mm']].values  
 y = penguins_clean['body_mass_g'].values
 
 # Fit the model
@@ -203,6 +220,8 @@ print(f"R-squared: {model.score(X, y):.3f}")
 
 ```python
 # Get predictions for the regression line
+# We create a sequence of x values spanning our data range
+# reshape(-1, 1) converts the 1D array to 2D (required by sklearn)
 X_line = np.linspace(penguins_clean['flipper_length_mm'].min(), 
                      penguins_clean['flipper_length_mm'].max(), 100).reshape(-1, 1)
 y_line = model.predict(X_line)
@@ -237,17 +256,41 @@ fig.show()
 
 With real data, you should get something like:
 
-- **Slope ≈ 49.7 g/mm**: For every 1 mm increase in flipper length, body mass increases by about 50 grams
-- **Intercept ≈ -5781 g**: This would be the predicted mass at flipper length = 0, which makes no biological sense (negative mass!), but it's needed mathematically to position the line
-- **R² ≈ 0.76**: Flipper length explains about 76% of the variation in body mass
+- **Slope ≈ 49.7 g/mm**: For every 1 mm increase in flipper length, body mass increases by about 50 grams. This is our β₁.
 
-That R² is pretty good for biological data! It means if you only know a penguin's flipper length, you can predict its mass reasonably well.
+- **Intercept ≈ -5781 g**: This would be the predicted mass at flipper length = 0, which makes no biological sense (negative mass!), but it's needed mathematically to position the line correctly within the range of our actual data. This is our β₀.
+
+- **R² ≈ 0.76**: This deserves more explanation...
+
+### Understanding R² (R-squared)
+
+R², also called the **coefficient of determination**, tells you what proportion of the variation in your response variable is explained by your model.
+
+Think of it this way:
+- Your data has natural variation - penguins don't all weigh the same
+- Some of that variation is related to flipper length (bigger flippers → heavier birds)
+- Some variation is due to other factors (species, sex, individual differences, measurement error)
+
+**R² = 0.76** means flipper length explains about 76% of the variation in body mass. The remaining 24% is unexplained variation (our ε).
+
+**How is R² calculated?**
+
+R² = 1 - (SS_residual / SS_total)
+
+Where:
+- **SS_total** = total sum of squares = Σ(yᵢ - ȳ)² — how much your data varies around its mean
+- **SS_residual** = residual sum of squares = Σ(yᵢ - ŷᵢ)² — how much your data varies around the regression line
+
+If your model explains everything perfectly, SS_residual = 0 and R² = 1.
+If your model explains nothing (just predicts the mean), SS_residual = SS_total and R² = 0.
+
+That R² of 0.76 is pretty good for biological data! It means if you only know a penguin's flipper length, you can predict its mass reasonably well.
 
 ### Making Predictions
 
 ```python
 # What's the predicted mass for a penguin with 200mm flippers?
-new_flipper = np.array([[200]])
+new_flipper = np.array([[200]])  # Note: 2D array for sklearn
 predicted_mass = model.predict(new_flipper)
 print(f"Predicted mass for 200mm flipper: {predicted_mass[0]:.0f} g")
 
@@ -257,19 +300,24 @@ predicted_mass = model.predict(new_flipper)
 print(f"Predicted mass for 180mm flipper: {predicted_mass[0]:.0f} g")
 ```
 
-<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
-{% capture exercise %}
+### A Note on Extrapolation
 
+Be careful about predicting outside the range of your training data! Our model was built on penguins with flippers roughly 170-230mm. If you try to predict mass for a 100mm flipper or a 300mm flipper, you're **extrapolating** - assuming the linear relationship continues outside the observed range. This is often dangerous because:
 
-<h3> Try It Yourself </h3>
-<p>Using the Palmer Penguins dataset, fit a simple regression predicting bill length from bill depth. 
-What do you find? Is the relationship positive or negative? How does R² compare to the flipper-mass relationship?</p>
+1. Relationships may be non-linear at extremes
+2. You have no data to validate predictions in that range
+3. Biological constraints may make extrapolations impossible (like our negative-mass intercept)
 
+**Stick to interpolation** (predicting within your data range) whenever possible.
 
-{::options parse_block_html="true" /}
+---
 
-<details><summary markdown="span">Solution!</summary>
+## Try It Yourself
 
+Using the Palmer Penguins dataset, fit a simple regression predicting bill length from bill depth. What do you find? Is the relationship positive or negative? How does R² compare to the flipper-mass relationship?
+
+<details>
+<summary>Solution</summary>
 
 ```python
 from palmerpenguins import load_penguins
@@ -305,19 +353,19 @@ for species in penguins['species'].unique():
 
 </details>
 
-{::options parse_block_html="false" /}
+---
 
-{% endcapture %}
+## Limitation: Simpson's Paradox
 
-<div class="notice--primary">
-  {{ exercise | markdownify }}
-</div>
+The exercise above reveals something important: simple regression can be misleading when you have groups in your data. This phenomenon is called **Simpson's Paradox** - when a trend appears in several groups of data but disappears or reverses when the groups are combined.
 
-</div>
+In our case:
+- **Within each species**: deeper bills → longer bills (positive relationship)
+- **Across all species combined**: deeper bills → shorter bills (negative relationship!)
 
-## A Word of Caution
+How can this be? It's because species differ systematically in both variables. Gentoo penguins have long but shallow bills; Adelie penguins have shorter but deeper bills. When you ignore species, these group differences create an artificial negative trend.
 
-The exercise above reveals something important: simple regression can be misleading when you have groups in your data. The overall flipper-mass relationship also differs among species - Gentoo penguins are bigger than Adelie and Chinstrap. 
+The flipper-mass relationship also differs among species - Gentoo penguins are bigger than Adelie and Chinstrap overall.
 
 This is one reason we need multiple regression - to account for additional factors that might be confounding our results.
 
@@ -335,15 +383,17 @@ Looking at the penguin data, body mass depends on more than just flipper length:
 - Males are larger than females
 - Bill dimensions correlate with mass too
 
-If we only model mass against flipper length, we're missing important information. Multiple regression lets us ask: "what's the effect of flipper length, *after accounting for* species and sex?"
+If we only model mass against flipper length, we're missing important information. Multiple regression lets us ask: **"What's the effect of flipper length, *after accounting for* species and sex?"**
+
+This is fundamentally different from simple regression. We're no longer asking "how does y change with x?" but rather "how does y change with x₁, *holding x₂, x₃, etc. constant*?"
 
 ## The Model
 
 We extend our simple model to include multiple predictors:
 
-**y = β₀ + β₁x₁ + β₂x₂ + β₃x₃ + ...**
+**ŷ = β₀ + β₁x₁ + β₂x₂ + β₃x₃ + ...**
 
-Each coefficient now tells us the effect of that variable *while holding the others constant*. This is crucial for interpretation.
+Each coefficient now tells us the **partial effect** of that variable - its effect while holding the others constant. This is crucial for interpretation and is what makes multiple regression so powerful for teasing apart confounded relationships.
 
 ## Example: Predicting Penguin Body Mass
 
@@ -360,6 +410,7 @@ import sklearn.metrics as metrics
 penguins = load_penguins().dropna()
 
 # Encode categorical variables (species and sex) as numbers
+# LabelEncoder converts text categories to integers: 0, 1, 2, etc.
 le_species = LabelEncoder()
 le_sex = LabelEncoder()
 penguins['species_code'] = le_species.fit_transform(penguins['species'])
@@ -374,7 +425,17 @@ print(penguins[['species', 'sex', 'flipper_length_mm', 'bill_length_mm',
                 'bill_depth_mm', 'body_mass_g']].head())
 ```
 
+### A Note on Encoding Categorical Variables
+
+We just converted species (Adelie, Chinstrap, Gentoo) to numbers (0, 1, 2). This is called **label encoding** and it has a subtle problem: it implies an ordering. The model might think Gentoo (2) is "more" than Adelie (0) in some way.
+
+For binary variables like sex (male/female → 0/1), this is fine - we're just measuring the difference between two groups.
+
+For multi-category variables, a better approach is **one-hot encoding** (also called dummy variables), where each category gets its own 0/1 column. We'll keep label encoding here for simplicity, but be aware this is a simplification. In a real analysis, you'd want to use one-hot encoding or a statistical framework that handles categories properly.
+
 ### Check Correlations First
+
+Before building a model, it's good practice to explore how your variables relate to each other:
 
 ```python
 # Which variables correlate with body mass?
@@ -385,7 +446,15 @@ print("\nCorrelations with body mass:")
 print(penguins[numeric_cols].corr()['body_mass_g'].sort_values(ascending=False))
 ```
 
-### Fitting the Multiple Regression
+**Why check correlations?** 
+1. It gives you a preview of which variables might be useful predictors
+2. It reveals potential **multicollinearity** - when predictors are highly correlated with *each other*
+
+**Multicollinearity** is a problem because if two predictors are highly correlated, it becomes hard to separate their individual effects. The model can't tell if it's variable A or variable B causing the effect. You'll get unstable coefficient estimates. We'll keep an eye on this.
+
+### Why Split Into Training and Test Sets?
+
+This is a fundamental concept in predictive modeling:
 
 ```python
 # Prepare features and target
@@ -400,7 +469,24 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 print(f"Training set: {len(X_train)} penguins")
 print(f"Test set: {len(X_test)} penguins")
+```
 
+**Why do we split the data?**
+
+If we train our model on all the data and then evaluate it on the same data, we're essentially asking "how well did you memorize this?" A model could achieve a perfect score by memorizing every data point without learning any real patterns.
+
+What we actually want to know is: "how well will this model perform on *new, unseen data*?"
+
+By holding out a **test set** that the model never sees during training, we can get an honest estimate of how well the model will generalize to new penguins.
+
+- **Training set (70%)**: Used to fit the model
+- **Test set (30%)**: Used only for evaluation, never for fitting
+
+The `random_state=42` ensures we get the same split every time we run the code (for reproducibility).
+
+### Fitting the Multiple Regression
+
+```python
 # Fit the model
 model = LinearRegression()
 model.fit(X_train, y_train)
@@ -414,16 +500,19 @@ for name, coef in zip(X.columns, model.coef_):
 
 ## Interpreting the Results
 
-What do these coefficients actually mean?
+What do these coefficients actually mean? This is where multiple regression differs fundamentally from simple regression:
 
 ```python
 print("""
 Interpreting the coefficients:
 
 flipper_length_mm: Each additional mm of flipper length adds about 
-  17g to body mass, after controlling for other variables. Note this 
-  is smaller than in simple regression (~50g) because some of that 
-  effect was actually due to species differences.
+  17g to body mass, AFTER CONTROLLING FOR other variables. 
+  
+  Note this is smaller than in simple regression (~50g). Why? Because 
+  some of that apparent flipper effect was actually due to species 
+  differences - Gentoo penguins have both longer flippers AND higher 
+  mass. Once we account for species, the "pure" flipper effect is smaller.
 
 bill_length_mm: Longer bills are associated with slightly higher mass,
   holding other variables constant.
@@ -432,17 +521,36 @@ bill_depth_mm: Deeper bills are associated with higher mass. This makes
   sense - it's a measure of overall head size.
 
 species_code: The coefficient shows average difference between species
-  (encoded as 0, 1, 2). Interpretation is tricky with encoded categories.
+  (encoded as 0, 1, 2). Interpretation is tricky with encoded categories
+  because we're treating it as a continuous variable. This is a limitation
+  of our simple encoding approach.
 
 sex_code: Males (coded as 1) are heavier than females (coded as 0) by
-  about this many grams, controlling for body measurements.
+  about this many grams, controlling for body measurements. This is 
+  the easiest to interpret - it's the male-female difference in mass
+  after accounting for differences in flipper length, bill size, etc.
 """)
 ```
+
+### The Key Insight: "Controlling For" Other Variables
+
+The phrase "controlling for" or "holding constant" is crucial in multiple regression. Here's what it means:
+
+Imagine you could magically find two penguins that are:
+- The same species
+- The same sex  
+- Have the same bill length
+- Have the same bill depth
+- But differ in flipper length by 1mm
+
+The flipper coefficient tells you how much heavier we'd expect the longer-flippered penguin to be.
+
+Of course, we can't actually find such perfectly matched penguins. Multiple regression does this statistically by partitioning the variation in body mass among all the predictors.
 
 ### How Good Is Our Model?
 
 ```python
-# Predict on test data
+# Predict on test data (data the model has never seen)
 y_pred = model.predict(X_test)
 
 # Calculate metrics
@@ -453,7 +561,17 @@ mae = metrics.mean_absolute_error(y_test, y_pred)
 print(f"R-squared: {r2:.3f}")
 print(f"RMSE: {rmse:.1f} g")
 print(f"MAE: {mae:.1f} g")
+```
 
+**Understanding the Evaluation Metrics:**
+
+- **R² (R-squared)**: Same interpretation as before - proportion of variance explained. But now we're measuring it on the *test set*, so it tells us how well the model generalizes.
+
+- **RMSE (Root Mean Squared Error)**: The square root of the average squared prediction error. It's in the same units as your response variable (grams), so you can interpret it directly: "on average, our predictions are off by about RMSE grams." RMSE penalizes large errors heavily because of the squaring.
+
+- **MAE (Mean Absolute Error)**: The average absolute prediction error. Also in grams. MAE treats all errors equally regardless of size. If RMSE is much larger than MAE, you have some predictions with large errors.
+
+```python
 # Plot predicted vs observed
 fig = px.scatter(x=y_test, y=y_pred,
                  labels={'x': 'Observed Mass (g)', 'y': 'Predicted Mass (g)'})
@@ -465,6 +583,8 @@ fig.update_layout(template='simple_white',
                   title=f'Multiple Regression: R² = {r2:.3f}')
 fig.show()
 ```
+
+**Interpreting the predicted vs. observed plot**: If predictions were perfect, all points would fall exactly on the red 1:1 line. The scatter around that line shows prediction error. Look for patterns - if errors are larger for heavy penguins than light ones, your model might have heteroscedasticity issues.
 
 ## Does Adding Variables Help?
 
@@ -506,19 +626,18 @@ print(pd.DataFrame(results))
 
 You should see R² improve as you add relevant predictors - species and sex both contribute meaningful information about body mass.
 
-<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
-{% capture exercise %}
+**But be careful!** R² will always increase (or stay the same) when you add more predictors to a model, even if those predictors are useless. This is because more parameters give the model more flexibility to fit the training data.
 
+This is why we evaluate on a **test set** - on new data, useless predictors will actually hurt performance by adding noise. This is called **overfitting**, and it's a central concern in machine learning.
 
-<h3> Try It Yourself </h3>
-<p>Build a multiple regression model predicting bill length from bill depth, flipper length, species, and sex. 
-Which predictors have the strongest effects? Does the bill depth coefficient change from the simple regression?</p>
+---
 
+## Exercise
 
-{::options parse_block_html="true" /}
+Build a multiple regression model predicting bill length from bill depth, flipper length, species, and sex. Which predictors have the strongest effects? Does the bill depth coefficient change from the simple regression?
 
-<details><summary markdown="span">Solution!</summary>
-
+<details>
+<summary>Solution</summary>
 
 ```python
 from palmerpenguins import load_penguins
@@ -562,25 +681,21 @@ print(f"Multiple regression bill_depth coefficient: {model.coef_[0]:.3f}")
 
 </details>
 
-{::options parse_block_html="false" /}
+---
 
-{% endcapture %}
-
-<div class="notice--primary">
-  {{ exercise | markdownify }}
-</div>
-
-</div>
-
-## Limitations
+## Limitations of Multiple Regression
 
 Multiple regression is powerful but has some important limitations:
 
-**It assumes linear relationships.** If the relationship between flipper length and mass is curved (it often is at extremes), a linear model won't capture that properly.
+**1. It assumes linear relationships.** The model assumes each predictor has a straight-line relationship with the response. If flipper length and mass have a curved relationship (they often do at extremes), a linear model won't capture that properly. You might need polynomial terms or transformations.
 
-**It assumes additive effects.** The model says the effect of flipper length is the same for all species. In reality, species might differ in their flipper-mass scaling.
+**2. It assumes additive effects.** The model says the effect of flipper length is the same for all species - we just shift the intercept for each species. In reality, species might differ in their flipper-mass scaling (different slopes). This would require **interaction terms**.
 
-**Categorical encoding matters.** We used simple numeric codes for species, but this assumes equal "distances" between categories, which doesn't make biological sense.
+**3. Categorical encoding matters.** We used simple numeric codes for species, but this assumes equal "distances" between categories (Chinstrap is "halfway between" Adelie and Gentoo), which doesn't make biological sense. Use one-hot encoding or a proper statistical framework for better results.
+
+**4. It assumes independent errors.** If you measured the same penguin multiple times, or penguins from the same colony are more similar, you violate the independence assumption. You'd need mixed-effects models for such data.
+
+**5. Outliers can have outsized influence.** A single unusual data point can dramatically shift your regression line. Always check for influential observations.
 
 These limitations bring us to machine learning approaches, which can handle more complexity.
 
@@ -594,25 +709,41 @@ Alright, now we're getting to the fun stuff. Machine learning sounds fancy, but 
 
 Ecological relationships are often messy:
 
-- Relationships might be non-linear
+- Relationships might be non-linear (e.g., growth rates that plateau)
 - Effects of one variable depend on another (interactions)
 - There might be thresholds we didn't anticipate
+- The functional form might be completely unknown
 
 Machine learning algorithms can discover these patterns automatically. You don't have to know the shape of the relationship beforehand.
 
+**The trade-off**: Machine learning models are often less interpretable than linear regression. You might get better predictions but less insight into *why*. This is sometimes called the "black box" problem.
+
 ## Decision Trees: The Building Block
 
-Before we get to Random Forests, we need to understand decision trees. They're intuitive once you see how they work.
+Before we get to Random Forests, we need to understand decision trees. They're surprisingly intuitive.
 
-A decision tree is basically a flowchart of questions:
+### The Basic Idea
 
-- Is flipper length > 206mm?
-  - Yes → Probably a Gentoo, predict ~5000g
-  - No → Is bill depth > 18mm?
-    - Yes → Probably Adelie, predict ~3700g
-    - No → Probably Chinstrap, predict ~3500g
+A decision tree is basically a flowchart of yes/no questions:
 
-The algorithm figures out which questions to ask and what thresholds to use by looking at your data.
+```
+Is flipper length > 206mm?
+├── Yes → Probably a Gentoo, predict ~5000g
+└── No → Is bill depth > 18mm?
+    ├── Yes → Probably Adelie, predict ~3700g
+    └── No → Probably Chinstrap, predict ~3500g
+```
+
+The algorithm figures out:
+1. Which questions to ask (which variable to split on)
+2. What thresholds to use (why 206mm and not 200mm?)
+3. When to stop asking questions
+
+### How Does It Choose Splits?
+
+At each step, the algorithm tries every possible split of every variable and picks the one that creates the most "pure" groups - groups where the response values are most similar to each other.
+
+For regression, "purity" is measured by variance. A good split creates child nodes with lower variance in the response than the parent node.
 
 ```python
 from sklearn.tree import DecisionTreeRegressor, plot_tree
@@ -625,6 +756,7 @@ y = penguins['body_mass_g']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
 # Fit a simple tree
+# max_depth=3 limits the tree to 3 levels of questions
 tree = DecisionTreeRegressor(max_depth=3, random_state=42)
 tree.fit(X_train, y_train)
 
@@ -638,25 +770,59 @@ plt.show()
 print(f"Decision Tree R²: {tree.score(X_test, y_test):.3f}")
 ```
 
-Decision trees are easy to interpret - you can literally see the rules. But they have a problem: they tend to overfit. A deep tree can memorize the training data perfectly but fail miserably on new data.
+### Reading the Tree Visualization
+
+Each box in the tree visualization shows:
+- The splitting rule (e.g., "flipper_length_mm <= 206.5")
+- `samples`: how many training samples reached this node
+- `value`: the predicted value (mean of samples at this node)
+- `squared_error` (or `mse`): the variance of samples at this node
+
+The colors indicate the predicted value - similar colors mean similar predictions.
+
+### The Overfitting Problem
+
+Decision trees are easy to interpret - you can literally see the rules. But they have a critical flaw: **they tend to overfit**.
+
+A deep tree can grow until each leaf contains just one sample, essentially memorizing the training data perfectly. But this memorization doesn't generalize - the model fails on new data because it learned noise, not signal.
+
+Try this experiment:
+```python
+# A tree with no depth limit
+deep_tree = DecisionTreeRegressor(random_state=42)  # No max_depth
+deep_tree.fit(X_train, y_train)
+
+print(f"Deep tree - Training R²: {deep_tree.score(X_train, y_train):.3f}")
+print(f"Deep tree - Test R²: {deep_tree.score(X_test, y_test):.3f}")
+```
+
+You'll likely see near-perfect training R² but worse test R² - classic overfitting!
 
 ## Random Forests: Many Trees Are Better Than One
 
-Random Forests solve the overfitting problem by building many trees and averaging their predictions. Each tree is a bit different because:
+Random Forests solve the overfitting problem through a clever strategy: build many trees and average their predictions. Individual trees might make mistakes, but their errors tend to cancel out.
 
-1. Each tree is trained on a random subset of the data (with replacement)
-2. At each split, only a random subset of variables is considered
+### How It Works
 
-This randomness means individual trees might make mistakes, but averaging over hundreds of trees gives robust predictions.
+Each tree in the forest is built differently:
+
+1. **Bootstrap sampling**: Each tree is trained on a random sample of the data, drawn *with replacement* (some observations appear multiple times, others not at all). This is called a "bootstrap sample."
+
+2. **Random feature selection**: At each split, instead of considering all variables, only a random subset is considered. This prevents all trees from making identical decisions.
+
+This randomness means individual trees are "weaker" (less accurate) than a fully-grown single tree. But their collective wisdom is stronger and more robust.
+
+**The magic**: When you average many imperfect but different predictions, the random errors cancel out, while the true signal remains.
 
 ```python
 from sklearn.ensemble import RandomForestRegressor
 
 # Fit a random forest
 rf = RandomForestRegressor(
-    n_estimators=100,    # number of trees
+    n_estimators=100,    # number of trees in the forest
     max_depth=10,        # how deep each tree can go
-    random_state=42
+    min_samples_leaf=5,  # minimum samples required at each leaf
+    random_state=42      # for reproducibility
 )
 rf.fit(X_train, y_train)
 
@@ -665,6 +831,36 @@ y_pred = rf.predict(X_test)
 print(f"Random Forest R²: {metrics.r2_score(y_test, y_pred):.3f}")
 print(f"Random Forest RMSE: {np.sqrt(metrics.mean_squared_error(y_test, y_pred)):.1f} g")
 ```
+
+### Key Hyperparameters
+
+**Hyperparameters** are settings you choose before training (unlike model parameters like coefficients, which are learned from data):
+
+- **n_estimators**: Number of trees. More trees = more stable predictions, but slower training. 100-500 is usually enough; returns diminish beyond that.
+
+- **max_depth**: Maximum depth of each tree. Shallower trees are simpler and less prone to overfitting. Try 5-20 for most problems.
+
+- **min_samples_leaf**: Minimum samples required at each leaf node. Higher values prevent the tree from creating leaves with just one or two samples, reducing overfitting.
+
+- **max_features**: Number of features to consider at each split. Default is sqrt(n_features) for classification, n_features/3 for regression. Lower values increase randomness between trees.
+
+### Out-of-Bag Error: Free Cross-Validation
+
+Here's a neat trick: because each tree only sees about 63% of the data (due to bootstrap sampling), the remaining 37% can be used to evaluate that tree. This "out-of-bag" (OOB) error gives you a built-in estimate of test performance without needing a separate test set!
+
+```python
+rf_oob = RandomForestRegressor(
+    n_estimators=100,
+    max_depth=10,
+    oob_score=True,  # Enable OOB scoring
+    random_state=42
+)
+rf_oob.fit(X_train, y_train)
+print(f"OOB R²: {rf_oob.oob_score_:.3f}")
+print(f"Test R²: {rf_oob.score(X_test, y_test):.3f}")
+```
+
+The OOB score should be close to your test score - it's a good sanity check.
 
 ## Comparing All Our Methods
 
@@ -716,9 +912,9 @@ results.append({
 print(pd.DataFrame(results).to_string(index=False))
 ```
 
-## What's Driving the Patterns?
+## What's Driving the Patterns? Feature Importance
 
-One of the nicest things about Random Forests is that they tell you which variables matter most:
+One of the nicest things about Random Forests is that they tell you which variables matter most for predictions:
 
 ```python
 importance = pd.DataFrame({
@@ -736,23 +932,49 @@ fig.update_layout(template='simple_white', yaxis={'categoryorder': 'total ascend
 fig.show()
 ```
 
+### How Is Feature Importance Calculated?
+
+The default importance measure (called "mean decrease in impurity" or "Gini importance") is based on how much each feature contributes to reducing prediction error across all trees:
+
+1. Every time a feature is used to make a split, it reduces the impurity (variance) somewhat
+2. Sum up these reductions across all splits and all trees
+3. Normalize so importances sum to 1
+
 For the penguin data, you'll probably find that sex and flipper length are the most important predictors - which makes biological sense!
 
-<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
-{% capture exercise %}
+### A Caution About Feature Importance
 
+This default importance measure has known biases:
+- It favors features with many unique values (continuous > categorical)
+- It favors features that are correlated with other features
+- It doesn't tell you about the *direction* of the effect
 
-<h3> Try It Yourself </h3>
-<p>Use Random Forest to predict penguin species (as a classification problem) from the morphological 
-measurements. Which measurements are most useful for distinguishing species?</p>
+For more reliable importance estimates, consider **permutation importance**: randomly shuffle one feature and see how much performance drops. If shuffling a feature hurts predictions a lot, that feature was important.
 
+```python
+from sklearn.inspection import permutation_importance
 
-<p><strong>Hint:</strong> Use <code>RandomForestClassifier</code> instead of <code>RandomForestRegressor</code></p>
+perm_importance = permutation_importance(rf, X_test, y_test, n_repeats=10, random_state=42)
 
-{::options parse_block_html="true" /}
+perm_imp_df = pd.DataFrame({
+    'Variable': X.columns,
+    'Importance': perm_importance.importances_mean
+}).sort_values('Importance', ascending=False)
 
-<details><summary markdown="span">Solution!</summary>
+print("\nPermutation importance:")
+print(perm_imp_df.to_string(index=False))
+```
 
+---
+
+## Exercise
+
+Use Random Forest to predict penguin species (as a classification problem) from the morphological measurements. Which measurements are most useful for distinguishing species?
+
+**Hint:** Use `RandomForestClassifier` instead of `RandomForestRegressor`
+
+<details>
+<summary>Solution</summary>
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
@@ -788,15 +1010,18 @@ for name, imp in sorted(zip(X.columns, rf_clf.feature_importances_),
 
 </details>
 
-{::options parse_block_html="false" /}
+---
 
-{% endcapture %}
+## When to Use What?
 
-<div class="notice--primary">
-  {{ exercise | markdownify }}
-</div>
+Here's a practical guide:
 
-</div>
+| Method | Use When | Advantages | Disadvantages |
+|--------|----------|------------|---------------|
+| **Simple Regression** | One predictor, linear relationship, need interpretability | Simple, coefficients are meaningful | Can't handle multiple predictors or non-linearity |
+| **Multiple Regression** | Multiple predictors, linear relationships, need to understand effects | Coefficients are interpretable, can control for confounders | Assumes linearity and additivity |
+| **Decision Tree** | Need interpretable rules, non-linear relationships | Easy to explain, handles non-linearity | Prone to overfitting, unstable |
+| **Random Forest** | Prediction is main goal, complex non-linear relationships | Excellent predictive performance, robust | Less interpretable, slower to train |
 
 ---
 
