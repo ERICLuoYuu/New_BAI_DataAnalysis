@@ -1019,8 +1019,6 @@ for name, imp in sorted(zip(X.columns, rf_clf.feature_importances_),
 
 ## When to Use What?
 
-Here's a practical guide:
-
 | Method | Use When | Advantages | Disadvantages |
 |--------|----------|------------|---------------|
 | **Simple Regression** | One predictor, linear relationship, need interpretability | Simple, coefficients are meaningful | Can't handle multiple predictors or non-linearity |
