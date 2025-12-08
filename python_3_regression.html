@@ -20,7 +20,7 @@
 </span><span class="n">fig</span> <span class="o">=</span> <span class="n">px</span><span class="p">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">penguins_clean</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s">'flipper_length_mm'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s">'body_mass_g'</span><span class="p">,</span>
                  <span class="n">color</span><span class="o">=</span><span class="s">'species'</span><span class="p">,</span>
                  <span class="n">title</span><span class="o">=</span><span class="s">'Penguin Body Mass vs Flipper Length'</span><span class="p">)</span>
-<span class="n">fig</span><span class="p">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">template</span><span class="o">=</span><span class="s">'simple_white'</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">template</span><span class="o">=</span><span class="s">'simple_white'</span><span class="p">,</span> <span class="n">font_size</span> <span class="o">=</span> <span class="mi">36</span><span class="p">,)</span>
 <span class="n">fig</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div></div> <p>You’ll see there’s clearly a positive relationship - longer flippers go with heavier birds. Let’s quantify it.</p> <h3 id="fitting-the-regression"> <a href="#fitting-the-regression" class="anchor-heading" aria-labelledby="fitting-the-regression"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Fitting the Regression </h3> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
 
@@ -52,7 +52,7 @@
     <span class="n">x</span><span class="o">=</span><span class="n">penguins_clean</span><span class="p">[</span><span class="s">'flipper_length_mm'</span><span class="p">],</span> 
     <span class="n">y</span><span class="o">=</span><span class="n">penguins_clean</span><span class="p">[</span><span class="s">'body_mass_g'</span><span class="p">],</span>
     <span class="n">mode</span><span class="o">=</span><span class="s">'markers'</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">'Observations'</span><span class="p">,</span>
-    <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+    <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
 <span class="p">))</span>
 
 <span class="c1"># Regression line
@@ -66,7 +66,8 @@
     <span class="n">title</span><span class="o">=</span><span class="s">'Penguin Body Mass vs Flipper Length'</span><span class="p">,</span>
     <span class="n">xaxis_title</span><span class="o">=</span><span class="s">'Flipper Length (mm)'</span><span class="p">,</span>
     <span class="n">yaxis_title</span><span class="o">=</span><span class="s">'Body Mass (g)'</span><span class="p">,</span>
-    <span class="n">template</span><span class="o">=</span><span class="s">'simple_white'</span>
+    <span class="n">template</span><span class="o">=</span><span class="s">'simple_white'</span><span class="p">,</span>
+    <span class="n">font_size</span> <span class="o">=</span> <span class="mi">36</span>
 <span class="p">)</span>
 <span class="n">fig</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div></div> <h2 id="what-do-these-numbers-mean"> <a href="#what-do-these-numbers-mean" class="anchor-heading" aria-labelledby="what-do-these-numbers-mean"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> What Do These Numbers Mean? </h2> <p>With real data, you should get something like:</p> <ul> <li> <p><strong>Slope ≈ 49.7 g/mm</strong>: For every 1 mm increase in flipper length, body mass increases by about 50 grams. This is our β₁.</p> </li> <li> <p><strong>Intercept ≈ -5781 g</strong>: This would be the predicted mass at flipper length = 0, which makes no biological sense (negative mass!), but it’s needed mathematically to position the line correctly within the range of our actual data. This is our β₀.</p> </li> <li> <p><strong>R² = 0.76</strong> means flipper length explains about 76% of the variation in body mass. The remaining 24% is unexplained variation (our ε).</p> </li> </ul> <h3 id="making-predictions"> <a href="#making-predictions" class="anchor-heading" aria-labelledby="making-predictions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Making Predictions </h3> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># What's the predicted mass for a penguin with 200mm flippers?
