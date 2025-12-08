@@ -11,7 +11,7 @@ nav_order: 4
 2.[Simple Linear Regression](#2-simple-linear-regression)
 3.[Multiple Regression](#3-multiple-regression)
 4.[Machine Learning with Random Forests](#4-machine-learning-with-random-forests)
-5.[Gap-filling in Time Series](#5-Gap-filling-in-time-series)
+5.[Gap-filling in Time Series](#5-gap-filling-in-time-series)
 
 Welcome! This tutorial will walk you through regression analysis - one of the most useful tools you'll encounter for making sense of ecological data. We'll start from the basics and work our way up to more advanced machine learning methods.
 Don't worry if statistics isn't your strong suit. We'll take it step by step, and by the end you should feel comfortable applying these techniques to your own data.
