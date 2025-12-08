@@ -260,31 +260,7 @@ With real data, you should get something like:
 
 - **Intercept ≈ -5781 g**: This would be the predicted mass at flipper length = 0, which makes no biological sense (negative mass!), but it's needed mathematically to position the line correctly within the range of our actual data. This is our β₀.
 
-- **R² ≈ 0.76**: This deserves more explanation...
-
-### Understanding R² (R-squared)
-
-R², also called the **coefficient of determination**, tells you what proportion of the variation in your response variable is explained by your model.
-
-Think of it this way:
-- Your data has natural variation - penguins don't all weigh the same
-- Some of that variation is related to flipper length (bigger flippers → heavier birds)
-- Some variation is due to other factors (species, sex, individual differences, measurement error)
-
-**R² = 0.76** means flipper length explains about 76% of the variation in body mass. The remaining 24% is unexplained variation (our ε).
-
-**How is R² calculated?**
-
-R² = 1 - (SS_residual / SS_total)
-
-Where:
-- **SS_total** = total sum of squares = Σ(yᵢ - ȳ)² — how much your data varies around its mean
-- **SS_residual** = residual sum of squares = Σ(yᵢ - ŷᵢ)² — how much your data varies around the regression line
-
-If your model explains everything perfectly, SS_residual = 0 and R² = 1.
-If your model explains nothing (just predicts the mean), SS_residual = SS_total and R² = 0.
-
-That R² of 0.76 is pretty good for biological data! It means if you only know a penguin's flipper length, you can predict its mass reasonably well.
+- **R² = 0.76** means flipper length explains about 76% of the variation in body mass. The remaining 24% is unexplained variation (our ε).
 
 ### Making Predictions
 
@@ -312,12 +288,16 @@ Be careful about predicting outside the range of your training data! Our model w
 
 ---
 
-## Try It Yourself
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
 
-Using the Palmer Penguins dataset, fit a simple regression predicting bill length from bill depth. What do you find? Is the relationship positive or negative? How does R² compare to the flipper-mass relationship?
+<h3> Try It Yourself </h3>
+<p>Using the Palmer Penguins dataset, fit a simple regression predicting bill length from bill depth. 
+What do you find? Is the relationship positive or negative? How does R² compare to the flipper-mass relationship?</p>
 
-<details>
-<summary>Solution</summary>
+{::options parse_block_html="true" /}
+
+<details><summary markdown="span">Solution!</summary>
 
 ```python
 from palmerpenguins import load_penguins
@@ -350,8 +330,16 @@ for species in penguins['species'].unique():
     model_sp = LinearRegression().fit(X_sp, y_sp)
     print(f"{species}: slope = {model_sp.coef_[0]:.2f}, R² = {model_sp.score(X_sp, y_sp):.3f}")
 ```
-
 </details>
+
+{::options parse_block_html="false" /}
+
+{% endcapture %}
+
+<div class="notice--primary">
+  {{ exercise | markdownify }}
+</div>
+</div>
 
 ---
 
