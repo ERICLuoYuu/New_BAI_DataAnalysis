@@ -126,7 +126,7 @@ The difference between RMSE and MAE? RMSE penalizes large errors more heavily be
 
 ---
 
-# **2. Simple Linear Regression**
+# **Chapter 2: Simple Linear Regression**
 
 Alright, let's actually do some regression. We'll start with the simplest case: one predictor, one response, straight line relationship.
 
@@ -137,12 +137,15 @@ Simple linear regression fits this equation:
 **y = β₀ + β₁x**
 
 Where:
-- **β₀** is the intercept (value of y when x is zero)
-- **β₁** is the slope (how much y changes for each unit increase in x)
+
+- β₀ is the intercept (value of y when x is zero)
+- β₁ is the slope (how much y changes for each unit increase in x)
 
 That's it. We're just fitting a line through our data points.
 
-## Let's Try It: Tree Growth and Temperature
+## Let's Try It: Penguin Body Mass and Flipper Length
+
+We'll use the Palmer Penguins dataset - real measurements collected by Dr. Kristen Gorman at Palmer Station, Antarctica.
 
 ```python
 import numpy as np
@@ -150,134 +153,156 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-# Here's some tree ring data from a temperature gradient
-np.random.seed(42)
+# Load the penguins dataset
+# You can install it with: pip install palmerpenguins
+from palmerpenguins import load_penguins
+penguins = load_penguins()
 
-temperature = np.array([6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
-ring_width = 0.8 + 0.15 * temperature + np.random.normal(0, 0.3, len(temperature))
+# Take a look at what we have
+print("Dataset shape:", penguins.shape)
+print("\nFirst few rows:")
+print(penguins.head())
 
-tree_data = pd.DataFrame({
-    'temperature_C': temperature,
-    'ring_width_mm': ring_width
-})
-
-print("Our data:")
-print(tree_data)
+# Check for missing values and drop them for now
+penguins_clean = penguins.dropna(subset=['flipper_length_mm', 'body_mass_g'])
+print(f"\nComplete cases: {len(penguins_clean)}")
 ```
 
-Now let's fit a regression. I'll show you both the manual calculation and the easy way with scikit-learn.
-
-### The Math (for those who want it)
+Now let's explore the relationship between flipper length and body mass:
 
 ```python
-# Calculate means
-temp_mean = np.mean(temperature)
-growth_mean = np.mean(ring_width)
-
-# Slope formula
-numerator = np.sum((temperature - temp_mean) * (ring_width - growth_mean))
-denominator = np.sum((temperature - temp_mean) ** 2)
-slope = numerator / denominator
-
-# Intercept
-intercept = growth_mean - slope * temp_mean
-
-print(f"Slope: {slope:.4f} mm per °C")
-print(f"Intercept: {intercept:.4f} mm")
+# Quick visualization
+fig = px.scatter(penguins_clean, x='flipper_length_mm', y='body_mass_g',
+                 color='species',
+                 title='Penguin Body Mass vs Flipper Length')
+fig.update_layout(template='simple_white')
+fig.show()
 ```
 
-### The Easy Way
+You'll see there's clearly a positive relationship - longer flippers go with heavier birds. Let's quantify it.
 
-In practice, you'll almost always use a library:
+### Fitting the Regression
 
 ```python
 from sklearn.linear_model import LinearRegression
 
-# sklearn wants 2D arrays, hence the reshape
-X = temperature.reshape(-1, 1)
-y = ring_width
+# Prepare the data
+X = penguins_clean[['flipper_length_mm']].values  # sklearn wants 2D array
+y = penguins_clean['body_mass_g'].values
 
+# Fit the model
 model = LinearRegression()
 model.fit(X, y)
 
-print(f"Slope: {model.coef_[0]:.4f} mm per °C")
-print(f"Intercept: {model.intercept_:.4f} mm")
-print(f"R-squared: {model.score(X, y):.4f}")
+print(f"Slope: {model.coef_[0]:.2f} g per mm")
+print(f"Intercept: {model.intercept_:.2f} g")
+print(f"R-squared: {model.score(X, y):.3f}")
 ```
-
-### What Do These Numbers Mean?
-
-The slope of about 0.15 tells us that for every 1°C increase in mean annual temperature, tree ring width increases by roughly 0.15 mm. That's the key ecological finding here.
-
-The intercept (around 0.8) would be the predicted ring width at 0°C. This doesn't make much biological sense - trees don't really grow at 0°C - but mathematically we need it to define our line.
-
-The R² of around 0.75 tells us that temperature explains about 75% of the variation in ring width. Not bad! The remaining 25% is due to other factors we haven't measured (soil quality, genetics, competition, etc.) plus measurement error.
 
 ### Visualizing the Fit
 
-Always plot your regression. Numbers alone can be misleading.
-
 ```python
-# Get predictions
-predicted = model.predict(X)
+# Get predictions for the regression line
+X_line = np.linspace(penguins_clean['flipper_length_mm'].min(), 
+                     penguins_clean['flipper_length_mm'].max(), 100).reshape(-1, 1)
+y_line = model.predict(X_line)
 
 fig = go.Figure()
 
 # Data points
 fig.add_trace(go.Scatter(
-    x=temperature, y=ring_width,
+    x=penguins_clean['flipper_length_mm'], 
+    y=penguins_clean['body_mass_g'],
     mode='markers', name='Observations',
-    marker=dict(size=10, color='forestgreen')
+    marker=dict(size=8, opacity=0.6)
 ))
 
 # Regression line
 fig.add_trace(go.Scatter(
-    x=temperature, y=predicted,
-    mode='lines', name='Fitted line',
-    line=dict(color='darkgreen', width=2)
+    x=X_line.flatten(), y=y_line,
+    mode='lines', name='Regression line',
+    line=dict(color='red', width=2)
 ))
 
 fig.update_layout(
-    title='Tree Growth vs Temperature',
-    xaxis_title='Mean Annual Temperature (°C)',
-    yaxis_title='Ring Width (mm)',
+    title='Penguin Body Mass vs Flipper Length',
+    xaxis_title='Flipper Length (mm)',
+    yaxis_title='Body Mass (g)',
     template='simple_white'
 )
 fig.show()
 ```
 
+## What Do These Numbers Mean?
+
+With real data, you should get something like:
+
+- **Slope ≈ 49.7 g/mm**: For every 1 mm increase in flipper length, body mass increases by about 50 grams
+- **Intercept ≈ -5781 g**: This would be the predicted mass at flipper length = 0, which makes no biological sense (negative mass!), but it's needed mathematically to position the line
+- **R² ≈ 0.76**: Flipper length explains about 76% of the variation in body mass
+
+That R² is pretty good for biological data! It means if you only know a penguin's flipper length, you can predict its mass reasonably well.
+
+### Making Predictions
+
+```python
+# What's the predicted mass for a penguin with 200mm flippers?
+new_flipper = np.array([[200]])
+predicted_mass = model.predict(new_flipper)
+print(f"Predicted mass for 200mm flipper: {predicted_mass[0]:.0f} g")
+
+# What about 180mm?
+new_flipper = np.array([[180]])
+predicted_mass = model.predict(new_flipper)
+print(f"Predicted mass for 180mm flipper: {predicted_mass[0]:.0f} g")
+```
+
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
+
 <h3> Try It Yourself </h3>
-<p>Create a dataset for grassland productivity (kg/ha) vs annual precipitation (mm). 
-Fit a regression and interpret the slope. What does it tell you about water limitation?</p>
+<p>Using the Palmer Penguins dataset, fit a simple regression predicting bill length from bill depth. 
+What do you find? Is the relationship positive or negative? How does R² compare to the flipper-mass relationship?</p>
+
 
 {::options parse_block_html="true" /}
 
 <details><summary markdown="span">Solution!</summary>
 
+
 ```python
-import numpy as np
+from palmerpenguins import load_penguins
 from sklearn.linear_model import LinearRegression
 
-np.random.seed(42)
+penguins = load_penguins().dropna(subset=['bill_length_mm', 'bill_depth_mm'])
 
-# Precipitation gradient
-precip = np.array([200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100])
-# Biomass increases with rainfall (with some noise)
-biomass = 500 + 3.5 * precip + np.random.normal(0, 150, len(precip))
+X = penguins[['bill_depth_mm']].values
+y = penguins['bill_length_mm'].values
 
 model = LinearRegression()
-model.fit(precip.reshape(-1, 1), biomass)
+model.fit(X, y)
 
-print(f"Slope: {model.coef_[0]:.2f} kg/ha per mm rainfall")
-print(f"R-squared: {model.score(precip.reshape(-1,1), biomass):.3f}")
+print(f"Slope: {model.coef_[0]:.3f}")
+print(f"Intercept: {model.intercept_:.3f}")
+print(f"R-squared: {model.score(X, y):.3f}")
 
-# The slope tells us that each additional mm of rainfall 
-# gives us about 3.5 kg/ha more biomass. This is essentially
-# a measure of rainfall use efficiency for this grassland.
+# Surprise! You'll find a NEGATIVE relationship and very low R²
+# This is Simpson's paradox - when you combine the species,
+# the overall trend is negative, but within each species 
+# the relationship is positive. This is because Gentoo penguins
+# have long bills but shallow depth, while Adelie have 
+# shorter bills but deeper depth.
+
+# Try it by species:
+for species in penguins['species'].unique():
+    subset = penguins[penguins['species'] == species]
+    X_sp = subset[['bill_depth_mm']].values
+    y_sp = subset['bill_length_mm'].values
+    model_sp = LinearRegression().fit(X_sp, y_sp)
+    print(f"{species}: slope = {model_sp.coef_[0]:.2f}, R² = {model_sp.score(X_sp, y_sp):.3f}")
 ```
+
 </details>
 
 {::options parse_block_html="false" /}
@@ -287,31 +312,30 @@ print(f"R-squared: {model.score(precip.reshape(-1,1), biomass):.3f}")
 <div class="notice--primary">
   {{ exercise | markdownify }}
 </div>
+
 </div>
 
-## Limitations
+## A Word of Caution
 
-Simple regression is great, but it has obvious limitations. Ecological systems are complex - tree growth isn't just about temperature. There's precipitation, soil nutrients, competition, pests, genetics... 
+The exercise above reveals something important: simple regression can be misleading when you have groups in your data. The overall flipper-mass relationship also differs among species - Gentoo penguins are bigger than Adelie and Chinstrap. 
 
-Also, the relationship might not be linear. Many ecological relationships have thresholds or optima. Trees don't just keep growing faster forever as temperature increases - at some point it gets too hot.
-
-That's where multiple regression and machine learning come in.
+This is one reason we need multiple regression - to account for additional factors that might be confounding our results.
 
 ---
 
-# **3. Multiple Regression**
+# **Chapter 3: Multiple Regression**
 
 In the real world, ecological responses depend on many factors simultaneously. Multiple regression lets us include all of them in one model.
 
 ## Why Go Multiple?
 
-Think about what controls ecosystem carbon exchange:
-- Light drives photosynthesis
-- Temperature affects both photosynthesis and respiration
-- Soil moisture determines water availability
-- Humidity influences stomatal conductance
+Looking at the penguin data, body mass depends on more than just flipper length:
 
-If we only model carbon flux against temperature, we're missing most of the picture. Multiple regression lets us ask: "what's the effect of temperature, *after accounting for* light, moisture, and humidity?"
+- Species differ in overall body size
+- Males are larger than females
+- Bill dimensions correlate with mass too
+
+If we only model mass against flipper length, we're missing important information. Multiple regression lets us ask: "what's the effect of flipper length, *after accounting for* species and sex?"
 
 ## The Model
 
@@ -321,214 +345,221 @@ We extend our simple model to include multiple predictors:
 
 Each coefficient now tells us the effect of that variable *while holding the others constant*. This is crucial for interpretation.
 
-## Example: Forest Carbon Flux
+## Example: Predicting Penguin Body Mass
 
-Let's build a model for net ecosystem exchange (NEE) - the balance between carbon uptake and release.
+Let's build a more complete model for penguin body mass.
 
 ```python
-import numpy as np
-import pandas as pd
+from palmerpenguins import load_penguins
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 import sklearn.metrics as metrics
 
-np.random.seed(42)
-n = 300
+# Load and prepare data
+penguins = load_penguins().dropna()
 
-# Environmental drivers
-solar_rad = np.random.uniform(100, 900, n)       # W/m²
-air_temp = np.random.uniform(5, 30, n)           # °C
-soil_moisture = np.random.uniform(10, 50, n)     # %
-vpd = np.random.uniform(0.5, 3, n)               # kPa (vapor pressure deficit)
+# Encode categorical variables (species and sex) as numbers
+le_species = LabelEncoder()
+le_sex = LabelEncoder()
+penguins['species_code'] = le_species.fit_transform(penguins['species'])
+penguins['sex_code'] = le_sex.fit_transform(penguins['sex'])
 
-# Carbon flux - negative means uptake, positive means release
-# These relationships are roughly realistic
-nee = (
-    5 -                           # baseline respiration
-    0.015 * solar_rad +           # light drives uptake
-    0.3 * air_temp +              # warmth increases respiration  
-    -0.1 * soil_moisture +        # moisture supports uptake
-    2.0 * vpd +                   # high VPD closes stomata, reduces uptake
-    np.random.normal(0, 1.5, n)   # noise
-)
+print("Species encoding:", dict(zip(le_species.classes_, range(len(le_species.classes_)))))
+print("Sex encoding:", dict(zip(le_sex.classes_, range(len(le_sex.classes_)))))
 
-flux_data = pd.DataFrame({
-    'solar_radiation': solar_rad,
-    'air_temperature': air_temp,
-    'soil_moisture': soil_moisture,
-    'vpd': vpd,
-    'nee': nee
-})
-
-print("Dataset preview:")
-print(flux_data.head())
+# Check what we have
+print(f"\nDataset: {len(penguins)} penguins")
+print(penguins[['species', 'sex', 'flipper_length_mm', 'bill_length_mm', 
+                'bill_depth_mm', 'body_mass_g']].head())
 ```
 
 ### Check Correlations First
 
-Before modeling, it's always good to see how variables relate to each other:
-
 ```python
-print("\nCorrelations with NEE:")
-print(flux_data.corr()['nee'].sort_values())
+# Which variables correlate with body mass?
+numeric_cols = ['flipper_length_mm', 'bill_length_mm', 'bill_depth_mm', 
+                'body_mass_g', 'species_code', 'sex_code']
+                
+print("\nCorrelations with body mass:")
+print(penguins[numeric_cols].corr()['body_mass_g'].sort_values(ascending=False))
 ```
 
-This gives you a first sense of which variables might be important predictors.
-
-### Fitting the Model
+### Fitting the Multiple Regression
 
 ```python
-# Prepare our data
-X = flux_data[['solar_radiation', 'air_temperature', 'soil_moisture', 'vpd']]
-y = flux_data['nee']
+# Prepare features and target
+X = penguins[['flipper_length_mm', 'bill_length_mm', 'bill_depth_mm', 
+              'species_code', 'sex_code']]
+y = penguins['body_mass_g']
 
-# Always split into training and test sets!
-# This is how we honestly evaluate our model
+# Split into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.3, random_state=42
 )
+
+print(f"Training set: {len(X_train)} penguins")
+print(f"Test set: {len(X_test)} penguins")
 
 # Fit the model
 model = LinearRegression()
 model.fit(X_train, y_train)
 
-# Look at the coefficients
-print("Model coefficients:")
-print(f"  Intercept: {model.intercept_:.3f}")
+# Look at coefficients
+print("\nModel coefficients:")
+print(f"  Intercept: {model.intercept_:.1f}")
 for name, coef in zip(X.columns, model.coef_):
-    print(f"  {name}: {coef:.4f}")
+    print(f"  {name}: {coef:.2f}")
 ```
 
-### Interpreting the Results
+## Interpreting the Results
 
-This is the important part. What do these numbers actually mean?
+What do these coefficients actually mean?
 
 ```python
 print("""
-What the coefficients tell us:
+Interpreting the coefficients:
 
-Solar radiation (-0.015): Each additional W/m² of radiation 
-  decreases NEE by 0.015 µmol/m²/s. Negative because more light 
-  means more photosynthesis, which is carbon uptake.
+flipper_length_mm: Each additional mm of flipper length adds about 
+  17g to body mass, after controlling for other variables. Note this 
+  is smaller than in simple regression (~50g) because some of that 
+  effect was actually due to species differences.
 
-Air temperature (+0.30): Each degree warmer increases NEE by 
-  0.30 µmol/m²/s. Positive because warmth stimulates respiration 
-  more than photosynthesis in this model.
+bill_length_mm: Longer bills are associated with slightly higher mass,
+  holding other variables constant.
 
-Soil moisture (-0.10): Wetter soils decrease NEE (more uptake).
-  Makes sense - water stress limits productivity.
+bill_depth_mm: Deeper bills are associated with higher mass. This makes
+  sense - it's a measure of overall head size.
 
-VPD (+2.0): High vapor pressure deficit increases NEE. When 
-  the air is dry, plants close their stomata to conserve water,
-  which also blocks CO2 uptake.
+species_code: The coefficient shows average difference between species
+  (encoded as 0, 1, 2). Interpretation is tricky with encoded categories.
+
+sex_code: Males (coded as 1) are heavier than females (coded as 0) by
+  about this many grams, controlling for body measurements.
 """)
 ```
 
 ### How Good Is Our Model?
 
 ```python
-# Predict on test data (data the model hasn't seen)
+# Predict on test data
 y_pred = model.predict(X_test)
 
+# Calculate metrics
 r2 = metrics.r2_score(y_test, y_pred)
 rmse = np.sqrt(metrics.mean_squared_error(y_test, y_pred))
+mae = metrics.mean_absolute_error(y_test, y_pred)
 
 print(f"R-squared: {r2:.3f}")
-print(f"RMSE: {rmse:.2f} µmol/m²/s")
+print(f"RMSE: {rmse:.1f} g")
+print(f"MAE: {mae:.1f} g")
 
 # Plot predicted vs observed
-import plotly.express as px
 fig = px.scatter(x=y_test, y=y_pred,
-                 labels={'x': 'Observed NEE', 'y': 'Predicted NEE'})
-# Add 1:1 line
+                 labels={'x': 'Observed Mass (g)', 'y': 'Predicted Mass (g)'})
 fig.add_scatter(x=[y_test.min(), y_test.max()], 
                 y=[y_test.min(), y_test.max()],
                 mode='lines', name='1:1 line',
                 line=dict(dash='dash', color='red'))
-fig.update_layout(template='simple_white', 
-                  title='How well does our model predict?')
+fig.update_layout(template='simple_white',
+                  title=f'Multiple Regression: R² = {r2:.3f}')
 fig.show()
 ```
 
-### Does Adding Variables Help?
+## Does Adding Variables Help?
 
-A natural question: does including more predictors actually improve our model?
+Let's compare models with different numbers of predictors:
 
 ```python
-# Let's compare models with different numbers of predictors
 results = []
 
-# Just solar radiation
-m1 = LinearRegression().fit(X_train[['solar_radiation']], y_train)
+# Just flipper length
+m1 = LinearRegression().fit(X_train[['flipper_length_mm']], y_train)
 results.append({
-    'Model': 'Solar only',
-    'R²': m1.score(X_test[['solar_radiation']], y_test)
+    'Model': 'Flipper only',
+    'R²': m1.score(X_test[['flipper_length_mm']], y_test)
 })
 
-# Solar + temperature
-m2 = LinearRegression().fit(X_train[['solar_radiation', 'air_temperature']], y_train)
+# Flipper + species
+m2 = LinearRegression().fit(X_train[['flipper_length_mm', 'species_code']], y_train)
 results.append({
-    'Model': 'Solar + Temp',
-    'R²': m2.score(X_test[['solar_radiation', 'air_temperature']], y_test)
+    'Model': 'Flipper + Species',
+    'R²': m2.score(X_test[['flipper_length_mm', 'species_code']], y_test)
 })
 
-# All four
+# Flipper + species + sex
+m3 = LinearRegression().fit(X_train[['flipper_length_mm', 'species_code', 'sex_code']], y_train)
+results.append({
+    'Model': 'Flipper + Species + Sex',
+    'R²': m3.score(X_test[['flipper_length_mm', 'species_code', 'sex_code']], y_test)
+})
+
+# All predictors
 m4 = LinearRegression().fit(X_train, y_train)
 results.append({
-    'Model': 'All four',
+    'Model': 'All predictors',
     'R²': m4.score(X_test, y_test)
 })
 
 print(pd.DataFrame(results))
 ```
 
-Usually, adding relevant predictors helps. But be careful - adding irrelevant variables can actually hurt your model's ability to generalize to new data (this is called overfitting).
+You should see R² improve as you add relevant predictors - species and sex both contribute meaningful information about body mass.
 
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
+
 <h3> Try It Yourself </h3>
-<p>Build a model predicting fish species richness in lakes based on: lake area, maximum depth, 
-water temperature, and dissolved oxygen. Which factor matters most?</p>
+<p>Build a multiple regression model predicting bill length from bill depth, flipper length, species, and sex. 
+Which predictors have the strongest effects? Does the bill depth coefficient change from the simple regression?</p>
+
 
 {::options parse_block_html="true" /}
 
 <details><summary markdown="span">Solution!</summary>
 
+
 ```python
-np.random.seed(42)
-n = 150
+from palmerpenguins import load_penguins
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 
-area = np.random.uniform(10, 5000, n)          # hectares
-depth = np.random.uniform(2, 50, n)            # meters  
-temp = np.random.uniform(10, 28, n)            # °C
-oxygen = np.random.uniform(4, 12, n)           # mg/L
+penguins = load_penguins().dropna()
 
-# Species richness - larger, deeper lakes with good oxygen have more species
-richness = (
-    5 + 0.005 * area + 0.3 * depth + 
-    -0.1 * (temp - 18)**2 +  # optimum around 18°C
-    1.5 * oxygen + 
-    np.random.normal(0, 3, n)
-).clip(min=1)
+# Encode categoricals
+le_species = LabelEncoder()
+le_sex = LabelEncoder()
+penguins['species_code'] = le_species.fit_transform(penguins['species'])
+penguins['sex_code'] = le_sex.fit_transform(penguins['sex'])
 
-X = pd.DataFrame({'area': area, 'depth': depth, 'temp': temp, 'oxygen': oxygen})
-y = richness
+# Prepare data
+X = penguins[['bill_depth_mm', 'flipper_length_mm', 'species_code', 'sex_code']]
+y = penguins['bill_length_mm']
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
+# Full model
 model = LinearRegression()
 model.fit(X_train, y_train)
 
 print(f"R²: {model.score(X_test, y_test):.3f}\n")
-print("Coefficients (larger absolute value = more important):")
-for name, coef in sorted(zip(X.columns, model.coef_), 
-                         key=lambda x: abs(x[1]), reverse=True):
-    print(f"  {name}: {coef:.4f}")
+print("Coefficients:")
+for name, coef in zip(X.columns, model.coef_):
+    print(f"  {name}: {coef:.3f}")
 
-# Oxygen usually comes out strongest - makes ecological sense
-# since it's essential for fish survival
+# Compare to simple regression
+simple = LinearRegression()
+simple.fit(penguins[['bill_depth_mm']], penguins['bill_length_mm'])
+print(f"\nSimple regression bill_depth coefficient: {simple.coef_[0]:.3f}")
+print(f"Multiple regression bill_depth coefficient: {model.coef_[0]:.3f}")
+
+# The bill_depth coefficient changes dramatically - in simple regression
+# it's negative (Simpson's paradox), but in multiple regression 
+# controlling for species, it becomes positive as expected.
 ```
+
 </details>
 
 {::options parse_block_html="false" /}
@@ -538,32 +569,34 @@ for name, coef in sorted(zip(X.columns, model.coef_),
 <div class="notice--primary">
   {{ exercise | markdownify }}
 </div>
+
 </div>
 
 ## Limitations
 
 Multiple regression is powerful but has some important limitations:
 
-**It assumes linear relationships.** If temperature has an optimum (growth increases up to 25°C then decreases), a linear model won't capture that properly.
+**It assumes linear relationships.** If the relationship between flipper length and mass is curved (it often is at extremes), a linear model won't capture that properly.
 
-**It assumes additive effects.** The model says the effect of temperature is the same regardless of moisture levels. In reality, these factors often interact.
+**It assumes additive effects.** The model says the effect of flipper length is the same for all species. In reality, species might differ in their flipper-mass scaling.
 
-**It can struggle with many predictors.** If you have 50 environmental variables and only 100 observations, you're going to have problems.
+**Categorical encoding matters.** We used simple numeric codes for species, but this assumes equal "distances" between categories, which doesn't make biological sense.
 
 These limitations bring us to machine learning approaches, which can handle more complexity.
 
 ---
 
-# **4. Machine Learning with Random Forests**
+# **Chapter 4: Machine Learning with Random Forests**
 
 Alright, now we're getting to the fun stuff. Machine learning sounds fancy, but the basic idea is simple: let the algorithm figure out the patterns in your data, rather than you specifying them in advance.
 
 ## Why Machine Learning?
 
 Ecological relationships are often messy:
-- Species have thermal optima, not just linear responses
+
+- Relationships might be non-linear
 - Effects of one variable depend on another (interactions)
-- There might be thresholds or nonlinearities we didn't anticipate
+- There might be thresholds we didn't anticipate
 
 Machine learning algorithms can discover these patterns automatically. You don't have to know the shape of the relationship beforehand.
 
@@ -572,11 +605,12 @@ Machine learning algorithms can discover these patterns automatically. You don't
 Before we get to Random Forests, we need to understand decision trees. They're intuitive once you see how they work.
 
 A decision tree is basically a flowchart of questions:
-- Is temperature > 15°C?
-  - Yes → Is rainfall > 500mm?
-    - Yes → Predict high productivity
-    - No → Predict medium productivity
-  - No → Predict low productivity
+
+- Is flipper length > 206mm?
+  - Yes → Probably a Gentoo, predict ~5000g
+  - No → Is bill depth > 18mm?
+    - Yes → Probably Adelie, predict ~3700g
+    - No → Probably Chinstrap, predict ~3500g
 
 The algorithm figures out which questions to ask and what thresholds to use by looking at your data.
 
@@ -584,23 +618,24 @@ The algorithm figures out which questions to ask and what thresholds to use by l
 from sklearn.tree import DecisionTreeRegressor, plot_tree
 import matplotlib.pyplot as plt
 
-# Using our carbon flux data from before
-X = flux_data[['solar_radiation', 'air_temperature', 'soil_moisture', 'vpd']]
-y = flux_data['nee']
+# Using our penguin data
+X = penguins[['flipper_length_mm', 'bill_length_mm', 'bill_depth_mm', 
+              'species_code', 'sex_code']]
+y = penguins['body_mass_g']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Fit a simple tree (max_depth limits how many questions it asks)
+# Fit a simple tree
 tree = DecisionTreeRegressor(max_depth=3, random_state=42)
 tree.fit(X_train, y_train)
 
 # Visualize it
 plt.figure(figsize=(16, 8))
 plot_tree(tree, feature_names=X.columns, filled=True, rounded=True, fontsize=9)
-plt.title('Decision Tree for Carbon Flux')
+plt.title('Decision Tree for Penguin Body Mass')
 plt.tight_layout()
 plt.show()
 
-print(f"Tree R²: {tree.score(X_test, y_test):.3f}")
+print(f"Decision Tree R²: {tree.score(X_test, y_test):.3f}")
 ```
 
 Decision trees are easy to interpret - you can literally see the rules. But they have a problem: they tend to overfit. A deep tree can memorize the training data perfectly but fail miserably on new data.
@@ -628,24 +663,20 @@ rf.fit(X_train, y_train)
 # Evaluate
 y_pred = rf.predict(X_test)
 print(f"Random Forest R²: {metrics.r2_score(y_test, y_pred):.3f}")
-print(f"Random Forest RMSE: {np.sqrt(metrics.mean_squared_error(y_test, y_pred)):.2f}")
+print(f"Random Forest RMSE: {np.sqrt(metrics.mean_squared_error(y_test, y_pred)):.1f} g")
 ```
 
 ## Comparing All Our Methods
 
-Let's see how everything stacks up:
+Let's see how everything stacks up on the penguin data:
 
 ```python
-from sklearn.linear_model import LinearRegression
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor
-
 results = []
 
-# Simple regression (just one predictor)
+# Simple regression
 simple = LinearRegression()
-simple.fit(X_train[['solar_radiation']], y_train)
-pred = simple.predict(X_test[['solar_radiation']])
+simple.fit(X_train[['flipper_length_mm']], y_train)
+pred = simple.predict(X_test[['flipper_length_mm']])
 results.append({
     'Method': 'Simple regression',
     'R²': metrics.r2_score(y_test, pred),
@@ -700,93 +731,61 @@ print(importance.to_string(index=False))
 
 # Plot it
 fig = px.bar(importance, x='Importance', y='Variable', orientation='h',
-             title='What drives carbon flux?')
+             title='What drives penguin body mass?')
 fig.update_layout(template='simple_white', yaxis={'categoryorder': 'total ascending'})
 fig.show()
 ```
 
-This is ecologically valuable - it tells you which environmental factors to focus on in future research or monitoring.
-
-## Tuning Your Forest
-
-Random Forests have some settings (hyperparameters) you can adjust:
-
-```python
-# How many trees do we need?
-results = []
-for n_trees in [10, 50, 100, 200, 500]:
-    rf = RandomForestRegressor(n_estimators=n_trees, max_depth=10, random_state=42)
-    rf.fit(X_train, y_train)
-    results.append({
-        'Trees': n_trees,
-        'R²': rf.score(X_test, y_test)
-    })
-
-print(pd.DataFrame(results))
-# Usually performance plateaus around 100-200 trees
-```
-
-The main parameters to consider:
-- **n_estimators**: More trees = better but slower. 100-500 is usually fine.
-- **max_depth**: Deeper trees can capture more complexity but might overfit.
-- **min_samples_leaf**: Requiring more samples per leaf prevents overfitting.
+For the penguin data, you'll probably find that sex and flipper length are the most important predictors - which makes biological sense!
 
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 
+
 <h3> Try It Yourself </h3>
-<p>Build a Random Forest to predict plant species richness from soil pH, nitrogen, 
-precipitation, and grazing intensity. Compare it to multiple regression. 
-Which variables matter most for plant diversity?</p>
+<p>Use Random Forest to predict penguin species (as a classification problem) from the morphological 
+measurements. Which measurements are most useful for distinguishing species?</p>
+
+
+<p><strong>Hint:</strong> Use <code>RandomForestClassifier</code> instead of <code>RandomForestRegressor</code></p>
 
 {::options parse_block_html="true" /}
 
 <details><summary markdown="span">Solution!</summary>
 
+
 ```python
-np.random.seed(42)
-n = 200
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
 
-soil_ph = np.random.uniform(4.5, 8.0, n)
-nitrogen = np.random.uniform(10, 200, n)
-precip = np.random.uniform(400, 1200, n)
-grazing = np.random.uniform(0, 3, n)
+penguins = load_penguins().dropna()
 
-# Non-linear relationships - this is where RF should shine
-richness = (
-    20 - 2*(soil_ph - 6.5)**2 +      # optimum pH around 6.5
-    -0.0005*(nitrogen - 50)**2 +      # intermediate N best
-    0.01*precip +                     # more rain helps
-    5*grazing - 2*grazing**2 +        # moderate grazing best
-    np.random.normal(0, 3, n)
-).clip(min=1)
-
-X = pd.DataFrame({
-    'soil_ph': soil_ph, 'nitrogen': nitrogen,
-    'precipitation': precip, 'grazing': grazing
-})
-y = richness
+# Prepare data - predict species from measurements
+X = penguins[['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g']]
+y = penguins['species']
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Multiple regression
-lr = LinearRegression().fit(X_train, y_train)
-print(f"Multiple regression R²: {lr.score(X_test, y_test):.3f}")
+# Fit classifier
+rf_clf = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_clf.fit(X_train, y_train)
 
-# Random forest
-rf = RandomForestRegressor(n_estimators=100, max_depth=10, random_state=42)
-rf.fit(X_train, y_train)
-print(f"Random Forest R²: {rf.score(X_test, y_test):.3f}")
+# Evaluate
+y_pred = rf_clf.predict(X_test)
+print(f"Accuracy: {accuracy_score(y_test, y_pred):.3f}")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
 
-print("\nVariable importance:")
-for name, imp in sorted(zip(X.columns, rf.feature_importances_), 
+# Feature importance
+print("\nFeature importance for species classification:")
+for name, imp in sorted(zip(X.columns, rf_clf.feature_importances_), 
                         key=lambda x: x[1], reverse=True):
     print(f"  {name}: {imp:.3f}")
 
-# RF should do better because of the non-linear relationships
-# soil_ph and grazing are probably most important due to their 
-# strong non-linear effects
+# Bill length and bill depth are typically most important -
+# they differ most clearly between species
 ```
+
 </details>
 
 {::options parse_block_html="false" /}
@@ -796,22 +795,8 @@ for name, imp in sorted(zip(X.columns, rf.feature_importances_),
 <div class="notice--primary">
   {{ exercise | markdownify }}
 </div>
+
 </div>
-
-## When to Use What?
-
-Here's my rough guide:
-
-| Situation | Method |
-|-----------|--------|
-| Simple exploratory analysis | Simple regression |
-| Need interpretable coefficients | Multiple regression |
-| Complex patterns, many variables | Random Forest |
-| Small dataset (<50 samples) | Stick to regression |
-| Need to explain to non-statisticians | Decision tree or regression |
-| Just want the best predictions | Random Forest |
-
-In practice, I often fit both multiple regression and Random Forest. The regression gives me interpretable coefficients, while Random Forest tells me if there's predictive signal I'm missing with the linear model.
 
 ---
 
