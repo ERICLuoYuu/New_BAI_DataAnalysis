@@ -189,7 +189,7 @@ Now let's explore the relationship between flipper length and body mass:
 fig = px.scatter(penguins_clean, x='flipper_length_mm', y='body_mass_g',
                  color='species',
                  title='Penguin Body Mass vs Flipper Length')
-fig.update_layout(template='simple_white')
+fig.update_layout(template='simple_white', font_size = 36,)
 fig.show()
 ```
 
@@ -233,7 +233,7 @@ fig.add_trace(go.Scatter(
     x=penguins_clean['flipper_length_mm'], 
     y=penguins_clean['body_mass_g'],
     mode='markers', name='Observations',
-    marker=dict(size=8, opacity=0.6)
+    marker=dict(size=24, opacity=0.6)
 ))
 
 # Regression line
@@ -247,7 +247,8 @@ fig.update_layout(
     title='Penguin Body Mass vs Flipper Length',
     xaxis_title='Flipper Length (mm)',
     yaxis_title='Body Mass (g)',
-    template='simple_white'
+    template='simple_white',
+    font_size = 36
 )
 fig.show()
 ```
