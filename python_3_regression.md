@@ -726,6 +726,30 @@ At each step, the algorithm tries every possible split of every variable and pic
 
 For regression, "purity" is measured by variance. A good split creates child nodes with lower variance in the response than the parent node.
 
+**The Goal: Reduce Variance**
+
+Before any split, a node contains samples with some variance in the target variable. The tree wants to split these samples into two groups where:
+- Group 1 (left child): samples are similar to each other
+- Group 2 (right child): samples are similar to each other
+
+Even if the two groups have very different means, that's fine, what matters is that *within* each group, values are more similar than before.
+
+**The Algorithm**
+
+For every possible split (every feature × every threshold):
+
+1. Divide samples into left and right groups based on the split
+2. Calculate the weighted average variance of the two groups
+3. Pick the split that gives the lowest weighted variance
+
+Mathematically, we want to minimize:
+
+**Cost = (n_left / n_total) × MSE_left + (n_right / n_total) × MSE_right**
+
+Where MSE (Mean Squared Error) measures variance:
+
+**MSE = (1/n) × Σ(yᵢ - ȳ)²**
+
 ```python
 from sklearn.tree import DecisionTreeRegressor, plot_tree
 import matplotlib.pyplot as plt
