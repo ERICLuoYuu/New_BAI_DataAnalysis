@@ -674,11 +674,9 @@ Multiple regression is powerful but has some important limitations:
 
 **2. It assumes additive effects.** The model says the effect of flipper length is the same for all species - we just shift the intercept for each species. In reality, species might differ in their flipper-mass scaling (different slopes). This would require **interaction terms**.
 
-**3. Categorical encoding matters.** We used simple numeric codes for species, but this assumes equal "distances" between categories (Chinstrap is "halfway between" Adelie and Gentoo), which doesn't make biological sense. Use one-hot encoding or a proper statistical framework for better results.
+**3. It assumes independent errors.** If you measured the same penguin multiple times, or penguins from the same colony are more similar, you violate the independence assumption. You'd need mixed-effects models for such data.
 
-**4. It assumes independent errors.** If you measured the same penguin multiple times, or penguins from the same colony are more similar, you violate the independence assumption. You'd need mixed-effects models for such data.
-
-**5. Outliers can have outsized influence.** A single unusual data point can dramatically shift your regression line. Always check for influential observations.
+**4. Outliers can have outsized influence.** A single unusual data point can dramatically shift your regression line. Always check for influential observations.
 
 These limitations bring us to machine learning approaches, which can handle more complexity.
 
