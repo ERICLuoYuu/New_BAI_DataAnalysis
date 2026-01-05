@@ -33,7 +33,9 @@ import io
 ```
     
 Our strategy will be to read the file line-by-line, find the start of the data, and then pass only those lines to pandas.
-### 1.1 Reading and Parsing the File
+### 1.1Loading NO₂ Data
+The analyzer produces tab-separated files with a metadata block at the top. The data section is marked by a line starting with DATAH. Our strategy is to read the file line-by-line, find the DATAH m
+#### Reading and parsing the file
 First, we read the entire file into a single string, and then split that string into a list of individual lines. This gives us the flexibility to find our data "landmarks."
 
 ```python
@@ -59,7 +61,7 @@ data_start_index = header_index + 2
 # Now we can grab the headers themselves from that line. The values are separated by tabs ('\t').
 headers = lines[header_index].split('\t')
 ```
-### 1.2 Using io.StringIO to Read Our Cleaned Data
+#### Using io.StringIO to Read Our Cleaned Data
 The pd.read_csv() function is built to read from a file. We don't have a clean file; we have a list of Python strings (lines) that we've already processed.
 So, how do we make pandas read from our list? We use io.StringIO to trick pandas. It takes our cleaned-up data lines and presents them to pandas as if they were a file stored in the computer's memory.
 >**Info**:
@@ -78,7 +80,7 @@ df_raw = pd.read_csv(
 )
 ```
 
-### 1.3 Data Formatting
+#### Data Formatting
 The last step is to tidy up the DataFrame. We will:
 Remove the useless DATAH column.
 Combine the separate DATE and TIME columns into a single Timestamp object. This is crucial for time-series analysis.
@@ -159,39 +161,235 @@ return df_raw
 </div>
 </div>
 
-Now that we have our powerful load_raw_data function, we can easily handle data from multiple field trips. Instead of copying code, we can simply call our function in a loop.
+### 1.2 Loading CH₄ and CO₂ Data
+
+The Los Gatos GGA analyzer produces comma-separated files with a different structure:
+- **Line 1:** Instrument metadata (version, serial number, etc.)
+- **Line 2:** Column headers
+- **Lines 3+:** Measurement data
+
+Here's an example of the first few lines:
+
+```
+VC:2f90039 BD:Jan 16 2014 SN:
+                     Time,      [CH4]_ppm,   [CH4]_ppm_sd,      [H2O]_ppm, ...
+  08/15/2025 11:00:03.747,   2.080375e+00,   0.000000e+00,   1.103072e+03, ...
+```
+
+However, there's a complication: some GGA files contain extra non-data content at the end (such as digital signatures or log messages). We need to filter these out. Let's build our loader step by step.
+
+#### Step 1: Read the CSV File
+
+First, we read the file with `pd.read_csv()`, skipping the first metadata line:
+
+```python
+df = pd.read_csv(
+    "./raw_data/gga_2025-08-15_f0000.txt",
+    skiprows=1,            # Skip instrument metadata header (line 1)
+    skipinitialspace=True  # Handle leading whitespace in columns
+)
+
+# Clean column names (remove extra spaces)
+df.columns = df.columns.str.strip()
+
+print(f"Rows loaded: {len(df)}")
+df.head()
+```
+
+#### Step 2: Identify Valid Data Rows
+
+If we look at the end of some files, we might find non-data content like this:
+
+```
+-----BEGIN PGP MESSAGE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+jA0EAwMC1o7j8zNG6eRgye1CgI1h0/yQoOa8fycg+...
+```
+
+We need to keep only the rows where the `Time` column contains an actual timestamp. Valid timestamps in our data look like `08/15/2025 11:00:03.747` — they always start with a date in `MM/DD/YYYY` format.
+
+To identify these rows programmatically, we use a **regular expression** (regex). A regex is a pattern that describes what text should look like.
+
+> **Info: What is a Regular Expression?**
+> 
+> A regular expression is a sequence of characters that defines a search pattern. It's like a template that says "I'm looking for text that looks like THIS." Regular expressions are extremely powerful for finding, matching, and filtering text data.
+
+Here's the regex pattern we'll use: `^\s*\d{2}/\d{2}/\d{4}`
+
+Let's break it down piece by piece:
+
+| Pattern | Meaning | Example Match |
+|---------|---------|---------------|
+| `^` | Start of the string | (anchors the match to the beginning) |
+| `\s*` | Zero or more whitespace characters | Matches leading spaces like `"  "` |
+| `\d{2}` | Exactly 2 digits | `08` (month) |
+| `/` | A literal forward slash | `/` |
+| `\d{2}` | Exactly 2 digits | `15` (day) |
+| `/` | A literal forward slash | `/` |
+| `\d{4}` | Exactly 4 digits | `2025` (year) |
+
+So the full pattern `^\s*\d{2}/\d{2}/\d{4}` means: "Starting from the beginning, allow optional spaces, then match a date in MM/DD/YYYY format."
+
+Let's see it in action:
+
+```python
+import re
+
+# Test the pattern on different strings
+pattern = r'^\s*\d{2}/\d{2}/\d{4}'
+
+test_strings = [
+    '  08/15/2025 11:00:03.747',    # Valid timestamp (with leading spaces)
+    '08/15/2025 11:00:03.747',       # Valid timestamp (no leading spaces)
+    '-----BEGIN PGP MESSAGE-----',   # Invalid (PGP signature)
+    'jA0EAwMC1o7j8zNG6eRgye1C',      # Invalid (encrypted data)
+    'nan',                            # Invalid (missing value)
+]
+
+for s in test_strings:
+    match = bool(re.match(pattern, s))
+    print(f"'{s[:30]:30s}' → {match}")
+```
+
+Output:
+```
+'  08/15/2025 11:00:03.747     ' → True
+'08/15/2025 11:00:03.747       ' → True
+'-----BEGIN PGP MESSAGE-----  ' → False
+'jA0EAwMC1o7j8zNG6eRgye1C      ' → False
+'nan                           ' → False
+```
+
+Now we can use this pattern to filter our DataFrame:
+
+```python
+# Create a boolean mask: True for valid rows, False for invalid
+valid_mask = df['Time'].astype(str).str.match(r'^\s*\d{2}/\d{2}/\d{4}')
+
+# Count how many rows we're keeping vs. dropping
+print(f"Valid rows: {valid_mask.sum()}")
+print(f"Invalid rows (will be dropped): {(~valid_mask).sum()}")
+
+# Keep only valid rows
+df = df[valid_mask].copy()
+```
+
+#### Step 3: Parse Timestamps
+
+Now that we have only valid data, we convert the `Time` column to proper datetime objects:
+
+```python
+# Remove any leading/trailing whitespace and parse the timestamp
+df['Time'] = pd.to_datetime(
+    df['Time'].str.strip(), 
+    format='%m/%d/%Y %H:%M:%S.%f'
+)
+
+# Rename to 'Timestamp' for consistency and set as index
+df = df.rename(columns={'Time': 'Timestamp'})
+df = df.set_index('Timestamp')
+
+print(f"Time range: {df.index.min()} to {df.index.max()}")
+df.head()
+```
+
+#### Putting It All Together
+
+Now let's wrap everything into a reusable function:
+
+```python
+def load_gga_data(filepath: str) -> pd.DataFrame:
+    """
+    Load CH4/CO2 data from a Los Gatos GGA analyzer file.
+    
+    Parameters:
+        filepath: Path to the GGA .txt file
+        
+    Returns:
+        DataFrame with DatetimeIndex
+    """
+    # Step 1: Read CSV, skip metadata header
+    df = pd.read_csv(
+        filepath,
+        skiprows=1,
+        skipinitialspace=True
+    )
+    df.columns = df.columns.str.strip()
+    
+    # Step 2: Filter to valid data rows using regex
+    # Pattern: optional whitespace, then MM/DD/YYYY date format
+    valid_mask = df['Time'].astype(str).str.match(r'^\s*\d{2}/\d{2}/\d{4}')
+    df = df[valid_mask].copy()
+    
+    # Step 3: Parse timestamps and set as index
+    df['Time'] = pd.to_datetime(df['Time'].str.strip(), format='%m/%d/%Y %H:%M:%S.%f')
+    df = df.rename(columns={'Time': 'Timestamp'})
+    df = df.set_index('Timestamp')
+    
+    return df
+```
+
+Let's test it:
+
+```python
+df_gga = load_gga_data("./raw_data/gga_2025-08-15_f0000.txt")
+print(f"Loaded {len(df_gga):,} rows")
+print(f"Time range: {df_gga.index.min()} to {df_gga.index.max()}")
+df_gga.head()
+```
+
+
+
+###1.3 Loading Multiple Files
+Now that we have loader functions, we can easily handle data from multiple field trips. Instead of copying code, we can simply call our function in a loop.
 First, we create a list of all the file paths we want to load. Then, we can loop through this list, call our function for each path, and store the resulting DataFrames in a new list.
 
 ```python
 # First, let's list all the files we want to load.
 # Make sure the file paths are complete and correct.
 base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
-file_names = [
-    'TG20-01072-2025-08-15T110000.data.txt', 
-    'TG20-01072-2025-08-16T110000.data.txt' # A hypothetical second file
+no2_files = [
+    'TG20-01072-2025-08-15T110000.data.txt',
+    'TG20-01072-2025-08-16T110000.data.txt'
+]
+
+gga_files = [
+    'gga_2025-08-15_f0000.txt',
+    'gga_2025-08-16_f0000.txt'
 ]
 
 # Create the full file paths
-full_file_paths = [base_path + name for name in file_names]
+no2_full_file_paths = [base_path + name for name in no2_files
+gga_full_file_paths = [base_path + name for name in gga_files
 
 # Create an empty list to hold the loaded DataFrames
-raw_data_list = []
+no2_data_list = []
+gga_data_list = []
 
 # Loop through each path, load the data, and append it to our list
-for path in full_file_paths:
-    df = load_raw_data(path)
-    raw_data_list.append(df)
+for path in no2_full_file_paths:
+    df = load_no2_data(path)
+    no2_data_list.append(df)
 
-print(f"\nSuccessfully loaded {len(raw_data_list)} data files.")
+print(f"\nSuccessfully loaded {len(no2_data_list)} data files.")
+
+for path in gga_full_file_paths:
+    df = load_gga_data(path)
+    gga_data_list.append(df)
+
+print(f"\nSuccessfully loaded {len(gga_data_list)} data files.")
+
+
 ```
 
 The loop above is clear and correct. However, a more concise way to write this in Python is with a list comprehension. It achieves the exact same result in a single, readable line:
 
 ```python
-raw_data_list = [load_raw_data(path) for path in full_file_paths]
+no2_data_list = [load_no2_data(path) for path in no2_full_file_paths]
+gga_data_list = [load_gga_data(path) for path in gga_full_file_paths]
 ```
 
-For our flux calculations to be accurate, we need more than just gas concentrations. The Ideal Gas Law, which is the basis of the calculation, requires the ambient air temperature and air pressure at the time of each measurement.
+For our flux calculations to be accurate, we need more than just gas concentrations. The Ideal Gas Law, which is the basis of the calculation, requires the temperature and air pressure at the time of each measurement.
 We will use the same workflow as before: load each file and then combine them.
 
 
@@ -200,7 +398,7 @@ We will use the same workflow as before: load each file and then combine them.
 {% capture exercise %}
 ### Exercise
 
-You have two Excel files containing air temperature and two files for air pressure.
+You have two Excel files containing air temperature.
 Create lists of the file paths for the temperature and pressure data.
 Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!
 
@@ -221,14 +419,6 @@ full_file_paths_Ta = [base_path + name for name in file_names_Ta]
 ta_data_list = [pd.read_excel(path) for path in full_file_paths_Ta]
 print(f"Successfully loaded {len(ta_data_list)} air temperature files.")
 
-# --- Load Air Pressure Data ---
-file_names_Pa = [
-    'air_pressure_2025-08-15.xlsx', 
-    'air_pressure_2025-08-16.xlsx' 
-]
-full_file_paths_Pa = [base_path + name for name in file_names_Pa]
-pa_data_list = [pd.read_excel(path) for path in full_file_paths_Pa]
-print(f"Successfully loaded {len(pa_data_list)} air pressure files.")
 ```
 
 </details>
@@ -238,6 +428,8 @@ print(f"Successfully loaded {len(pa_data_list)} air pressure files.")
 {{ exercise | markdownify }}
 </div>
 </div>
+
+
 
 ### 1.4 Concatenating and Merging All Data
 Now that we have all our data loaded, we need to combine it into one master DataFrame for analysis. This involves two steps:
