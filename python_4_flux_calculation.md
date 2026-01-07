@@ -36,7 +36,7 @@ Our strategy will be to read the file line-by-line, find the start of the data, 
 ### 1.1 Loading N₂O Data
 The analyzer produces tab-separated files with a metadata block at the top. The data section is marked by a line starting with DATAH. Our strategy is to read the file line-by-line, find the DATAH marker, and pass only the data lines to pandas.
 
-#### Reading and parsing the file
+### Reading and parsing the file
 First, we read the entire file into a single string, and then split that string into a list of individual lines. This gives us the flexibility to find our data "landmarks."
 
 ```python
@@ -62,7 +62,7 @@ data_start_index = header_index + 2
 # Now we can grab the headers themselves from that line. The values are separated by tabs ('\t').
 headers = lines[header_index].split('\t')
 ```
-#### Using io.StringIO to Read Our Cleaned Data
+### Using io.StringIO to Read Our Cleaned Data
 The pd.read_csv() function is built to read from a file. We don't have a clean file; we have a list of Python strings (lines) that we've already processed.
 So, how do we make pandas read from our list? We use io.StringIO to trick pandas. It takes our cleaned-up data lines and presents them to pandas as if they were a file stored in the computer's memory.
 >**Info**:
@@ -81,7 +81,7 @@ df_raw = pd.read_csv(
 )
 ```
 
-#### Data Formatting
+### Data Formatting
 The last step is to tidy up the DataFrame. We will:
 Remove the useless DATAH column.
 Combine the separate DATE and TIME columns into a single Timestamp object. This is crucial for time-series analysis.
@@ -164,7 +164,7 @@ def load_n2o_data(filepath: str) -> pd.DataFrame:
 
 ### 1.2 Loading CH₄ and CO₂ Data
 
-The Los Gatos GGA analyzer produces comma-separated files with a different structure:
+The GGA analyzer produces comma-separated files with a different structure:
 - **Line 1:** Instrument metadata (version, serial number, etc.)
 - **Line 2:** Column headers
 - **Lines 3+:** Measurement data
@@ -179,7 +179,7 @@ VC:2f90039 BD:Jan 16 2014 SN:
 
 However, there's a complication: some GGA files contain extra non-data content at the end (such as digital signatures or log messages). We need to filter these out. Let's build our loader step by step.
 
-#### Step 1: Read the CSV File
+### Read the CSV File
 
 First, we read the file with `pd.read_csv()`, skipping the first metadata line:
 
@@ -197,7 +197,7 @@ print(f"Rows loaded: {len(df)}")
 df.head()
 ```
 
-#### Step 2: Identify Valid Data Rows
+### Identify Valid Data Rows
 
 If we look at the end of some files, we might find non-data content like this:
 
@@ -275,7 +275,7 @@ print(f"Invalid rows (will be dropped): {(~valid_mask).sum()}")
 df = df[valid_mask].copy()
 ```
 
-#### Step 3: Parse Timestamps
+### Parse Timestamps
 
 Now that we have only valid data, we convert the `Time` column to proper datetime objects:
 
@@ -294,7 +294,7 @@ print(f"Time range: {df.index.min()} to {df.index.max()}")
 df.head()
 ```
 
-#### Putting It All Together
+### Putting It All Together
 
 Now let's wrap everything into a reusable function:
 
@@ -441,7 +441,7 @@ This means our workflow is:
 1. **Concatenate** all gas data files into one DataFrame (stacking rows)
 2. **Merge** temperature into the gas data using time-matching
 
-#### Step 1: Concatenate Gas Data from All Files
+### Concatenate Gas Data from All Files
 
 First, let's combine files of the same type:
 
@@ -470,7 +470,7 @@ print("\n--- Temperature DataFrame ---")
 print(f"  Rows: {len(df_Ta):,}, Time range: {df_Ta.index.min()} to {df_Ta.index.max()}")
 ```
 
-#### Step 2: Combine All Gas Data into One Master Table
+### Combine All Gas Data into One Master Table
 
 Since N₂O and CH₄/CO₂ measurements don't overlap in time, we can safely stack them together. First, we need to select and rename columns so they're consistent:
 
@@ -503,7 +503,7 @@ print("\nSample from CH4/CO2 measurement period:")
 print(df_gas.loc[df_gas['CH4_ppm'].notna()].head(3))
 ```
 
-#### Step 3: Merge Temperature with Gas Data
+### Merge Temperature with Gas Data
 
 The gas analyzers record data every second, while the weather station might record only every minute. A simple merge would leave many empty rows. The solution is `pd.merge_asof()`, which performs a "nearest-neighbor" merge—ideal for combining time-series data with different frequencies.
 
@@ -525,7 +525,7 @@ print(f"Merged DataFrame: {len(df_merged):,} rows")
 df_merged.head()
 ```
 
-#### Final Master DataFrame
+### Final Master DataFrame
 
 Let's verify our final dataset:
 
