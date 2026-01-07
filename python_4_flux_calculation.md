@@ -33,8 +33,9 @@ import io
 ```
     
 Our strategy will be to read the file line-by-line, find the start of the data, and then pass only those lines to pandas.
-### 1.1Loading NO₂ Data
-The analyzer produces tab-separated files with a metadata block at the top. The data section is marked by a line starting with DATAH. Our strategy is to read the file line-by-line, find the DATAH m
+### 1.1 Loading N₂O Data
+The analyzer produces tab-separated files with a metadata block at the top. The data section is marked by a line starting with DATAH. Our strategy is to read the file line-by-line, find the DATAH marker, and pass only the data lines to pandas.
+
 #### Reading and parsing the file
 First, we read the entire file into a single string, and then split that string into a list of individual lines. This gives us the flexibility to find our data "landmarks."
 
@@ -102,7 +103,7 @@ df_raw.head()
 ```
 Great! Now, we have successfully read in and formatted our raw data.
 However, think about our field campaigns. We went out several times and generate a new data file for each trip. If we wanted to analyze all of them, we would have to copy and paste our loading code multiple times.
-To avoid repetition and make our code cleaner and more reliable, it's a best practice to wrap a reusable process into a function. Let's turn our loading and cleaning steps into a function called load_raw_data.
+To avoid repetition and make our code cleaner and more reliable, it's a best practice to wrap a reusable process into a function. Let's turn our loading and cleaning steps into a function called load_n2o_data.
 
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 
@@ -116,42 +117,42 @@ Tip: The function will need to accept one argument: the filepath of the file you
 Note: how it's the exact same logic as before, just defined within a def block.
     
 ```python
-def load_raw_data(filepath: str) -> pd.DataFrame:
-"""
-Loads raw data from a text file, remove metadata, and returns a DataFrame.
+def load_n2o_data(filepath: str) -> pd.DataFrame:
+    """
+    Loads N2O data from a text file, remove metadata, and returns a DataFrame.
 
-Parameters:
-- filepath (str): The path to the input data file.
+    Parameters:
+    - filepath (str): The path to the input data file.
 
-Returns:
-- pd.DataFrame: A cleaned DataFrame with a DatetimeIndex.
-"""
-with open(filepath) as f:
-    file_content = f.read()
+    Returns:
+    - pd.DataFrame: A cleaned DataFrame with a DatetimeIndex.
+    """
+    with open(filepath) as f:
+        file_content = f.read()
 
-lines = file_content.strip().split('\n')
-header_index = next(i for i, line in enumerate(lines) if line.startswith('DATAH'))
-data_start_index = header_index + 2
-headers = lines[header_index].split('\t')
+    lines = file_content.strip().split('\n')
+    header_index = next(i for i, line in enumerate(lines) if line.startswith('DATAH'))
+    data_start_index = header_index + 2
+    headers = lines[header_index].split('\t')
 
-df_raw = pd.read_csv(
-    io.StringIO('\n'.join(lines[data_start_index:])),
-    sep='\t',
-    header=None,
-    names=headers,
-    na_values='nan'
-)
+    df_raw = pd.read_csv(
+        io.StringIO('\n'.join(lines[data_start_index:])),
+        sep='\t',
+        header=None,
+        names=headers,
+        na_values='nan'
+    )
 
-if 'DATAH' in df_raw.columns:
-    df_raw = df_raw.drop(columns=['DATAH'])
+    if 'DATAH' in df_raw.columns:
+        df_raw = df_raw.drop(columns=['DATAH'])
 
-if 'DATE' in df_raw.columns and 'TIME' in df_raw.columns:
-    df_raw['Timestamp'] = pd.to_datetime(df_raw['DATE'] + ' ' + df_raw['TIME'])
-    df_raw = df_raw.drop(columns=['DATE', 'TIME'])
-    df_raw = df_raw.set_index('Timestamp')
+    if 'DATE' in df_raw.columns and 'TIME' in df_raw.columns:
+        df_raw['Timestamp'] = pd.to_datetime(df_raw['DATE'] + ' ' + df_raw['TIME'])
+        df_raw = df_raw.drop(columns=['DATE', 'TIME'])
+        df_raw = df_raw.set_index('Timestamp')
 
-print("Raw data loaded and cleaned successfully.")
-return df_raw
+    print("N2O data loaded and cleaned successfully.")
+    return df_raw
 ```
 </details>
 {% endcapture %}
@@ -340,7 +341,7 @@ df_gga.head()
 
 
 
-###1.3 Loading Multiple Files
+### 1.3 Loading Multiple Files
 Now that we have loader functions, we can easily handle data from multiple field trips. Instead of copying code, we can simply call our function in a loop.
 First, we create a list of all the file paths we want to load. Then, we can loop through this list, call our function for each path, and store the resulting DataFrames in a new list.
 
@@ -348,7 +349,7 @@ First, we create a list of all the file paths we want to load. Then, we can loop
 # First, let's list all the files we want to load.
 # Make sure the file paths are complete and correct.
 base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
-no2_files = [
+n2o_files = [
     'TG20-01072-2025-08-15T110000.data.txt',
     'TG20-01072-2025-08-16T110000.data.txt'
 ]
@@ -359,33 +360,31 @@ gga_files = [
 ]
 
 # Create the full file paths
-no2_full_file_paths = [base_path + name for name in no2_files
-gga_full_file_paths = [base_path + name for name in gga_files
+n2o_full_file_paths = [base_path + name for name in n2o_files]
+gga_full_file_paths = [base_path + name for name in gga_files]
 
 # Create an empty list to hold the loaded DataFrames
-no2_data_list = []
+n2o_data_list = []
 gga_data_list = []
 
 # Loop through each path, load the data, and append it to our list
-for path in no2_full_file_paths:
-    df = load_no2_data(path)
-    no2_data_list.append(df)
+for path in n2o_full_file_paths:
+    df = load_n2o_data(path)
+    n2o_data_list.append(df)
 
-print(f"\nSuccessfully loaded {len(no2_data_list)} data files.")
+print(f"\nSuccessfully loaded {len(n2o_data_list)} N2O data files.")
 
 for path in gga_full_file_paths:
     df = load_gga_data(path)
     gga_data_list.append(df)
 
-print(f"\nSuccessfully loaded {len(gga_data_list)} data files.")
-
-
+print(f"\nSuccessfully loaded {len(gga_data_list)} GGA data files.")
 ```
 
 The loop above is clear and correct. However, a more concise way to write this in Python is with a list comprehension. It achieves the exact same result in a single, readable line:
 
 ```python
-no2_data_list = [load_no2_data(path) for path in no2_full_file_paths]
+n2o_data_list = [load_n2o_data(path) for path in n2o_full_file_paths]
 gga_data_list = [load_gga_data(path) for path in gga_full_file_paths]
 ```
 
@@ -399,7 +398,7 @@ We will use the same workflow as before: load each file and then combine them.
 ### Exercise
 
 You have two Excel files containing air temperature.
-Create lists of the file paths for the temperature and pressure data.
+Create lists of the file paths for the temperature data.
 Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!
 
 <details markdown="1">
@@ -418,7 +417,6 @@ file_names_Ta = [
 full_file_paths_Ta = [base_path + name for name in file_names_Ta]
 ta_data_list = [pd.read_excel(path) for path in full_file_paths_Ta]
 print(f"Successfully loaded {len(ta_data_list)} air temperature files.")
-
 ```
 
 </details>
@@ -432,62 +430,125 @@ print(f"Successfully loaded {len(ta_data_list)} air temperature files.")
 
 
 ### 1.4 Concatenating and Merging All Data
-Now that we have all our data loaded, we need to combine it into one master DataFrame for analysis. This involves two steps:
-Concatenate: Stacking the files of the same type together (e.g., all gas files into one, all temperature files into one).
-Merge: Joining the different datasets (gas, temperature, and pressure) together based on their common timestamp.
 
-**Concatenating the Datasets**
+Now we combine everything into one master DataFrame. Understanding our data structure is important:
 
-First, let's use pd.concat() to combine the lists of DataFrames we created. After combining, we must format the Timestamp column and set it as the index, just as we did before.
+- **Gas measurements (N₂O, CH₄, CO₂):** Recorded at different times. They do NOT overlap in time, we simply need to stack them together.
+- **Temperature data:** Recorded continuously and DOES overlap with all gas measurements. We need to match each gas reading with its corresponding temperature.
+
+This means our workflow is:
+
+1. **Concatenate** all gas data files into one DataFrame (stacking rows)
+2. **Merge** temperature into the gas data using time-matching
+
+#### Step 1: Concatenate Gas Data from All Files
+
+First, let's combine files of the same type:
 
 ```python
-# --- Concatenate and Clean Gas Data ---
-df_gas = pd.concat(raw_data_list) # Assumes raw_data_list is from the previous step
+# Concatenate N2O data from multiple files
+df_n2o = pd.concat(n2o_data_list)
+df_n2o = df_n2o.sort_index()
 
-# --- Concatenate and Clean Temperature Data ---
+# Concatenate GGA data (CH4 and CO2) from multiple files
+df_gga = pd.concat(gga_data_list)
+df_gga = df_gga.sort_index()
+
+# Concatenate and format temperature data
 df_Ta = pd.concat(ta_data_list)
 df_Ta['Timestamp'] = pd.to_datetime(df_Ta['Timestamp'])
 df_Ta = df_Ta.set_index('Timestamp')
+df_Ta = df_Ta.sort_index()
 
-# --- Concatenate and Clean Pressure Data ---
-df_Pa = pd.concat(pa_data_list)
-df_Pa['Timestamp'] = pd.to_datetime(df_Pa['Timestamp'])
-df_Pa = df_Pa.set_index('Timestamp')
+print("--- N2O DataFrame ---")
+print(f"  Rows: {len(df_n2o):,}, Time range: {df_n2o.index.min()} to {df_n2o.index.max()}")
 
-print("--- Gas DataFrame Info ---")
-df_gas.info()
-print("\n--- Temperature DataFrame Info ---")
-df_Ta.info()
-print("\n--- Pressure DataFrame Info ---")
-df_Pa.info()
+print("\n--- GGA DataFrame (CH4/CO2) ---")
+print(f"  Rows: {len(df_gga):,}, Time range: {df_gga.index.min()} to {df_gga.index.max()}")
+
+print("\n--- Temperature DataFrame ---")
+print(f"  Rows: {len(df_Ta):,}, Time range: {df_Ta.index.min()} to {df_Ta.index.max()}")
 ```
 
-**Merging Gas and Auxiliary Data**
+#### Step 2: Combine All Gas Data into One Master Table
 
-Finally, we need to combine our df_gas, df_Ta, and df_Pa DataFrames. We want to add the temperature and pressure columns to the gas data, matching them by the nearest timestamp.
-The gas analyzer records data every second, while the weather station might only record every minute. A simple merge would leave many empty rows. The perfect tool for this is pd.merge_asof(). It performs a "nearest-neighbor" merge, which is ideal for combining time-series data with different frequencies.
-
+Since N₂O and CH₄/CO₂ measurements don't overlap in time, we can safely stack them together. First, we need to select and rename columns so they're consistent:
 
 ```python
-# First, merge the two auxiliary datasets together
-df_aux = pd.merge_asof(left=df_Ta, right=df_Pa, on='Timestamp', direction='nearest')
+# Select key columns from N2O data
+df_n2o_clean = df_n2o[['N2O']].copy()
+df_n2o_clean.columns = ['N2O_ppb']
 
-# Now, merge the gas data with the combined auxiliary data.
-# We use direction='backward' to find the most recent weather data for each gas measurement.
-df_raw = pd.merge_asof(
-    left=df_gas, 
-    right=df_aux, 
-    on='Timestamp', 
+# Select key columns from GGA data (dry-corrected values)
+df_gga_clean = df_gga[['[CH4]d_ppm', '[CO2]d_ppm']].copy()
+df_gga_clean.columns = ['CH4_ppm', 'CO2_ppm']
+
+# Stack them together - rows from different time periods
+df_gas = pd.concat([df_n2o_clean, df_gga_clean])
+df_gas = df_gas.sort_index()
+
+print(f"Combined gas DataFrame: {len(df_gas):,} rows")
+print(f"Time range: {df_gas.index.min()} to {df_gas.index.max()}")
+df_gas.head()
+```
+
+Notice that each row will have values in either `N2O_ppb` OR `CH4_ppm`/`CO2_ppm`, but not both—because the measurements were taken at different times:
+
+```python
+# Check the structure
+print("\nSample from N2O measurement period:")
+print(df_gas.loc[df_gas['N2O_ppb'].notna()].head(3))
+
+print("\nSample from CH4/CO2 measurement period:")
+print(df_gas.loc[df_gas['CH4_ppm'].notna()].head(3))
+```
+
+#### Step 3: Merge Temperature with Gas Data
+
+The gas analyzers record data every second, while the weather station might record only every minute. A simple merge would leave many empty rows. The solution is `pd.merge_asof()`, which performs a "nearest-neighbor" merge—ideal for combining time-series data with different frequencies.
+
+```python
+# Reset index for merge_asof (requires sorted column, not index)
+df_gas_reset = df_gas.reset_index()
+df_Ta_reset = df_Ta.reset_index()
+
+# Merge gas data with temperature
+# direction='backward' means: for each gas reading, find the most recent temperature
+df_merged = pd.merge_asof(
+    df_gas_reset.sort_values('Timestamp'),
+    df_Ta_reset[['Timestamp', 'Ta_C']].sort_values('Timestamp'),
+    on='Timestamp',
     direction='backward'
 )
 
-print("\n--- Final Merged DataFrame ---")
-display(df_raw.head())
-df_raw.info()
+print(f"Merged DataFrame: {len(df_merged):,} rows")
+df_merged.head()
 ```
 
-Brilliant! You now have a single, clean DataFrame called df_final that contains everything you need: the high-frequency gas concentrations and the corresponding temperature and pressure for each measurement point. We are now fully prepared to move on to the flux calculation.
+#### Final Master DataFrame
 
+Let's verify our final dataset:
+
+```python
+print("--- Master DataFrame ---")
+print(f"Total rows: {len(df_merged):,}")
+print(f"Time range: {df_merged.index.min()} to {df_merged.index.max()}")
+print(f"\nColumns: {list(df_merged.columns)}")
+
+print("\n--- Sample rows with N2O data ---")
+display(df_merged.loc[df_merged['N2O_ppb'].notna()].head())
+
+print("\n--- Sample rows with CH4/CO2 data ---")
+display(df_merged.loc[df_merged['CH4_ppm'].notna()].head())
+```
+
+The master DataFrame now contains:
+- `N2O_ppb`: N₂O concentration (only during N₂O measurement periods)
+- `CH4_ppm`: CH₄ concentration (only during GGA measurement periods)  
+- `CO2_ppm`: CO₂ concentration (only during GGA measurement periods)
+- `Ta_C`: Air temperature (matched to each gas reading)
+
+  
 ## 2. Visualizing and cleaning the data
 Now that we have a single, merged DataFrame, our next step is to inspect the data quality. Raw sensor data from the field is almost never perfect. Visualizing it is the best way to diagnose issues like noise, drift, or outliers before we attempt any calculations. For this, we'll use plotly, a powerful library for creating interactive plots.
 ### 2.1 Creating a Reusable Plotting Function with Plotly
