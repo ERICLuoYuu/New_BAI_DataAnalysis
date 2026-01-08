@@ -798,8 +798,11 @@ plot_time_series(
 
 ![Filtered N2O](/assets/images/python/5/filtered_N2O.png)
 
-This looks much better! The noise is gone, and a clear, meaningful pattern has emerged.
+This looks much better! The noise is gone, now please pan and zoom in to check the N2O data measured on 15th and 26th of Aug. You can see a clear, meaningful pattern.
 
+![Filtered_N2O_0815](/assets/images/python/5/Filtered_N2O_0815.png)
+
+![Filtered_N2O_0826](/assets/images/python/5/Filtered_N2O_0826.png)
 
 ### 2.4 Understanding the Data Pattern
 
