@@ -833,45 +833,112 @@ Where:
 > For accurate flux calculations, we must identify and use **only the initial, linear part** of each accumulation period. We'll learn how to do this in the next section.
 
 
-### 2.5 Applying the Same Process to CH₄ and CO₂
+The same visualization and filtering workflow applies to the GGA data (CH₄ and CO₂). But does the GGA data actually need filtering? Let's find out!
 
-The same visualization and filtering workflow applies to the GGA data. Let's clean the CH₄ and CO₂ measurements:
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
+### Exercise: Inspect and Clean the GGA Data
 
-```python
-# --- Filter CH4 data ---
-ch4_p10 = df_merged['CH4_ppm'].quantile(0.10)
-ch4_p90 = df_merged['CH4_ppm'].quantile(0.90)
+**Part 1: Visualize the raw data**
 
-df_merged_clean = df_merged[
-    (df_merged['CH4_ppm'] >= ch4_p10) & 
-    (df_merged['CH4_ppm'] <= ch4_p90) |
-    df_merged['CH4_ppm'].isna()  # Keep rows where CH4 is NaN (N2O measurement periods)
-].copy()
-
-print(f"CH4 filter range: [{ch4_p10:.3f}, {ch4_p90:.3f}] ppm")
-
-# --- Filter CO2 data ---
-co2_p10 = df_merged['CO2_ppm'].quantile(0.10)
-co2_p90 = df_merged['CO2_ppm'].quantile(0.90)
-
-df_merged_clean = df_merged_clean[
-    (df_merged_clean['CO2_ppm'] >= co2_p10) & 
-    (df_merged_clean['CO2_ppm'] <= co2_p90) |
-    df_merged_clean['CO2_ppm'].isna()
-].copy()
-
-print(f"CO2 filter range: [{co2_p10:.1f}, {co2_p90:.1f}] ppm")
-```
+First, plot the raw CH₄ and CO₂ data to see if they contain noise or outliers.
 
 ```python
-# Visualize the cleaned CH4 data
+# Plot raw CH4 data
 plot_time_series(
-    df_merged_clean[df_merged_clean['CH4_ppm'].notna()], 
+    df_merged[df_merged['CH4_ppm'].notna()], 
     y_column='CH4_ppm', 
-    title='Filtered CH₄ Concentration Over Time', 
+    title='Raw CH₄ Concentration Over Time', 
+    mode='markers'
+)
+
+# Plot raw CO2 data
+plot_time_series(
+    df_merged[df_merged['CO2_ppm'].notna()], 
+    y_column='CO2_ppm', 
+    title='Raw CO₂ Concentration Over Time', 
     mode='markers'
 )
 ```
+
+**Questions to consider:**
+1. Do you see any obvious outliers or impossible values (like negative concentrations)?
+2. Are there extreme spikes that look like sensor errors?
+3. Use the zoom and pan features to inspect different time periods.
+
+**Part 2: Decide on filtering**
+
+Based on your visual inspection:
+- **If the data looks clean:** No filtering needed! Move on to the next section.
+- **If the data contains outliers:** Apply a quantile filter like we did for N₂O.
+
+**Part 3: Apply filtering (if needed)**
+
+If you determined that filtering is necessary, apply the quantile filter to CH₄ and CO₂.
+
+**Hints:**
+- Use `.quantile(0.03)` and `.quantile(0.97)` to get the 10th and 90th percentiles
+
+<details markdown="1">
+<summary>Click here for the solution!</summary>
+
+```python
+# 1. Create clean copies for CH4 and CO2 (removing NaNs first simplifies everything)
+df_CH4 = df_merged[['CH4_ppm']].dropna().copy()
+df_CO2 = df_merged[['CO2_ppm']].dropna().copy()
+
+# --- Filter CH4 data (3rd - 97th percentile) ---
+ch4_p03 = df_CH4['CH4_ppm'].quantile(0.03)
+ch4_p97 = df_CH4['CH4_ppm'].quantile(0.97)
+
+print(f"CH4 filter range: [{ch4_p03:.3f}, {ch4_p97:.3f}] ppm")
+
+# Apply filter to the specific dataframe
+df_CH4_clean = df_CH4[
+    (df_CH4['CH4_ppm'] >= ch4_p03) & 
+    (df_CH4['CH4_ppm'] <= ch4_p97)
+].copy()
+
+# --- Filter CO2 data (3rd - 97th percentile) ---
+co2_p03 = df_CO2['CO2_ppm'].quantile(0.03)
+co2_p97 = df_CO2['CO2_ppm'].quantile(0.97)
+
+print(f"CO2 filter range: [{co2_p03:.1f}, {co2_p97:.1f}] ppm")
+
+# Apply filter to the specific dataframe
+df_CO2_clean = df_CO2[
+    (df_CO2['CO2_ppm'] >= co2_p03) & 
+    (df_CO2['CO2_ppm'] <= co2_p97)
+].copy()
+
+
+
+```python
+plot_time_series(
+    df_CH4_clean, 
+    y_column='CH4_ppm', 
+    title='Filtered CH₄ Concentration (3rd-97th Percentile)', 
+    mode='markers' # Markers are safer for high-frequency data
+)
+
+# Visualize the cleaned CO2 data
+plot_time_series(
+    df_CO2_clean, 
+    y_column='CO2_ppm', 
+    title='Filtered CO₂ Concentration (3rd-97th Percentile)', 
+    mode='markers'
+)
+```
+
+**Note:** Depending on your dataset, you may find that the GGA data is already quite clean and filtering removes very few points. This is because the Los Gatos GGA analyzer tends to produce more stable measurements than some other sensors. Always visualize first before deciding to filter!
+
+</details>
+{% endcapture %}
+
+<div class="notice--primary">
+{{ exercise | markdownify }}
+</div>
+</div>
 
 ## 3. Calculating flux for a single measurement
 After loading and filtering our raw data and getting an overview of the patterns, it's time to calculate the fluxes. Excited?
