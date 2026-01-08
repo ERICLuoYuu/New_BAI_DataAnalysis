@@ -804,13 +804,12 @@ Where:
 - $t$ = time
 - $\frac{dC}{dt}$ = rate of change (slope of the linear portion)
 
-> ** Important: Use Only the Linear Portion**
+> **Important: Use Only the Linear Portion**
 > 
 > If a chamber is left on the ground too long, gas buildup inside the chamber reduces the concentration gradient between soil and chamber air. This causes the accumulation rate to slow down ("leveling off").
 > 
 > For accurate flux calculations, we must identify and use **only the initial, linear part** of each accumulation period. We'll learn how to do this in the next section.
 
----
 
 ### 2.5 Applying the Same Process to CH₄ and CO₂
 
