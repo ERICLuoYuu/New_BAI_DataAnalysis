@@ -696,7 +696,21 @@ Now, let's use our new function to look at the raw N₂O data. The interactive p
 
 ```python
 # Plot the raw 'N2O' column from our merged DataFrame
-plot_time_series(df_merged, y_column='N2O_ppb', title='Raw N₂O Concentration Over Time')
+# 1. Ensure the index is sorted chronologically (crucial for time slicing)
+df_merged = df_merged.set_index('Timestamp')
+df_merged = df_merged.sort_index()
+
+# 2. slect where N2O has valid values.
+df_N2O = df_merged.loc[df_merged['N2O_ppb'].notna()].loc[:,['N2O_ppb']] 
+
+# 3. Plot
+plot_time_series(
+    df_N2O, 
+    y_column='N2O_ppb', 
+    title='N₂O Concentration',
+    mode = 'markers'
+
+)   
 ```
 
 ![raw data plotting](/assets/images/python/5/raw_data_plot.png)
@@ -713,15 +727,15 @@ These artifacts are common in field measurements and must be removed before we c
 
 ### 2.3 Filtering with a Quantile Filter
 
-To remove outliers, we'll use a **quantile filter**. This method calculates percentiles of the data and keeps only values within a specified range.
+To remove outliers, we'll use a **quantile filter**, it can help us see the real data patterns (signal) by removing all outliers/noise. This method calculates percentiles of the data and keeps only values within a specified range.
 
-#### Why Quantile Filtering?
+### Why Quantile Filtering?
 
 Quantile filtering is **robust to outliers**. Unlike methods based on mean and standard deviation, extreme values have very little influence on percentile calculations. This makes it ideal for sensor data with occasional spikes.
 
 The approach:
-1. Calculate the 10th percentile ($P_{10}$) and 90th percentile ($P_{90}$)
-2. Keep only data points where: $P_{10} \leq x \leq P_{90}$
+1. Calculate the 3th percentile ($P_{3}$) and 97th percentile ($P_{97}$)
+2. Keep only data points where: $P_{3} \leq x \leq P_{97}$
 3. Discard everything else
 
 > **Info: What are Quantiles?**
@@ -750,11 +764,19 @@ print(f"Keeping data in range [{p_10:.2f}, {p_90:.2f}]")
 ```
 
 ```python
+# Calculate the 10th and 90th percentiles
+p_3 = df_N2O['N2O_ppb'].quantile(0.03)
+p_97 = df_N2O['N2O_ppb'].quantile(0.97)
+
+print(f"10th percentile: {p_3:.2f} ppb")
+print(f"90th percentile: {p_97:.2f} ppb")
+print(f"Keeping data in range [{p_3:.2f}, {p_97:.2f}]")
+
 # Apply the filter to create a clean DataFrame
 # We use .copy() to avoid pandas SettingWithCopyWarning
-df_filtered = df_merged[
-    (df_merged['N2O_ppb'] >= p_10) & 
-    (df_merged['N2O_ppb'] <= p_90)
+df_filtered = df_N2O[
+    (df_N2O['N2O_ppb'] >= p_3) & 
+    (df_N2O['N2O_ppb'] <= p_97)
 ].copy()
 
 print(f"\nRows before filtering: {len(df_merged):,}")
