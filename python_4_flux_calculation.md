@@ -940,125 +940,160 @@ plot_time_series(
 </div>
 </div>
 
-## 3. Calculating flux for a single measurement
+## 3. Calculating Flux for a Single Measurement
+
 After loading and filtering our raw data and getting an overview of the patterns, it's time to calculate the fluxes. Excited?
-In this section, we will focus on the data for a single measurement period to understand the process in detail. We'll break it down into a few key steps:
-<ol>
-<li> Review the flux calculation formula to see what components we need. </li>
-<li> Define the metadata (chamber dimensions, etc.) for our specific plot. </li>
-<li> Isolate the data for a specific time window and visualize it. </li>
-<li> Perform a linear regression on the concentration data to get the rate of change. </li>
-<li> Combine all the pieces to calculate the final flux. </li>
-</ol>
+
+In this section, we will focus on a **single measurement period** to understand the process in detail. We'll break it down into these key steps:
+
+1. Review the flux calculation formula to understand what components we need
+2. Isolate the data for a specific time window and visualize it
+3. Perform a linear regression to get the rate of concentration change
+4. Combine all the pieces to calculate the final flux
+
+---
 
 ### 3.1 The Flux Calculation Formula
 
-First, let's have a look on the fomula of flux calculation.
+Before we start coding, let's understand the physics behind flux calculation.
 
-​
+#### What is "Flux"?
+
+In the context of greenhouse gas research, **flux** refers to the exchange of gases between different parts of the Earth system—in our case, between the **soil** and the **atmosphere** inside our measurement chamber.
+
+> **Learn More:** [Greenhouse Gas Fluxes - Sustainability Directory](https://climate.sustainability-directory.com/term/greenhouse-gas-fluxes/)
+
+You might ask: *"Doesn't the rate of concentration change (ΔC/t) already represent the flux?"*
+
+Not quite! The raw concentration change rate (in ppb/s) is evidence of a flux, but it's **not standardized**. It only describes what's happening inside our specific chamber under specific conditions. We cannot compare measurements directly because:
+
+- **Gas density varies with temperature and pressure** — The same volume can contain different amounts of gas molecules
+- **Chamber size matters** — A larger chamber captures more gas, giving a higher concentration change rate
+
+To make measurements comparable, we need to convert our raw observation into a standardized unit: **µmol m⁻² s⁻¹** (micromoles per square meter per second).
+
+#### The Formula
+
+The flux calculation formula is:
+
 $$
-\text{Flux Rate (molar)} = \frac{\frac{\Delta C}{t} \cdot V \cdot p}{R \cdot (T_{c} + 273.15) \cdot A}
+\text{Flux} = \frac{\Delta C / \Delta t \cdot V \cdot P}{R \cdot T \cdot A}
 $$
-​
 
 Where:
 
-ΔC/t: The rate of change of the gas concentration in ppm/s (this will be the slope from our regression).
+| Symbol | Description | Unit |
+|--------|-------------|------|
+| $\Delta C / \Delta t$ | Rate of concentration change (slope from regression) | ppm s⁻¹ |
+| $V$ | Chamber headspace volume | m³ |
+| $P$ | Air pressure | Pa |
+| $R$ | Ideal gas constant | 8.314 J K⁻¹ mol⁻¹ |
+| $T$ | Air temperature | K (Kelvin) |
+| $A$ | Surface area covered by chamber | m² |
 
-V: The total volume of the chamber headspace (m³).
+#### Understanding the Formula
 
-p: The air pressure in Pascals (Pa) during measurement.
-
-R: The ideal gas constant (8.314 J K⁻¹ mol⁻¹).
-
-T_c: The air temperature in Celsius (°C).
-
-A: The surface area covered by the chamber (m²).
-
-To understand this fomula, we need to figure out the meaning of 'flux'. In the context of climate change, greenhouse gas flux specifically refers to the exchange of greenhouse gases (GHGs) like carbon dioxide (CO₂), methane (CH₄), and nitrous oxide (N₂O) between different parts of the Earth system (https://climate.sustainability-directory.com/term/greenhouse-gas-fluxes/#:~:text=In%20the%20context%20of%20climate,parts%20of%20the%20Earth%20system). Under the context of this analysis, 'flux' means gases exchange between soil and our measurement chamber. You might ask, "Doesn't the rate of concentration change, ΔC/t (in ppb/s), already represent this flux?" Actually, ΔC/t is the raw evidence of a flux, but it is not a standardized, comparable measurement. It only describes what's happening inside our specific chamber, under the specific conditions of that one measurement. We are not able to compare flux by simply comparing change rate of gas concentration. Under different temperature and pressure, gas molar density vary, the amount of gas molecular can be different even the gas volume is the same. Therefore, we need to utilize Gas Law (PV = nRT) to calculate the amount of molecular. Besides, a chamber covering a large area of soil will naturally capture more gas than one covering a small area. To make the measurement independent of our chamber's specifications, we must divide by the soil Area (A) it covers. By applying the full formula, We convert our raw observation (ΔC/t) into a robust, standardized unit: micromoles per square meter per second (µmol m⁻² s⁻¹).
-
-To better understand the above fomula, it can be arranged into the following:
-
+To better understand the formula, we can rearrange it into three intuitive components:
 
 $$
-\text{Flux Rate (molar)} = ( \frac{\Delta C}{t} \right) \cdot ( \frac{p \cdot V} {R \cdot (T_C + 273.15)} \right) \cdot ( \frac{1}{A} \right)
+\text{Flux} = \underbrace{\frac{\Delta C}{\Delta t}}_{\text{slope}} \times \underbrace{\frac{P \cdot V}{R \cdot T}}_{\text{moles of gas}} \times \underbrace{\frac{1}{A}}_{\text{per unit area}}
 $$
 
+This shows that: **Flux = Slope × Gas Moles × Area⁻¹**
 
-Now, it is clear that the fomula only contains three components: **Flux** = **slope** * **gas_mole** * **A⁻¹**
+> **Info: The Ideal Gas Law**
+> 
+> The middle term comes from the Ideal Gas Law: $PV = nRT$
+> 
+> Rearranging for $n$ (number of moles):
+> $$n = \frac{PV}{RT}$$
+> 
+> This converts our concentration measurement into an actual amount of gas molecules.
+>
+> **Resources:**
+> - [Ideal Gas Law (Khan Academy)](https://www.khanacademy.org/science/physics/thermodynamics/temp-kinetic-theory-ideal-gas-law/a/what-is-the-ideal-gas-law)
+> - [Gas Laws (Chemistry LibreTexts)](https://chem.libretexts.org/Bookshelves/General_Chemistry/Map%3A_Chemistry_-_The_Central_Science_(Brown_et_al.)/10%3A_Gases/10.04%3A_The_Ideal_Gas_Law)
 
-Okay, lets create a function of flux calculation based on the fomula for later use.
+#### Creating the Flux Calculation Function
 
-
+Now let's implement this formula as a Python function.
 
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
-
 {% capture exercise %}
 ### Exercise
 
-The function `calculate_flux` is provided below but is not complete. It is your task to finish the function based on the formula.
+The function `calculate_flux` is provided below but is incomplete. Fill in the missing parts based on the formula.
+
+**Hints:**
+- Convert slope from ppb/s to ppm/s by dividing by 1000
+- Use the Ideal Gas Law to calculate moles: $n = \frac{PV}{RT}$
+- Multiply by 10⁶ to convert from mol to µmol
 
 ```python
-# Define key physical constants
-R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
+# Define the ideal gas constant
+R = 8.314  # J K⁻¹ mol⁻¹
 
-def calculate_flux(slope_ppb_s, temp_k, pressure_pa, volume, area):
+def calculate_flux(slope_ppb_s, temp_k, pressure_pa, volume_m3, area_m2):
     """
-    Calculates N2O flux.
+    Calculates gas flux from chamber measurements.
 
     Parameters:
-    - slope_ppb_s (float): Rate of change in ppb/s.
-    - temperature (float): Temperature, assumed to be in Celsius or Kelvin.
-    - pressure (float): Pressure, assumed to be in Pascals (Pa) or hectopascals (hPa).
-    - volume (float): Chamber volume, assumed to be in cubic meters (m³) or Liters (L).
-    - area (float): Chamber area, assumed to be in square meters (m²) or square cm (cm²).
+    - slope_ppb_s (float): Rate of concentration change in ppb/s
+    - temp_k (float): Temperature in Kelvin
+    - pressure_pa (float): Pressure in Pascals
+    - volume_m3 (float): Chamber volume in cubic meters
+    - area_m2 (float): Chamber area in square meters
+    
+    Returns:
+    - float: Flux in µmol m⁻² s⁻¹
     """
-    # Convert slope from ppb/s to ppm/s for the formula
-    ppm_per_second = ...
+    # Convert slope from ppb/s to ppm/s
+    slope_ppm_s = ...
     
-    # Calculate molar density of air (n/V = P/RT) in mol/m³
-    gas_model = ...
+    # Calculate moles of gas using Ideal Gas Law (n = PV/RT)
+    gas_moles = ...
     
-    # Calculate the flux in µmol m⁻² s⁻¹
-    # The 1e6 converts from mol to µmol
+    # Calculate flux in µmol m⁻² s⁻¹
+    # Multiply by 1e6 to convert mol to µmol
     flux = ...
+    
     return flux
 ```
 
 <details markdown="1">
-<summary>Solution!</summary>
-Here is the completed function:
+<summary>Click here for the solution!</summary>
 
 ```python
+# Define the ideal gas constant
+R = 8.314  # J K⁻¹ mol⁻¹
 
-# Define key physical constants
-R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
-
-def calculate_flux(slope_ppb_s, temp_k, pressure_pa, volume, area):
+def calculate_flux(slope_ppb_s, temp_k, pressure_pa, volume_m3, area_m2):
     """
-    Calculates N2O flux.
+    Calculates gas flux from chamber measurements.
 
     Parameters:
-    - slope_ppb_s (float): Rate of change in ppb/s.
-    - temperature (float): Temperature, assumed to be in Celsius or Kelvin.
-    - pressure (float): Pressure, assumed to be in Pascals (Pa) or hectopascals (hPa).
-    - volume (float): Chamber volume, assumed to be in cubic meters (m³) or Liters (L).
-    - area (float): Chamber area, assumed to be in square meters (m²) or square cm (cm²).
+    - slope_ppb_s (float): Rate of concentration change in ppb/s
+    - temp_k (float): Temperature in Kelvin
+    - pressure_pa (float): Pressure in Pascals
+    - volume_m3 (float): Chamber volume in cubic meters
+    - area_m2 (float): Chamber area in square meters
+    
+    Returns:
+    - float: Flux in µmol m⁻² s⁻¹
     """
-    # Convert slope from ppb/s to ppm/s for the formula
-    ppm_per_second = slope_ppb_s / 1000.0
+    # Convert slope from ppb/s to ppm/s
+    slope_ppm_s = slope_ppb_s / 1000.0
     
-    # Calculate molar density of air (n/V = P/RT) in mol/m³
-    gas_mole = (pressure_pa * volume)/ (R * temp_k)
+    # Calculate moles of gas using Ideal Gas Law (n = PV/RT)
+    gas_moles = (pressure_pa * volume_m3) / (R * temp_k)
     
-    # Calculate the flux in µmol m⁻² s⁻¹
-    # The 1e6 converts from mol to µmol
-    flux = ppm_per_second * gas_mole / area * 1e6
+    # Calculate flux in µmol m⁻² s⁻¹
+    # Multiply by 1e6 to convert mol to µmol
+    flux = slope_ppm_s * gas_moles / area_m2 * 1e6
+    
     return flux
-
 ```
 </details>
-
 {% endcapture %}
 
 <div class="notice--primary">
@@ -1066,8 +1101,15 @@ def calculate_flux(slope_ppb_s, temp_k, pressure_pa, volume, area):
 </div>
 </div>
 
+---
+
 ### 3.2 Isolating and Visualizing the Measurement Data
-Let's use an example time period of measurement: 2025-08-15 12:04:00 to 2025-08-15 12:10:00. We'll slice our df_filtered DataFrame to get only the data within this window and then plot it to get a closer look.
+
+Now let's apply our formula to real data. We'll use an example measurement period from our field campaign.
+
+#### Step 1: Define the Time Window
+
+Let's select a measurement window from our filtered data:
 
 ```python
 # Define the start and end times for our measurement window
@@ -1075,262 +1117,393 @@ start_time = '2025-08-15 12:04:00'
 end_time = '2025-08-15 12:09:30'
 
 # Select the data for this specific time window
-measurement_data = df_filtered[(df_filtered.index >= start_time) & (df_filtered.index < end_time)]
+measurement_data = df_filtered[
+    (df_filtered.index >= start_time) & 
+    (df_filtered.index < end_time)
+]
 
-# Use our plotting function to visualize this specific period
+print(f"Selected {len(measurement_data)} data points")
+print(f"Time range: {measurement_data.index.min()} to {measurement_data.index.max()}")
+```
+
+#### Step 2: Visualize the Raw Measurement Window
+
+```python
+# Plot the measurement window
 plot_time_series(
     measurement_data, 
-    y_column='N2O', 
-    title=f'N2O Concentration for Plot {plot_metadata["plot_id"]}',
+    y_column='N2O_ppb', 
+    title='N₂O Concentration - Full Measurement Window',
     mode='markers'
 )
 ```
-As you can see from the plot, the data in our 5-minute window 2025-08-15 12:04:00 - 2025-08-15 12:09:30 contains more than just the measurement itself. 
 
-We can identify three distinct phases:
+#### Understanding the Pattern
 
-Pre-measurement Baseline: A flat period at the beginning. This is when the sensor was measuring ambient air before the chamber was placed on the collar.
-The Measurement (Linear Increase): This is the part we want. The chamber is sealed, and N₂O from the soil is accumulating, causing a steady, linear increase in concentration.
-Post-measurement Drop: The sharp, sudden drop at the end. This occurred when the chamber was lifted, and the sensor was exposed to ambient air again.
+Looking at the plot, we can identify **three distinct phases**:
 
-Our flux calculation relies on the slope (ΔC/t) from a linear regression. If we include the flat baseline or the sharp drop in our regression, the line of best fit will not represent the true rate of accumulation, leading to a highly inaccurate flux calculation.
+| Phase | Description | What You See |
+|-------|-------------|--------------|
+| **1. Pre-measurement Baseline** | Sensor measuring ambient air before chamber placement | Flat period at the beginning |
+| **2. Accumulation (Linear Increase)** | Chamber sealed, N₂O accumulating from soil | Steady, linear rise ✓ |
+| **3. Post-measurement Drop** | Chamber lifted, sensor exposed to ambient air | Sharp, sudden drop |
 
-Therefore, To get an accurate flux, visual inspection is necessary to include only the linear increase phase. Zoom in on the interactive Plotly graph. We can see that the clean, linear increase happens approximately between 12:05:30 and 12:09:00.
+> **⚠️ Critical: Use Only the Linear Phase**
+> 
+> Our flux calculation relies on the **slope** from linear regression. If we include the flat baseline or the sharp drop, the regression line will not represent the true accumulation rate, leading to **inaccurate flux values**.
+> 
+> We must visually inspect the data and select **only the linear increase phase**.
+
+#### Step 3: Refine the Time Window
+
+Use the zoom and pan features on the interactive plot to identify the linear portion. In this example, the clean linear increase occurs approximately between **12:05:30** and **12:09:00**.
 
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
-
 {% capture exercise %}
 ### Exercise
-Try to slice the dataframe based on your refined time window, and plot it to see our refined result.
+
+Slice the DataFrame to include only the linear accumulation phase, then plot it to verify your selection.
 
 <details markdown="1">
-<summary>Solution!</summary>
-Here is the completed function:
+<summary>Click here for the solution!</summary>
 
 ```python
-# Define the refined, visually inspected time window
-start_mea = '2025-08-15 12:05:30'
-end_mea = '2025-08-15 12:09:00'
+# Define the refined time window (linear portion only)
+start_linear = '2025-08-15 12:05:30'
+end_linear = '2025-08-15 12:09:00'
 
-# Create a new DataFrame with data only from this refined window
-# We use .copy() to create a completely new object for the regression
-measurement_data = df_filtered[df_filtered.index > start_mea & df_filtered.index < end_mea].copy()
+# Create a new DataFrame with only the linear phase
+# Use .copy() to avoid SettingWithCopyWarning
+regression_data = df_filtered[
+    (df_filtered.index > start_linear) & 
+    (df_filtered.index < end_linear)
+].copy()
 
-# Visualize the refined data to confirm our selection
+print(f"Selected {len(regression_data)} points for regression")
+
+# Visualize to confirm our selection
 plot_time_series(
     regression_data, 
-    y_column='N2O', 
-    title=f'Refined Regression Window for Plot {plot_metadata["plot_id"]}',
+    y_column='N2O_ppb', 
+    title='Refined Regression Window (Linear Phase Only)',
     mode='markers'
 )
 ```
 </details>
-
 {% endcapture %}
 
 <div class="notice--primary">
 {{ exercise | markdownify }}
 </div>
 </div>
-Great! This plot shows the clear, linear increase in N₂O concentration after the chamber was placed on the collar. This is the exact data we need for our regression.
 
-### 3.3 Linear Regression to derive the rate of gas concentration change
-Now, as we talked before, we will fit a linear line to these data points. The slope of that line is the dC/dt (rate of change) that we need for our flux formula. As we expect the unit of our regression slope to be ppb/s our x-axis needs to be seconds elapsed (it means the seconds passed compared to the start of the measurement) instead of a timestamp. So, our first step is to create a new column, elapsed_seconds.
+Great! The plot should now show a clear, linear increase in N₂O concentration. This is exactly what we need for our regression.
+
+---
+
+### 3.3 Linear Regression to Derive the Rate of Change
+
+Now we'll fit a linear regression line to our data. The **slope** of this line is the $\frac{\Delta C}{\Delta t}$ we need for our flux formula.
+
+#### Step 1: Convert Timestamps to Elapsed Seconds
+
+For regression, we need numeric x-values. We'll convert timestamps to "seconds elapsed since start of measurement":
 
 ```python
 from scipy import stats
-measurement_data = measurement_data.copy()
-# Create an 'elapsed_seconds' column for the regression
-# First, we get the start time of the measurement
-start_timestamp = measurement_data.index.min()
-# Then we get the time difference for each time point and the start of measurement, and use function total_seconds convert this time difference into seconds
-measurement_data['elapsed_seconds'] = (measurement_data.index - start_timestamp).total_seconds()
+
+# Work on a copy to avoid modifying the original
+regression_data = regression_data.copy()
+
+# Get the start time
+start_timestamp = regression_data.index.min()
+
+# Calculate elapsed seconds for each data point
+regression_data['elapsed_seconds'] = (
+    regression_data.index - start_timestamp
+).total_seconds()
+
+# Check the result
+print(regression_data[['elapsed_seconds', 'N2O_ppb']].head())
 ```
 
-Then, we are going to actually fit the regression using scipy library. R2 represents the strength of the relationship that we detected. In here, we are going to use r2 = 0.7 as a threshold. If R2 of a regression is lower than 0.7, the change of gas concentration as time is not significant enough to be recognize as a flux (no flux is detected from the data), otherwise a gas flux can be deceted from the data.
+#### Step 2: Perform Linear Regression
+
+We'll use SciPy's `linregress` function to fit a line:
 
 ```python
-# Perform the linear regression using SciPy
+# Perform linear regression
 slope, intercept, r_value, p_value, std_err = stats.linregress(
-    x=measurement_data['elapsed_seconds'],
-    y=measurement_data['N2O']
+    x=regression_data['elapsed_seconds'],
+    y=regression_data['N2O_ppb']
 )
 
-# The R-squared value tells us how well the line fits the data (a value > 0.7 is good!)
-r_squared = r_value**2
+# Calculate R-squared (coefficient of determination)
+r_squared = r_value ** 2
 
-print(f"--- Regression Results ---")
-print(f"Slope (dC/dt): {slope:.4f} ppb/s")
+print("--- Regression Results ---")
+print(f"Slope (ΔC/Δt): {slope:.4f} ppb/s")
+print(f"Intercept: {intercept:.2f} ppb")
 print(f"R-squared: {r_squared:.4f}")
+print(f"P-value: {p_value:.2e}")
 ```
-### 3.4 Visualizing the Fit and Final Calculation
-It's always good practice to visualize the regression line against the data to confirm the fit is good.
+
+> **Info: Interpreting R-squared**
+> 
+> The **R-squared** ($R^2$) value tells us how well the line fits the data:
+> - $R^2 = 1.0$: Perfect fit
+> - $R^2 > 0.9$: Excellent fit
+> - $R^2 > 0.7$: Good fit (acceptable for flux calculation)
+> - $R^2 < 0.7$: Poor fit (flux may not be reliable)
+> 
+> If $R^2 < 0.7$, the concentration change may not be significant enough to calculate a meaningful flux.
+>
+> **Resources:**
+> - [SciPy linregress documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.linregress.html)
+> - [Linear Regression (Khan Academy)](https://www.khanacademy.org/math/statistics-probability/describing-relationships-quantitative-data/introduction-to-trend-lines/a/linear-regression-review)
+
+---
+
+### 3.4 Visualizing the Regression Fit
+
+Before calculating the flux, let's visualize the regression line to confirm it fits well:
 
 ```python
-# --- Visualize the regression line ---
+import plotly.graph_objects as go
+
 fig = go.Figure()
 
 # Add the raw data points
-fig.add_trace(go.Scatter(x=measurement_data['elapsed_seconds'], y=measurement_data['N2O'], 
-                         mode='markers', name='Raw Data'))
+fig.add_trace(go.Scatter(
+    x=regression_data['elapsed_seconds'], 
+    y=regression_data['N2O_ppb'], 
+    mode='markers', 
+    name='Measured Data',
+    marker=dict(size=8)
+))
 
 # Add the fitted regression line
-fig.add_trace(go.Scatter(x=measurement_data['elapsed_seconds'], 
-                         y=intercept + slope * measurement_data['elapsed_seconds'],
-                         mode='lines', name='Fitted Line', line=dict(color='red')))
+fig.add_trace(go.Scatter(
+    x=regression_data['elapsed_seconds'], 
+    y=intercept + slope * regression_data['elapsed_seconds'],
+    mode='lines', 
+    name=f'Fitted Line (R²={r_squared:.3f})', 
+    line=dict(color='red', width=2)
+))
 
-fig.update_layout(title=f'Linear Regression for Plot {plot_metadata["plot_id"]} (R²={r_squared:.2f})',
-                  xaxis_title='Elapsed Time (s)', yaxis_title='N2O Concentration (ppb)', template='plotly_white')
+fig.update_layout(
+    title=f'Linear Regression: Slope = {slope:.4f} ppb/s',
+    xaxis_title='Elapsed Time (seconds)', 
+    yaxis_title='N₂O Concentration (ppb)', 
+    template='plotly_white',
+    legend=dict(x=0.02, y=0.98)
+)
+
 fig.show()
 ```
-Good! If the regression is well fitted into our data, we are able to calculate the flux now! Before we call the calculate_flux function, there are still some steps to go. 
-First, we need to get the average chamber air temperature and air pressure during the measurement and convert them into desired unit respectively (K for air temperature and Pa for air pressure). The unit conversion is very important, as when we wrote the calculate_flux function, we assumed units of our inputs. The mismatch of units will introduce systematic errors and leading to inaccuracy. 
+
+If the red line closely follows the data points and $R^2 > 0.7$, we can proceed with confidence!
+
+---
+
+### 3.5 Final Flux Calculation
+
+Now we have all the pieces. Let's put them together!
+
+#### Step 1: Get Average Temperature and Pressure
+
+We need the mean temperature and pressure during the measurement. **Unit conversion is critical!**
 
 ```python
-# try to get the average air temperature and air temperature value, don't forget the unit conversion.
-avg_temp_c = 
-avg_pressure_pa = 
+# Get average temperature (convert °C to Kelvin)
+avg_temp_c = regression_data['Ta_C'].mean()
+avg_temp_k = avg_temp_c + 273.15
+
+# Get average pressure (assuming data is in hPa, convert to Pa)
+# Note: Check your data to confirm the original unit!
+avg_pressure_hpa = regression_data['P_Pa'].mean()  # If already in Pa, skip conversion
+avg_pressure_pa = avg_pressure_hpa  # Adjust if needed: * 100 for hPa to Pa
+
+print(f"Average Temperature: {avg_temp_c:.2f} °C = {avg_temp_k:.2f} K")
+print(f"Average Pressure: {avg_pressure_pa:.0f} Pa")
 ```
-<details markdown="1">
-<summary>Solution!</summary>
-```python
-# Get the average temperature and pressure during the measurement
-avg_temp_c = measurement_data['T_air'].mean() + 273.15 # convert from °C to K
-avg_pressure_pa = measurement_data['P_air'].mean() * 100 # Assuming pressure is in hPa, convert to Pa
-```
-</details>
-Then, we still need the total volume of the chamber headspace (m³) and the surface area covered by the chamber (m²). As they are independent of time and the same for all plots, we can simply define them as constants. 
+
+#### Step 2: Define Chamber Dimensions
+
+The chamber volume and area are constants for our setup:
 
 ```python
-# --- Finally, Calculate the Flux! ---
-VOLUME = 0.126 # 
-AREA = 0.13 # the radias of the collar ring is 0.2m, so the area is 0.2*0.2*PI
+# Chamber specifications (measure these for your specific equipment!)
+CHAMBER_VOLUME = 0.0126  # m³ (example: 12.6 liters)
+COLLAR_AREA = 0.1257     # m² (example: circle with radius 0.2 m → π × 0.2²)
+
+print(f"Chamber Volume: {CHAMBER_VOLUME} m³")
+print(f"Collar Area: {COLLAR_AREA} m²")
 ```
-Finally, call our calculate_flux function and we can get the result!
+
+#### Step 3: Calculate the Flux
 
 ```python
-# Now try to call the function using all the inputs we have and print out to check the result.
-flux_N2O = ...
-
-print(...)
-```
-<details markdown="1">
-<summary>Solution!</summary>
-```python
-# Now we have all the pieces! Let's call our function.
-flux_N2O = calculate_flux(
+# Calculate the flux!
+flux_n2o = calculate_flux(
     slope_ppb_s=slope,
     temp_k=avg_temp_k,
     pressure_pa=avg_pressure_pa,
-    volume=VOLUME,
-    area=AREA
-
+    volume_m3=CHAMBER_VOLUME,
+    area_m2=COLLAR_AREA
 )
 
-print(f"\n--- Final Flux Calculation ---")
-print(f"Average Temperature: {avg_temp_c:.2f} °C")
-print(f"Average Pressure: {avg_pressure_pa:.2f} Pa")
-print(f"Calculated N₂O Flux: {flux_N2O:.5f} µmol m⁻² s⁻¹")
+print("\n" + "="*50)
+print("        FINAL FLUX CALCULATION RESULT")
+print("="*50)
+print(f"  Slope:       {slope:.4f} ppb/s")
+print(f"  Temperature: {avg_temp_k:.2f} K")
+print(f"  Pressure:    {avg_pressure_pa:.0f} Pa")
+print(f"  Volume:      {CHAMBER_VOLUME} m³")
+print(f"  Area:        {COLLAR_AREA} m²")
+print("-"*50)
+print(f"  N₂O Flux:    {flux_n2o:.5f} µmol m⁻² s⁻¹")
+print("="*50)
 ```
-</details>
 
-Brilliant! Now you successfuly turn the raw gas concentration data into gas fulx!
+🎉 **Congratulations!** You've successfully converted raw gas concentration data into a standardized flux value!
 
-<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+---
 
+### 3.6 Challenge: Making the Function More Robust
+
+<div style="background-color: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 5px; border-left: 4px solid #ffc107;">
 {% capture exercise %}
-### Challenge
-Our current calculate_flux function works well, but it has a hidden weakness. It assumes the units of the inputs are correct. For example, it blindly assumes the temp_k argument is already in Kelvin. What if a user accidentally passes in a temperature in Celsius? The function would run without an error but produce a wildly incorrect result.
-Code that relies on such hidden assumptions is sometimes called "hard-coded." A much better practice is to write more flexible code that can handle different situations or at least warn the user when something is wrong.
+### Challenge Exercise
 
-**Task**: upgrade the calculate_flux function to be more robust. It should:
-1. Add Unit Checks: Check the input values to make a reasonable guess about their units.
-2. Perform Automatic Unit Conversion: If it detects a value in a common but incorrect unit (like Celsius for temperature), it should automatically convert it to the required unit (Kelvin).
-3. Raise Errors: If a value is completely outside a plausible range, it should stop and raise an error with a helpful message.
+Our `calculate_flux` function works, but it has a hidden weakness: it assumes the user provides inputs in the correct units. What if someone accidentally passes temperature in Celsius instead of Kelvin? The function would run without error but produce **wildly incorrect results**.
 
-**Tip**: You can determine units by checking the physical range of a variable. For example, for a terrestrial field measurement, if a temperature value is between -50 and 50, it's almost certainly Celsius. If it's between 223 and 323, it's likely already in Kelvin.
+**Your Task:** Upgrade the function to be more robust by:
+
+1. **Detecting units** based on plausible value ranges
+2. **Auto-converting** common unit mistakes
+3. **Raising errors** for implausible values
+
+**Tips for detecting units:**
+
+| Variable | If value is in range... | It's probably... |
+|----------|------------------------|------------------|
+| Temperature | -50 to 60 | Celsius |
+| Temperature | 220 to 330 | Kelvin |
+| Pressure | 800 to 1100 | hPa (hectopascals) |
+| Pressure | 80,000 to 110,000 | Pa (pascals) |
+| Volume | 1 to 1000 | Liters |
+| Volume | 0.001 to 1 | m³ |
+| Area | 100 to 10,000 | cm² |
+| Area | 0.01 to 1 | m² |
 
 <details markdown="1">
-<summary>Solution!</summary>
-
+<summary>Click here for the solution!</summary>
 
 ```python
-
-# Define key physical constants
 R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
 
-def calculate_flux(slope_ppb_s, temperature, pressure, volume, area):
+def calculate_flux_robust(slope_ppb_s, temperature, pressure, volume, area):
     """
-    Calculates N2O flux with extensive unit checks and auto-conversion for all inputs.
+    Calculates gas flux with automatic unit detection and conversion.
 
     Parameters:
-    - slope_ppb_s (float): Rate of change in ppb/s.
-    - temperature (float): Temperature, assumed to be in Celsius or Kelvin.
-    - pressure (float): Pressure, assumed to be in Pascals (Pa) or hectopascals (hPa).
-    - volume (float): Chamber volume, assumed to be in cubic meters (m³) or Liters (L).
-    - area (float): Chamber area, assumed to be in square meters (m²) or square cm (cm²).
-    """
-    # --- 1. Input Validation and Unit Conversion ---
+    - slope_ppb_s (float): Rate of change in ppb/s
+    - temperature (float): Temperature in Celsius or Kelvin (auto-detected)
+    - pressure (float): Pressure in Pa or hPa (auto-detected)
+    - volume (float): Chamber volume in m³ or Liters (auto-detected)
+    - area (float): Chamber area in m² or cm² (auto-detected)
     
-    # Check Temperature (Celsius vs. Kelvin)
-    if -50 <= temperature <= 50:
-        print(f"Note: Temperature ({temperature}) detected as Celsius. Converting to Kelvin.")
+    Returns:
+    - float: Flux in µmol m⁻² s⁻¹
+    """
+    
+    # --- Temperature Check ---
+    if -50 <= temperature <= 60:
+        print(f"  [Auto-convert] Temperature {temperature} detected as °C → converting to K")
         temp_k = temperature + 273.15
-    elif 223 <= temperature <= 323:
-        temp_k = temperature
+    elif 220 <= temperature <= 330:
+        temp_k = temperature  # Already in Kelvin
     else:
-        raise ValueError(f"Temperature value ({temperature}) is outside a plausible range.")
+        raise ValueError(
+            f"Temperature ({temperature}) outside plausible range. "
+            f"Expected: -50 to 60 (°C) or 220 to 330 (K)"
+        )
 
-    # Check Pressure (Pascals vs. hPa)
+    # --- Pressure Check ---
     if 800 <= pressure <= 1100:
-        print(f"Note: Pressure ({pressure}) detected as hPa/mbar. Converting to Pascals.")
+        print(f"  [Auto-convert] Pressure {pressure} detected as hPa → converting to Pa")
         pressure_pa = pressure * 100
     elif 80000 <= pressure <= 110000:
-        pressure_pa = pressure
+        pressure_pa = pressure  # Already in Pa
     else:
-        raise ValueError(f"Pressure value ({pressure}) is outside a plausible range.")
+        raise ValueError(
+            f"Pressure ({pressure}) outside plausible range. "
+            f"Expected: 800 to 1100 (hPa) or 80000 to 110000 (Pa)"
+        )
         
-    # Check Volume (m³ vs. Liters)
-    if 10000 <= volume <= 2000000
-        print(f"Note: Volume ({volume}) detected as cm³. Converting to m³.")
-        volume_m3 = volume / 1e6
-    elif 10 <= volume <= 2000: # Plausible range for Liters
-        print(f"Note: Volume ({volume}) detected as Liters. Converting to m³.")
+    # --- Volume Check ---
+    if 1 <= volume <= 1000:
+        print(f"  [Auto-convert] Volume {volume} detected as Liters → converting to m³")
         volume_m3 = volume / 1000.0
-    elif 0.01 <= volume <= 2: # Plausible range for m³
-        volume_m3 = volume
+    elif 0.001 <= volume <= 1:
+        volume_m3 = volume  # Already in m³
     else:
-        raise ValueError(f"Volume value ({volume}) is outside a plausible range for m³ or Liters.")
+        raise ValueError(
+            f"Volume ({volume}) outside plausible range. "
+            f"Expected: 1 to 1000 (L) or 0.001 to 1 (m³)"
+        )
 
-    # Check Area (m² vs. cm²)
-    if 100 <= area <= 20000: # Plausible range for cm²
-        print(f"Note: Area ({area}) detected as cm². Converting to m².")
+    # --- Area Check ---
+    if 100 <= area <= 10000:
+        print(f"  [Auto-convert] Area {area} detected as cm² → converting to m²")
         area_m2 = area / 10000.0
-    elif 1 <= area <= 200:  # Plausible range for dm²
-        area_m2 = area / 100.0
-        print(f"Note: Area ({area}) detected as dm². Converting to m².")
-    elif 0.01 <= area <= 2: # Plausible range for m²
-        area_m2 = area
+    elif 0.01 <= area <= 1:
+        area_m2 = area  # Already in m²
     else:
-        raise ValueError(f"Area value ({area}) is outside a plausible range for m², dm² or cm².")
+        raise ValueError(
+            f"Area ({area}) outside plausible range. "
+            f"Expected: 100 to 10000 (cm²) or 0.01 to 1 (m²)"
+        )
 
-    # --- 2. Core Calculation ---
-    v_over_a = volume_m3 / area_m2
-    ppm_per_second = slope_ppb_s / 1000.0
-    molar_density = pressure_pa / (R * temp_k)
-    flux = ppm_per_second * molar_density * v_over_a * 1e6
+    # --- Core Calculation ---
+    slope_ppm_s = slope_ppb_s / 1000.0
+    gas_moles = (pressure_pa * volume_m3) / (R * temp_k)
+    flux = slope_ppm_s * gas_moles / area_m2 * 1e6
     
     return flux
 ```
-**Info**: Python ([raise keywords](https://www.geeksforgeeks.org/python/python-raise-keyword/)) is used to raise exceptions or errors. The raise keyword raises an error and stops the control flow of the program. It is used to bring up the current exception in an exception handler (an exception handler indicates the error type) so that it can be handled further up the call stack. 
 
-The basic way to raise an exception is 
+**Example usage:**
+
 ```python
-raise Exception ('...') # In here, Exception is an exception handler (it is actually a function), which indicate a general exception. It takes a string used to reminder                            # users what errors happen in here and the potential reasons. 
+# This will auto-convert units and print messages
+flux = calculate_flux_robust(
+    slope_ppb_s=0.05,
+    temperature=25,      # Celsius - will be converted
+    pressure=1013,       # hPa - will be converted  
+    volume=12.6,         # Liters - will be converted
+    area=1257            # cm² - will be converted
+)
+print(f"\nFlux: {flux:.5f} µmol m⁻² s⁻¹")
 ```
 
-In the 'solution', we used the handler ValueError to indicate the input value is outside a plausible range, and pass a string showing to users to further explain the error.
 </details>
+
+> **Info: Python's `raise` Keyword**
+> 
+> The `raise` keyword is used to trigger an exception (error) when something goes wrong:
+> 
+> ```python
+> raise ValueError("Your error message here")
+> ```
+> 
+> Common exception types:
+> - `ValueError`: Input has wrong value (but correct type)
+> - `TypeError`: Input has wrong type
+> - `RuntimeError`: General runtime error
+>
+> **Resources:** [Python raise keyword (GeeksforGeeks)](https://www.geeksforgeeks.org/python-raise-keyword/)
 
 {% endcapture %}
 
