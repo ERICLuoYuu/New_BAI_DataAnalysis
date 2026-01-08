@@ -576,25 +576,10 @@ In this section, we will:
 3. Apply a quantile filter to remove outliers
 4. Understand the patterns in our cleaned data
 
----
 
 ### 2.1 Creating a Reusable Plotting Function with Plotly
 
-For visualization, we'll use **Plotly**, a powerful library for creating interactive plots. Unlike static plots from Matplotlib, Plotly allows you to zoom, pan, and hover over data points—perfect for inspecting time-series data.
-
-> **Info: Why Plotly?**
-> 
-> Plotly creates interactive HTML-based visualizations. Key advantages:
-> - **Zoom & Pan**: Explore specific time periods without replotting
-> - **Hover info**: See exact values by hovering over points
-> - **Export**: Save plots as images or interactive HTML files
->
-> **Resources:**
-> - [Plotly Python Documentation](https://plotly.com/python/)
-> - [Plotly Express Quick Start](https://plotly.com/python/plotly-express/)
-> - [Time Series with Plotly](https://plotly.com/python/time-series/)
-
-Just as we did with data loading, we'll be plotting our time-series data multiple times. To make this efficient and keep our plots looking consistent, let's create a dedicated function.
+For visualization, we'll use **Plotly**, a powerful library for creating interactive plots. Unlike static plots from Matplotlib, Plotly allows you to zoom, pan, and hover over data points—perfect for inspecting time-series data. Just as we did with data loading, we'll be plotting our time-series data multiple times. To make this efficient and keep our plots looking consistent, let's create a dedicated function.
 
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
@@ -754,7 +739,7 @@ The approach:
 > - [Pandas quantile() documentation](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.quantile.html)
 > - [Understanding Percentiles (Khan Academy)](https://www.khanacademy.org/math/statistics-probability/summarizing-quantitative-data/percentile-rankings/v/calculating-percentile)
 
-#### Applying the Filter
+### Applying the Filter
 
 ```python
 # Calculate the 10th and 90th percentiles
@@ -801,8 +786,6 @@ This looks much better! The noise is gone, and a clear, meaningful pattern has e
 
 The filtered data reveals a repeating pattern characteristic of the **static chamber method**. Let's break down what we're seeing:
 
-![Chamber Pattern Explanation](/assets/images/python/5/chamber_pattern.png)
-
 | Phase | What's Happening | What You See in the Plot |
 |-------|------------------|--------------------------|
 | **1. Baseline** | Chamber is open, sensor measures ambient air | Long, flat periods at ~background concentration |
@@ -810,7 +793,7 @@ The filtered data reveals a repeating pattern characteristic of the **static cha
 | **3. Release** | Chamber lifted, gases escape | Sharp vertical drop back to baseline |
 | **4. Leveling off** | (If chamber left too long) Soil-air gradient decreases | Rate of increase slows, curve flattens |
 
-#### The Critical Insight: Linear Increase
+### The Critical Insight: Linear Increase
 
 The **rate of concentration increase** during the accumulation phase is what we use to calculate flux. Mathematically:
 
@@ -821,7 +804,7 @@ Where:
 - $t$ = time
 - $\frac{dC}{dt}$ = rate of change (slope of the linear portion)
 
-> **⚠️ Important: Use Only the Linear Portion**
+> ** Important: Use Only the Linear Portion**
 > 
 > If a chamber is left on the ground too long, gas buildup inside the chamber reduces the concentration gradient between soil and chamber air. This causes the accumulation rate to slow down ("leveling off").
 > 
@@ -868,21 +851,6 @@ plot_time_series(
     mode='markers'
 )
 ```
-
----
-
-### Summary
-
-In this section, we learned to:
-
-| Step | Purpose |
-|------|---------|
-| Create `plot_time_series()` | Reusable function for interactive visualization |
-| Visualize raw data | Identify noise, outliers, and sensor artifacts |
-| Apply quantile filter | Remove physically impossible values |
-| Understand chamber patterns | Recognize baseline, accumulation, and release phases |
-
-**Key takeaway:** The slope of the linear concentration increase ($\frac{dC}{dt}$) during chamber closure is the foundation of flux calculation. In the next section, we'll learn how to extract these measurement windows and calculate the actual flux values.
 
 ## 3. Calculating flux for a single measurement
 After loading and filtering our raw data and getting an overview of the patterns, it's time to calculate the fluxes. Excited?
