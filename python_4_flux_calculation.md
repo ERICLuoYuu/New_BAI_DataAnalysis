@@ -1365,7 +1365,7 @@ print(f"  N₂O Flux:    {flux_n2o:.5f} µmol m⁻² s⁻¹")
 print("="*50)
 ```
 
-🎉 **Congratulations!** You've successfully converted raw gas concentration data into a standardized flux value!
+**Congratulations!** You've successfully converted raw gas concentration data into a standardized flux value!
 
 ---
 
