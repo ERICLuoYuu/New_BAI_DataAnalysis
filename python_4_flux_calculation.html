@@ -7,7 +7,7 @@ Timezone:	Europe/Paris
 <span class="kn">import</span> <span class="nn">io</span>
 </code></pre></div></div> <p>Our strategy will be to read the file line-by-line, find the start of the data, and then pass only those lines to pandas.</p> <h3 id="11-loading-no-data"> <a href="#11-loading-no-data" class="anchor-heading" aria-labelledby="11-loading-no-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1.1 Loading N₂O Data </h3> <p>The analyzer produces tab-separated files with a metadata block at the top. The data section is marked by a line starting with DATAH. Our strategy is to read the file line-by-line, find the DATAH marker, and pass only the data lines to pandas.</p> <h3 id="reading-and-parsing-the-file"> <a href="#reading-and-parsing-the-file" class="anchor-heading" aria-labelledby="reading-and-parsing-the-file"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Reading and parsing the file </h3> <p>First, we read the entire file into a single string, and then split that string into a list of individual lines. This gives us the flexibility to find our data “landmarks.”</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="c1"># Read in raw data as a string
-</span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">"./BAI_StudyProject_LuentenerWald/raw_data/TG20-01072-2025-08-15T110000.data.txt"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">"./BAI_StudyProject_LuentenerWald/raw_data/N2O/TG20-01072-2025-08-15T110000.data.txt"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">file_content</span> <span class="o">=</span> <span class="n">f</span><span class="p">.</span><span class="n">read</span><span class="p">()</span>
 
 <span class="c1"># Split the string into a list of lines. 
@@ -79,11 +79,11 @@ Timezone:	Europe/Paris
 
     <span class="k">print</span><span class="p">(</span><span class="s">"N2O data loaded and cleaned successfully."</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">df_n2o</span>
-</code></pre></div> </div> </details> </div> </div> <h3 id="12-loading-ch-and-co-data"> <a href="#12-loading-ch-and-co-data" class="anchor-heading" aria-labelledby="12-loading-ch-and-co-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1.2 Loading CH₄ and CO₂ Data </h3> <p>The GGA analyzer produces comma-separated files with a different structure:</p> <ul> <li><strong>Line 1:</strong> Instrument metadata (version, serial number, etc.)</li> <li><strong>Line 2:</strong> Column headers</li> <li><strong>Lines 3+:</strong> Measurement data</li> </ul> <p>Here’s an example of the first few lines:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>VC:2f90039 BD:Jan 16 2014 SN:
+</code></pre></div> </div> </details> </div> </div> <h3 id="12-loading-ch-and-co-data"> <a href="#12-loading-ch-and-co-data" class="anchor-heading" aria-labelledby="12-loading-ch-and-co-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1.2 Loading CH₄ and CO₂ Data </h3> <p>The GGA analyzer produces comma-separated files with a different structure: The first line includes instrument metadata (version, serial number, etc.), The second are column headers, Lines 3+ hold measurement data.</p> <p>Here’s an example of the first few lines:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>VC:2f90039 BD:Jan 16 2014 SN:
                      Time,      [CH4]_ppm,   [CH4]_ppm_sd,      [H2O]_ppm, ...
   08/15/2025 11:00:03.747,   2.080375e+00,   0.000000e+00,   1.103072e+03, ...
-</code></pre></div></div> <p>However, there’s a complication: some GGA files contain extra non-data content at the end (such as digital signatures or log messages). We need to filter these out. Let’s build our loader step by step.</p> <h3 id="read-the-csv-file"> <a href="#read-the-csv-file" class="anchor-heading" aria-labelledby="read-the-csv-file"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Read the CSV File </h3> <p>First, we read the file with <code class="language-plaintext highlighter-rouge">pd.read_csv()</code>, skipping the first metadata line:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df_gga</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">read_csv</span><span class="p">(</span>
-    <span class="s">"./BAI_StudyProject_LuentenerWald/raw_data/gga_2025-08-15_f0000.txt"</span><span class="p">,</span>
+</code></pre></div></div> <p>However, GGA files contain extra non-data content at the end (such as digital signatures or log messages). We need to filter these out. Let’s build our loader step by step.</p> <h3 id="read-the-csv-file"> <a href="#read-the-csv-file" class="anchor-heading" aria-labelledby="read-the-csv-file"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Read the CSV File </h3> <p>First, we read the file with <code class="language-plaintext highlighter-rouge">pd.read_csv()</code>, skipping the first metadata line:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df_gga</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">read_csv</span><span class="p">(</span>
+    <span class="s">"./BAI_StudyProject_LuentenerWald/raw_data/GGA/gga_2025-08-15_f0000.txt"</span><span class="p">,</span>
     <span class="n">skiprows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>            <span class="c1"># Skip instrument metadata header (line 1)
 </span>    <span class="n">skipinitialspace</span><span class="o">=</span><span class="bp">True</span>  <span class="c1"># Handle leading whitespace in columns
 </span><span class="p">)</span>
@@ -118,6 +118,7 @@ jA0EAwMC1o7j8zNG6eRgye1CgI1h0/yQoOa8fycg+...
 'jA0EAwMC1o7j8zNG6eRgye1C      ' → False
 'nan                           ' → False
 </code></pre></div></div> <p>Now we can use this pattern to filter our DataFrame:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Create a boolean mask: True for valid rows, False for invalid
+# As regular expression can only be applied on string, we need to make sure timestamp is in string format
 </span><span class="n">valid_mask</span> <span class="o">=</span> <span class="n">df_gga</span><span class="p">[</span><span class="s">'Time'</span><span class="p">].</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">).</span><span class="nb">str</span><span class="p">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s">'^\s*\d{2}/\d{2}/\d{4}'</span><span class="p">)</span>
 
 <span class="c1"># Count how many rows we're keeping vs. dropping
@@ -169,7 +170,7 @@ jA0EAwMC1o7j8zNG6eRgye1CgI1h0/yQoOa8fycg+...
     <span class="n">df_gga</span> <span class="o">=</span> <span class="n">df_gga</span><span class="p">.</span><span class="n">set_index</span><span class="p">(</span><span class="s">'Timestamp'</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">df_gga</span>
-</code></pre></div></div> <p>Let’s test it:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df_gga</span> <span class="o">=</span> <span class="n">load_gga_data</span><span class="p">(</span><span class="s">"./BAI_StudyProject_LuentenerWald/raw_data/gga_2025-08-15_f0000.txt"</span><span class="p">)</span>
+</code></pre></div></div> <p>Let’s test it:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df_gga</span> <span class="o">=</span> <span class="n">load_gga_data</span><span class="p">(</span><span class="s">"./BAI_StudyProject_LuentenerWald/raw_data/GGA/gga_2025-08-15_f0000.txt"</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Loaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">df_gga</span><span class="p">)</span><span class="si">:</span><span class="p">,</span><span class="si">}</span><span class="s"> rows"</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Time range: </span><span class="si">{</span><span class="n">df_gga</span><span class="p">.</span><span class="n">index</span><span class="p">.</span><span class="nb">min</span><span class="p">()</span><span class="si">}</span><span class="s"> to </span><span class="si">{</span><span class="n">df_gga</span><span class="p">.</span><span class="n">index</span><span class="p">.</span><span class="nb">max</span><span class="p">()</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
 <span class="n">df_gga</span><span class="p">.</span><span class="n">head</span><span class="p">()</span>
@@ -177,14 +178,14 @@ jA0EAwMC1o7j8zNG6eRgye1CgI1h0/yQoOa8fycg+...
 # Make sure the file paths are complete and correct.
 </span><span class="n">base_path</span> <span class="o">=</span> <span class="s">"./BAI_StudyProject_LuentenerWald/raw_data/"</span>
 <span class="n">n2o_files</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s">'TG20-01072-2025-08-15T110000.data.txt'</span><span class="p">,</span>
-    <span class="s">'TG20-01072-2025-08-26T093000.data.txt'</span>
+    <span class="s">'N2O/TG20-01072-2025-08-15T110000.data.txt'</span><span class="p">,</span>
+    <span class="s">'N2O/TG20-01072-2025-08-26T093000.data.txt'</span>
 <span class="p">]</span>
 
 <span class="n">gga_files</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s">'gga_2025-08-15_f0000.txt'</span><span class="p">,</span>
-    <span class="s">'gga_2025-08-06_f0000.txt'</span><span class="p">,</span>
-    <span class="s">'gga_2025-08-26_f0000.txt'</span>
+    <span class="s">'GGA/gga_2025-08-15_f0000.txt'</span><span class="p">,</span>
+    <span class="s">'GGA/gga_2025-08-06_f0000.txt'</span><span class="p">,</span>
+    <span class="s">'GGA/gga_2025-08-26_f0000.txt'</span>
 <span class="p">]</span>
 
 <span class="c1"># Create the full file paths
@@ -210,7 +211,7 @@ jA0EAwMC1o7j8zNG6eRgye1CgI1h0/yQoOa8fycg+...
 </code></pre></div></div> <p>The loop above is clear and correct. However, a more concise way to write this in Python is with a list comprehension. It achieves the exact same result in a single, readable line:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">n2o_data_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">load_n2o_data</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">n2o_full_file_paths</span><span class="p">]</span>
 <span class="n">gga_data_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">load_gga_data</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">gga_full_file_paths</span><span class="p">]</span>
 </code></pre></div></div> <p>For our flux calculations to be accurate, we need more than just gas concentrations. The Ideal Gas Law, which is the basis of the calculation, requires the temperature and air pressure at the time of each measurement. We will use the same workflow as before: load each file and then combine them.</p> <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;"> <div class="notice--primary"> <h3 id="exercise"> <a href="#exercise" class="anchor-heading" aria-labelledby="exercise"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Exercise </h3> <p>You have two Excel files containing air temperature. Create lists of the file paths for the temperature data. Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!</p> <details> <summary>Click here for the solution!</summary> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># the base path is the same as before
-</span><span class="n">base_path</span> <span class="o">=</span> <span class="s">"./BAI_StudyProject_LuentenerWald/raw_data/"</span>
+</span><span class="n">base_path</span> <span class="o">=</span> <span class="s">"./BAI_StudyProject_LuentenerWald/raw_data/Ta"</span>
 
 <span class="c1"># --- Load Air Temperature Data ---
 </span><span class="n">file_names_Ta</span> <span class="o">=</span> <span class="p">[</span>
