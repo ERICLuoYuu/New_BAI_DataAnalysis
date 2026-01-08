@@ -72,7 +72,7 @@ So, how do we make pandas read from our list? We use io.StringIO to trick pandas
 # Join our data lines back into a single string, separated by newlines
 data_string = '\n'.join(lines[data_start_index:])
 # Read the data string into a DataFrame
-df_raw = pd.read_csv(
+df_n2o = pd.read_csv(
     io.StringIO(data_string),  # Treat our string as a file
     sep='\t',                  # Tell pandas the data is separated by tabs
     header=None,               # We are providing the headers ourselves, so there isn't one in the data
@@ -89,17 +89,17 @@ Set this new Timestamp as the DataFrame's index, which makes plotting and select
 
 ```python
 # Drop the first column which is just the 'DATAH' label
-if 'DATAH' in df_raw.columns:
-    df_raw = df_raw.drop(columns=['DATAH'])
+if 'DATAH' in df_n2o.columns:
+    df_n2o = df_n2o.drop(columns=['DATAH'])
 
 # Combine 'DATE' and 'TIME' into a proper Timestamp and set it as the index
-if 'DATE' in df_raw.columns and 'TIME' in df_raw.columns:
-    df_raw['Timestamp'] = pd.to_datetime(df_raw['DATE'] + ' ' + df_raw['TIME'])
-    df_raw = df_raw.drop(columns=['DATE', 'TIME'])
-    df_raw = df_raw.set_index('Timestamp')
+if 'DATE' in df_n2o.columns and 'TIME' in df_n2o.columns:
+    df_n2o['Timestamp'] = pd.to_datetime(df_n2o['DATE'] + ' ' + df_n2o['TIME'])
+    df_n2o = df_n2o.drop(columns=['DATE', 'TIME'])
+    df_n2o = df_n2o.set_index('Timestamp')
 
 print("Data loaded and formatted successfully!")
-df_raw.head()
+print(df_n2o.head())
 ```
 Great! Now, we have successfully read in and formatted our raw data.
 However, think about our field campaigns. We went out several times and generate a new data file for each trip. If we wanted to analyze all of them, we would have to copy and paste our loading code multiple times.
@@ -135,7 +135,7 @@ def load_n2o_data(filepath: str) -> pd.DataFrame:
     data_start_index = header_index + 2
     headers = lines[header_index].split('\t')
 
-    df_raw = pd.read_csv(
+    df_n2o = pd.read_csv(
         io.StringIO('\n'.join(lines[data_start_index:])),
         sep='\t',
         header=None,
@@ -143,16 +143,16 @@ def load_n2o_data(filepath: str) -> pd.DataFrame:
         na_values='nan'
     )
 
-    if 'DATAH' in df_raw.columns:
-        df_raw = df_raw.drop(columns=['DATAH'])
+    if 'DATAH' in df_n2o.columns:
+        df_n2o = df_n2o.drop(columns=['DATAH'])
 
-    if 'DATE' in df_raw.columns and 'TIME' in df_raw.columns:
-        df_raw['Timestamp'] = pd.to_datetime(df_raw['DATE'] + ' ' + df_raw['TIME'])
-        df_raw = df_raw.drop(columns=['DATE', 'TIME'])
-        df_raw = df_raw.set_index('Timestamp')
+    if 'DATE' in df_n2o.columns and 'TIME' in df_n2o.columns:
+        df_n2o['Timestamp'] = pd.to_datetime(df_n2o['DATE'] + ' ' + df_n2o['TIME'])
+        df_n2o = df_n2o.drop(columns=['DATE', 'TIME'])
+        df_n2o = df_n2o.set_index('Timestamp')
 
     print("N2O data loaded and cleaned successfully.")
-    return df_raw
+    return df_n2o
 ```
 </details>
 {% endcapture %}
@@ -184,17 +184,17 @@ However, there's a complication: some GGA files contain extra non-data content a
 First, we read the file with `pd.read_csv()`, skipping the first metadata line:
 
 ```python
-df = pd.read_csv(
-    "./raw_data/gga_2025-08-15_f0000.txt",
+df_gga = pd.read_csv(
+    "./BAI_StudyProject_LuentenerWald/raw_data/gga_2025-08-15_f0000.txt",
     skiprows=1,            # Skip instrument metadata header (line 1)
     skipinitialspace=True  # Handle leading whitespace in columns
 )
 
 # Clean column names (remove extra spaces)
-df.columns = df.columns.str.strip()
+df_gga.columns = df_gga.columns.str.strip()
 
-print(f"Rows loaded: {len(df)}")
-df.head()
+print(f"Rows loaded: {len(df_gga)}")
+df_gga.head()
 ```
 
 ### Identify Valid Data Rows
@@ -265,14 +265,14 @@ Now we can use this pattern to filter our DataFrame:
 
 ```python
 # Create a boolean mask: True for valid rows, False for invalid
-valid_mask = df['Time'].astype(str).str.match(r'^\s*\d{2}/\d{2}/\d{4}')
+valid_mask = df_gga['Time'].astype(str).str.match(r'^\s*\d{2}/\d{2}/\d{4}')
 
 # Count how many rows we're keeping vs. dropping
 print(f"Valid rows: {valid_mask.sum()}")
 print(f"Invalid rows (will be dropped): {(~valid_mask).sum()}")
 
 # Keep only valid rows
-df = df[valid_mask].copy()
+df_gga = df_gga[valid_mask].copy()
 ```
 
 ### Parse Timestamps
@@ -281,17 +281,19 @@ Now that we have only valid data, we convert the `Time` column to proper datetim
 
 ```python
 # Remove any leading/trailing whitespace and parse the timestamp
-df['Time'] = pd.to_datetime(
-    df['Time'].str.strip(), 
+df_gga['Time'] = pd.to_datetime(
+    df_gga['Time'].str.strip(), 
     format='%m/%d/%Y %H:%M:%S.%f'
 )
 
 # Rename to 'Timestamp' for consistency and set as index
-df = df.rename(columns={'Time': 'Timestamp'})
-df = df.set_index('Timestamp')
+df_gga = df_gga.rename(columns={'Time': 'Timestamp'})
+df_gga = df_gga.set_index('Timestamp')
 
-print(f"Time range: {df.index.min()} to {df.index.max()}")
-df.head()
+print(f"Time range: {df_gga.index.min()} to {df_gga.index.max()}")
+
+print("check the last five rows of the table to see if we really removed the non-data part")
+df_gga.tail()
 ```
 
 ### Putting It All Together
@@ -310,30 +312,30 @@ def load_gga_data(filepath: str) -> pd.DataFrame:
         DataFrame with DatetimeIndex
     """
     # Step 1: Read CSV, skip metadata header
-    df = pd.read_csv(
+    df_gga = pd.read_csv(
         filepath,
         skiprows=1,
         skipinitialspace=True
     )
-    df.columns = df.columns.str.strip()
+    df_gga.columns = df_gga.columns.str.strip()
     
     # Step 2: Filter to valid data rows using regex
     # Pattern: optional whitespace, then MM/DD/YYYY date format
-    valid_mask = df['Time'].astype(str).str.match(r'^\s*\d{2}/\d{2}/\d{4}')
-    df = df[valid_mask].copy()
+    valid_mask = df_gga['Time'].astype(str).str.match(r'^\s*\d{2}/\d{2}/\d{4}')
+    df_gga = df_gga[valid_mask].copy()
     
     # Step 3: Parse timestamps and set as index
-    df['Time'] = pd.to_datetime(df['Time'].str.strip(), format='%m/%d/%Y %H:%M:%S.%f')
-    df = df.rename(columns={'Time': 'Timestamp'})
-    df = df.set_index('Timestamp')
+    df_gga['Time'] = pd.to_datetime(df_gga['Time'].str.strip(), format='%m/%d/%Y %H:%M:%S.%f')
+    df_gga = df_gga.rename(columns={'Time': 'Timestamp'})
+    df_gga = df_gga.set_index('Timestamp')
     
-    return df
+    return df_gga
 ```
 
 Let's test it:
 
 ```python
-df_gga = load_gga_data("./raw_data/gga_2025-08-15_f0000.txt")
+df_gga = load_gga_data("./BAI_StudyProject_LuentenerWald/raw_data/gga_2025-08-15_f0000.txt")
 print(f"Loaded {len(df_gga):,} rows")
 print(f"Time range: {df_gga.index.min()} to {df_gga.index.max()}")
 df_gga.head()
@@ -351,12 +353,13 @@ First, we create a list of all the file paths we want to load. Then, we can loop
 base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
 n2o_files = [
     'TG20-01072-2025-08-15T110000.data.txt',
-    'TG20-01072-2025-08-16T110000.data.txt'
+    'TG20-01072-2025-08-26T093000.data.txt'
 ]
 
 gga_files = [
     'gga_2025-08-15_f0000.txt',
-    'gga_2025-08-16_f0000.txt'
+    'gga_2025-08-06_f0000.txt',
+    'gga_2025-08-26_f0000.txt'
 ]
 
 # Create the full file paths
@@ -406,13 +409,14 @@ Load each Excel file into a pandas DataFrame. Try using a list comprehension as 
 <summary>Click here for the solution!</summary>
     
 ```python
-# We assume the base path is the same as before
+# the base path is the same as before
 base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
 
 # --- Load Air Temperature Data ---
 file_names_Ta = [
-    'air_temperature_2025-08-15.xlsx', 
-    'air_temperature_2025-08-16.xlsx' 
+    'Haube 2025-08-06 15_24_26 CEST (Data CEST).xlsx', 
+    'Haube 2025-08-15 15_22_46 CEST (Data CEST).xlsx' ,
+    'Haube 2025-08-26 14_58_20 MESZ (Data MESZ).xlsx'
 ]
 full_file_paths_Ta = [base_path + name for name in file_names_Ta]
 ta_data_list = [pd.read_excel(path) for path in full_file_paths_Ta]
@@ -456,7 +460,7 @@ df_gga = df_gga.sort_index()
 
 # Concatenate and format temperature data
 df_Ta = pd.concat(ta_data_list)
-df_Ta['Timestamp'] = pd.to_datetime(df_Ta['Timestamp'])
+df_Ta['Timestamp'] = pd.to_datetime(df_Ta['Date-Time (CEST)'])
 df_Ta = df_Ta.set_index('Timestamp')
 df_Ta = df_Ta.sort_index()
 
@@ -516,7 +520,7 @@ df_Ta_reset = df_Ta.reset_index()
 # direction='backward' means: for each gas reading, find the most recent temperature
 df_merged = pd.merge_asof(
     df_gas_reset.sort_values('Timestamp'),
-    df_Ta_reset[['Timestamp', 'Ta_C']].sort_values('Timestamp'),
+    df_Ta_reset[['Timestamp', 'Temperature , °C']].sort_values('Timestamp'),
     on='Timestamp',
     direction='backward'
 )
@@ -536,10 +540,12 @@ print(f"Time range: {df_merged.index.min()} to {df_merged.index.max()}")
 print(f"\nColumns: {list(df_merged.columns)}")
 
 print("\n--- Sample rows with N2O data ---")
-display(df_merged.loc[df_merged['N2O_ppb'].notna()].head())
+
+from IPython.display import display
+display(df_merged.loc[df_merged['N2O_ppb'].notna()].head(100))
 
 print("\n--- Sample rows with CH4/CO2 data ---")
-display(df_merged.loc[df_merged['CH4_ppm'].notna()].head())
+display(df_merged.loc[df_merged['CH4_ppm'].notna()].head(100))
 ```
 
 The master DataFrame now contains:
