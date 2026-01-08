@@ -689,7 +689,6 @@ def plot_time_series(df, y_column, title, mode='lines'):
 </div>
 </div>
 
----
 
 ### 2.2 Visualizing the Raw Gas Data
 
@@ -711,7 +710,6 @@ The raw data is very noisy! There are several problems:
 
 These artifacts are common in field measurements and must be removed before we can calculate meaningful fluxes.
 
----
 
 ### 2.3 Filtering with a Quantile Filter
 
@@ -780,7 +778,6 @@ plot_time_series(
 
 This looks much better! The noise is gone, and a clear, meaningful pattern has emerged.
 
----
 
 ### 2.4 Understanding the Data Pattern
 
