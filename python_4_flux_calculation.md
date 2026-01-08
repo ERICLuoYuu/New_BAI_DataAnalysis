@@ -24,7 +24,13 @@ A metadata header: This block at the top contains useful information about the m
 The data block: This is the core data we need, with columns for date, time, and gas concentrations.
 Our first challenge is to programmatically read only the data block and ignore the metadata.
 
-![Metadata](/assets/images/python/5/Metadata.png)
+```
+Model:	LI-7820
+SN:	TG20-01072
+Software Version:	2.3.8
+Timestamp:	2025-08-15 11:00:00
+Timezone:	Europe/Paris
+```
 
 To do this, we'll need the pandas library for creating our DataFrame and the io library, we need to import them.
 ```python
@@ -230,6 +236,13 @@ Let's break it down piece by piece:
 | `\d{4}` | Exactly 4 digits | `2025` (year) |
 
 So the full pattern `^\s*\d{2}/\d{2}/\d{4}` means: "Starting from the beginning, allow optional spaces, then match a date in MM/DD/YYYY format."
+> **Learn More About Regular Expressions**
+> 
+> Regular expressions are a powerful tool worth learning. Here are some helpful resources:
+> - [RegExr](https://regexr.com/) — Interactive regex tester with real-time explanations
+> - [Regex101](https://regex101.com/) — Another great tester with detailed breakdown of patterns
+> - [Python re documentation](https://docs.python.org/3/library/re.html) — Official Python regex documentation
+> - [Regular Expressions Cheat Sheet](https://www.dataquest.io/blog/regex-cheatsheet/) — Quick reference for common patterns
 
 Let's see it in action:
 
