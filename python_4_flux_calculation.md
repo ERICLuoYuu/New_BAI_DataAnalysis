@@ -910,8 +910,7 @@ df_CO2_clean = df_CO2[
     (df_CO2['CO2_ppm'] >= co2_p03) & 
     (df_CO2['CO2_ppm'] <= co2_p97)
 ].copy()
-
-
+```
 
 ```python
 plot_time_series(
