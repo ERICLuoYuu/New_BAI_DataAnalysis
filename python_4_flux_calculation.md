@@ -566,17 +566,51 @@ The master DataFrame now contains:
 - `Ta_C`: Air temperature (matched to each gas reading)
 
   
-## 2. Visualizing and cleaning the data
-Now that we have a single, merged DataFrame, our next step is to inspect the data quality. Raw sensor data from the field is almost never perfect. Visualizing it is the best way to diagnose issues like noise, drift, or outliers before we attempt any calculations. For this, we'll use plotly, a powerful library for creating interactive plots.
+## 2. Visualizing and Cleaning the Data
+
+Now that we have a single, merged DataFrame, our next step is to inspect the data quality. Raw sensor data from the field is almost never perfect. Visualizing it is the best way to diagnose issues like noise, drift, or outliers before we attempt any calculations. 
+
+In this section, we will:
+1. Create a reusable plotting function with Plotly
+2. Visualize the raw gas data to identify problems
+3. Apply a quantile filter to remove outliers
+4. Understand the patterns in our cleaned data
+
+---
+
 ### 2.1 Creating a Reusable Plotting Function with Plotly
-Just as we did with data loading, we'll be plotting our time-series data multiple times. To make this efficient and keep our plots looking consistent, let's create a dedicated function. This function will take a DataFrame and some plot details as input and generate an interactive plot.
+
+For visualization, we'll use **Plotly**, a powerful library for creating interactive plots. Unlike static plots from Matplotlib, Plotly allows you to zoom, pan, and hover over data points—perfect for inspecting time-series data.
+
+> **Info: Why Plotly?**
+> 
+> Plotly creates interactive HTML-based visualizations. Key advantages:
+> - **Zoom & Pan**: Explore specific time periods without replotting
+> - **Hover info**: See exact values by hovering over points
+> - **Export**: Save plots as images or interactive HTML files
+>
+> **Resources:**
+> - [Plotly Python Documentation](https://plotly.com/python/)
+> - [Plotly Express Quick Start](https://plotly.com/python/plotly-express/)
+> - [Time Series with Plotly](https://plotly.com/python/time-series/)
+
+Just as we did with data loading, we'll be plotting our time-series data multiple times. To make this efficient and keep our plots looking consistent, let's create a dedicated function.
 
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
 ### Exercise
-The plooting function is partly providing in the following, now finish the function!
+The plotting function is partly provided below. Complete the function by filling in the `add_trace()` and `update_layout()` calls!
+
+**Hints:**
+- Use `go.Scatter()` for the trace with `x=`, `y=`, `mode=`, and `name=` parameters
+- The layout should include `title`, `xaxis_title`, `yaxis_title`, and `template`
 
 ```python
+import plotly.graph_objects as go
+import plotly.io as pio
+
+# This setting forces Plotly to open plots in your default web browser
+pio.renderers.default = "browser"
 
 def plot_time_series(df, y_column, title, mode='lines'):
     """
@@ -590,18 +624,17 @@ def plot_time_series(df, y_column, title, mode='lines'):
     """
     fig = go.Figure()
 
-    fig.add_trace(...)
+    fig.add_trace(...)  # TODO: Add a Scatter trace
 
-    # Update layout for a clean look
     fig.update_layout(
-        ...
+        ...  # TODO: Set title, axis labels, and template
     )
     
     fig.show()
 ```
 
 <details markdown="1">
-<summary>Here is the solution!</summary>
+<summary>Click here for the solution!</summary>
     
 ```python
 import plotly.graph_objects as go
@@ -625,27 +658,22 @@ def plot_time_series(df, y_column, title, mode='lines'):
     """
     # --- Input Validation and Auto-Correction ---
     
-    # It's good practice to work on a copy inside a function to avoid 
-    # changing the user's original DataFrame unexpectedly.
+    # Work on a copy to avoid changing the user's original DataFrame
     df_plot = df.copy()
 
     if not pd.api.types.is_datetime64_any_dtype(df_plot.index):
         print("Note: The DataFrame index is not a DatetimeIndex.")
-        # Attempt to fix the issue by finding a 'Timestamp' column
         if 'Timestamp' in df_plot.columns:
-            print("--> Found a 'Timestamp' column. Attempting to set it as the index.")
+            print("--> Found a 'Timestamp' column. Setting it as the index.")
             df_plot['Timestamp'] = pd.to_datetime(df_plot['Timestamp'])
-            # CRITICAL: You must re-assign the variable to save the change.
             df_plot = df_plot.set_index('Timestamp')
         else:
-            # If we can't fix it automatically, then we raise an error.
             raise TypeError(
-                "The DataFrame index is not a DatetimeIndex and a 'Timestamp' column was not found. "
-                "Please set a DatetimeIndex before plotting."
+                "The DataFrame index is not a DatetimeIndex and a 'Timestamp' "
+                "column was not found. Please set a DatetimeIndex before plotting."
             )
             
     # --- Plotting ---
-    # By this point, df_plot is guaranteed to have a valid DatetimeIndex.
     fig = go.Figure()
 
     fig.add_trace(go.Scatter(
@@ -659,7 +687,7 @@ def plot_time_series(df, y_column, title, mode='lines'):
     fig.update_layout(
         title=title, 
         xaxis_title='Time', 
-        yaxis_title=f'{y_column} Concentration (ppb)', 
+        yaxis_title=y_column, 
         template='plotly_white', 
         title_font=dict(size=24),
         xaxis=dict(tickfont=dict(size=14), title_font=dict(size=16)), 
@@ -667,7 +695,6 @@ def plot_time_series(df, y_column, title, mode='lines'):
     )
     
     fig.show()
-
 ```
 </details>
 {% endcapture %}
@@ -677,49 +704,185 @@ def plot_time_series(df, y_column, title, mode='lines'):
 </div>
 </div>
 
+---
+
 ### 2.2 Visualizing the Raw Gas Data
-Now, let's use our new function to look at the raw N₂O data from our combined file. You can zoom and pan on the plot to inspect the noisy areas.
+
+Now, let's use our new function to look at the raw N₂O data. The interactive plot allows you to zoom and pan to inspect noisy areas.
 
 ```python
-
-# Call our function to plot the raw 'N2O' column
-plot_time_series(df_final, y_column='N2O', title='Raw N2O Concentration Over Time')
-
+# Plot the raw 'N2O' column from our merged DataFrame
+plot_time_series(df_merged, y_column='N2O_ppb', title='Raw N₂O Concentration Over Time')
 ```
 
 ![raw data plotting](/assets/images/python/5/raw_data_plot.png)
 
-As you can see from the plot, the raw data is very noisy. There are several negative values and some extremely large spikes. These are physically impossible and are likely due to sensor errors or electrical interference. We cannot calculate meaningful fluxes from this data without cleaning it first.
+**What do we see?**
+
+The raw data is very noisy! There are several problems:
+- **Negative values**: Physically impossible for gas concentrations
+- **Extreme spikes**: Values far outside the expected range
+- **Sensor noise**: Random fluctuations due to electrical interference
+
+These artifacts are common in field measurements and must be removed before we can calculate meaningful fluxes.
+
+---
 
 ### 2.3 Filtering with a Quantile Filter
-To remove these outliers, we'll use a simple but effective quantile filter. This method is robust because the extreme values we want to remove have very little influence on the calculation of percentiles. We will calculate the 10th and 90th percentiles of the N₂O concentration and discard any data points that fall outside this range.
+
+To remove outliers, we'll use a **quantile filter**. This method calculates percentiles of the data and keeps only values within a specified range.
+
+#### Why Quantile Filtering?
+
+Quantile filtering is **robust to outliers**. Unlike methods based on mean and standard deviation, extreme values have very little influence on percentile calculations. This makes it ideal for sensor data with occasional spikes.
+
+The approach:
+1. Calculate the 10th percentile ($P_{10}$) and 90th percentile ($P_{90}$)
+2. Keep only data points where: $P_{10} \leq x \leq P_{90}$
+3. Discard everything else
+
+> **Info: What are Quantiles?**
+> 
+> A **quantile** divides your data into equal-sized groups. Common examples:
+> - **Median** (50th percentile): Half the data is below, half is above
+> - **Quartiles**: Divide data into 4 parts (25th, 50th, 75th percentiles)
+> - **Percentiles**: Divide data into 100 parts
+>
+> The 10th percentile means "10% of values are below this point."
+>
+> **Resources:**
+> - [Pandas quantile() documentation](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.quantile.html)
+> - [Understanding Percentiles (Khan Academy)](https://www.khanacademy.org/math/statistics-probability/summarizing-quantitative-data/percentile-rankings/v/calculating-percentile)
+
+#### Applying the Filter
 
 ```python
 # Calculate the 10th and 90th percentiles
-p_10 = df_final.N2O.quantile(0.10)
-p_90 = df_final.N2O.quantile(0.90)
+p_10 = df_merged['N2O_ppb'].quantile(0.10)
+p_90 = df_merged['N2O_ppb'].quantile(0.90)
 
-print(f"Filtering data to keep N2O concentrations between {p_10:.2f} and {p_90:.2f} ppb.")
+print(f"10th percentile: {p_10:.2f} ppb")
+print(f"90th percentile: {p_90:.2f} ppb")
+print(f"Keeping data in range [{p_10:.2f}, {p_90:.2f}]")
+```
 
-# Apply the filter to create a new, clean DataFrame
-# .copy() is used here to avoid a SettingWithCopyWarning from pandas
-df_filtered = df_final[(df_final.N2O >= p_10) & (df_final.N2O <= p_90)].copy()
+```python
+# Apply the filter to create a clean DataFrame
+# We use .copy() to avoid pandas SettingWithCopyWarning
+df_filtered = df_merged[
+    (df_merged['N2O_ppb'] >= p_10) & 
+    (df_merged['N2O_ppb'] <= p_90)
+].copy()
 
-# Visualize the filtered data using our function again, this time using 'markers'
-plot_time_series(df_filtered, y_column='N2O', title='Filtered N2O Concentration Over Time', mode='markers')
+print(f"\nRows before filtering: {len(df_merged):,}")
+print(f"Rows after filtering:  {len(df_filtered):,}")
+print(f"Rows removed:          {len(df_merged) - len(df_filtered):,} ({(1 - len(df_filtered)/len(df_merged))*100:.1f}%)")
+```
+
+Now let's visualize the filtered data:
+
+```python
+# Plot filtered data using markers to see individual points
+plot_time_series(
+    df_filtered, 
+    y_column='N2O_ppb', 
+    title='Filtered N₂O Concentration Over Time', 
+    mode='markers'
+)
 ```
 
 ![Filtered N2O](/assets/images/python/5/filtered_N2O.png)
 
-
 This looks much better! The noise is gone, and a clear, meaningful pattern has emerged.
 
+---
+
 ### 2.4 Understanding the Data Pattern
-The filtered data shows a repeating pattern which is the signature of the static chamber method:
-Baseline (Ambient Air): The long, relatively flat periods show the baseline N₂O concentration in the ambient air.
-Concentration Increase (Chamber Closed): The sections where the concentration rises steadily and linearly are the actual measurements. This occurs when the chamber is placed over the soil, trapping the gases being emitted. The rate of this increase is what we will use to calculate the flux.
-Sudden Drop (Chamber Opened): The sharp vertical drops occur when a measurement is finished, and the chamber is lifted from the ground, exposing the sensor to ambient air again.
-Leveling Off: If a chamber is left on the ground for too long, the gas concentration inside can build up, altering the pressure gradient between the soil and the chamber air. This can cause the rate of increase to slow down and "level off." For this reason, it's crucial to use only the initial, linear part of the increase for our flux calculation.
+
+The filtered data reveals a repeating pattern characteristic of the **static chamber method**. Let's break down what we're seeing:
+
+![Chamber Pattern Explanation](/assets/images/python/5/chamber_pattern.png)
+
+| Phase | What's Happening | What You See in the Plot |
+|-------|------------------|--------------------------|
+| **1. Baseline** | Chamber is open, sensor measures ambient air | Long, flat periods at ~background concentration |
+| **2. Accumulation** | Chamber closed over soil, gases accumulate | Steady, linear increase in concentration |
+| **3. Release** | Chamber lifted, gases escape | Sharp vertical drop back to baseline |
+| **4. Leveling off** | (If chamber left too long) Soil-air gradient decreases | Rate of increase slows, curve flattens |
+
+#### The Critical Insight: Linear Increase
+
+The **rate of concentration increase** during the accumulation phase is what we use to calculate flux. Mathematically:
+
+$$\text{Flux} \propto \frac{dC}{dt}$$
+
+Where:
+- $C$ = gas concentration inside the chamber
+- $t$ = time
+- $\frac{dC}{dt}$ = rate of change (slope of the linear portion)
+
+> **⚠️ Important: Use Only the Linear Portion**
+> 
+> If a chamber is left on the ground too long, gas buildup inside the chamber reduces the concentration gradient between soil and chamber air. This causes the accumulation rate to slow down ("leveling off").
+> 
+> For accurate flux calculations, we must identify and use **only the initial, linear part** of each accumulation period. We'll learn how to do this in the next section.
+
+---
+
+### 2.5 Applying the Same Process to CH₄ and CO₂
+
+The same visualization and filtering workflow applies to the GGA data. Let's clean the CH₄ and CO₂ measurements:
+
+```python
+# --- Filter CH4 data ---
+ch4_p10 = df_merged['CH4_ppm'].quantile(0.10)
+ch4_p90 = df_merged['CH4_ppm'].quantile(0.90)
+
+df_merged_clean = df_merged[
+    (df_merged['CH4_ppm'] >= ch4_p10) & 
+    (df_merged['CH4_ppm'] <= ch4_p90) |
+    df_merged['CH4_ppm'].isna()  # Keep rows where CH4 is NaN (N2O measurement periods)
+].copy()
+
+print(f"CH4 filter range: [{ch4_p10:.3f}, {ch4_p90:.3f}] ppm")
+
+# --- Filter CO2 data ---
+co2_p10 = df_merged['CO2_ppm'].quantile(0.10)
+co2_p90 = df_merged['CO2_ppm'].quantile(0.90)
+
+df_merged_clean = df_merged_clean[
+    (df_merged_clean['CO2_ppm'] >= co2_p10) & 
+    (df_merged_clean['CO2_ppm'] <= co2_p90) |
+    df_merged_clean['CO2_ppm'].isna()
+].copy()
+
+print(f"CO2 filter range: [{co2_p10:.1f}, {co2_p90:.1f}] ppm")
+```
+
+```python
+# Visualize the cleaned CH4 data
+plot_time_series(
+    df_merged_clean[df_merged_clean['CH4_ppm'].notna()], 
+    y_column='CH4_ppm', 
+    title='Filtered CH₄ Concentration Over Time', 
+    mode='markers'
+)
+```
+
+---
+
+### Summary
+
+In this section, we learned to:
+
+| Step | Purpose |
+|------|---------|
+| Create `plot_time_series()` | Reusable function for interactive visualization |
+| Visualize raw data | Identify noise, outliers, and sensor artifacts |
+| Apply quantile filter | Remove physically impossible values |
+| Understand chamber patterns | Recognize baseline, accumulation, and release phases |
+
+**Key takeaway:** The slope of the linear concentration increase ($\frac{dC}{dt}$) during chamber closure is the foundation of flux calculation. In the next section, we'll learn how to extract these measurement windows and calculate the actual flux values.
 
 ## 3. Calculating flux for a single measurement
 After loading and filtering our raw data and getting an overview of the patterns, it's time to calculate the fluxes. Excited?
