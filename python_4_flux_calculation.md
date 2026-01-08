@@ -349,7 +349,7 @@ Let's test it:
 df_gga = load_gga_data("./BAI_StudyProject_LuentenerWald/raw_data/GGA/gga_2025-08-15_f0000.txt")
 print(f"Loaded {len(df_gga):,} rows")
 print(f"Time range: {df_gga.index.min()} to {df_gga.index.max()}")
-df_gga.head()
+df_gga.tail()
 ```
 
 
@@ -421,7 +421,7 @@ Load each Excel file into a pandas DataFrame. Try using a list comprehension as 
     
 ```python
 # the base path is the same as before
-base_path = "./BAI_StudyProject_LuentenerWald/raw_data/Ta"
+base_path = "./BAI_StudyProject_LuentenerWald/raw_data/Ta/"
 
 # --- Load Air Temperature Data ---
 file_names_Ta = [
