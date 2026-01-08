@@ -48,7 +48,7 @@ First, we read the entire file into a single string, and then split that string 
 ```python
 
 # Read in raw data as a string
-with open("./BAI_StudyProject_LuentenerWald/raw_data/TG20-01072-2025-08-15T110000.data.txt") as f:
+with open("./BAI_StudyProject_LuentenerWald/raw_data/N2O/TG20-01072-2025-08-15T110000.data.txt") as f:
     file_content = f.read()
 
 # Split the string into a list of lines. 
@@ -170,10 +170,7 @@ def load_n2o_data(filepath: str) -> pd.DataFrame:
 
 ### 1.2 Loading CH₄ and CO₂ Data
 
-The GGA analyzer produces comma-separated files with a different structure:
-- **Line 1:** Instrument metadata (version, serial number, etc.)
-- **Line 2:** Column headers
-- **Lines 3+:** Measurement data
+The GGA analyzer produces comma-separated files with a different structure: The first line includes instrument metadata (version, serial number, etc.), The second are column headers, Lines 3+ hold measurement data.
 
 Here's an example of the first few lines:
 
@@ -183,7 +180,7 @@ VC:2f90039 BD:Jan 16 2014 SN:
   08/15/2025 11:00:03.747,   2.080375e+00,   0.000000e+00,   1.103072e+03, ...
 ```
 
-However, there's a complication: some GGA files contain extra non-data content at the end (such as digital signatures or log messages). We need to filter these out. Let's build our loader step by step.
+However, GGA files contain extra non-data content at the end (such as digital signatures or log messages). We need to filter these out. Let's build our loader step by step.
 
 ### Read the CSV File
 
@@ -191,7 +188,7 @@ First, we read the file with `pd.read_csv()`, skipping the first metadata line:
 
 ```python
 df_gga = pd.read_csv(
-    "./BAI_StudyProject_LuentenerWald/raw_data/gga_2025-08-15_f0000.txt",
+    "./BAI_StudyProject_LuentenerWald/raw_data/GGA/gga_2025-08-15_f0000.txt",
     skiprows=1,            # Skip instrument metadata header (line 1)
     skipinitialspace=True  # Handle leading whitespace in columns
 )
@@ -278,6 +275,7 @@ Now we can use this pattern to filter our DataFrame:
 
 ```python
 # Create a boolean mask: True for valid rows, False for invalid
+# As regular expression can only be applied on string, we need to make sure timestamp is in string format
 valid_mask = df_gga['Time'].astype(str).str.match(r'^\s*\d{2}/\d{2}/\d{4}')
 
 # Count how many rows we're keeping vs. dropping
@@ -348,7 +346,7 @@ def load_gga_data(filepath: str) -> pd.DataFrame:
 Let's test it:
 
 ```python
-df_gga = load_gga_data("./BAI_StudyProject_LuentenerWald/raw_data/gga_2025-08-15_f0000.txt")
+df_gga = load_gga_data("./BAI_StudyProject_LuentenerWald/raw_data/GGA/gga_2025-08-15_f0000.txt")
 print(f"Loaded {len(df_gga):,} rows")
 print(f"Time range: {df_gga.index.min()} to {df_gga.index.max()}")
 df_gga.head()
@@ -365,14 +363,14 @@ First, we create a list of all the file paths we want to load. Then, we can loop
 # Make sure the file paths are complete and correct.
 base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
 n2o_files = [
-    'TG20-01072-2025-08-15T110000.data.txt',
-    'TG20-01072-2025-08-26T093000.data.txt'
+    'N2O/TG20-01072-2025-08-15T110000.data.txt',
+    'N2O/TG20-01072-2025-08-26T093000.data.txt'
 ]
 
 gga_files = [
-    'gga_2025-08-15_f0000.txt',
-    'gga_2025-08-06_f0000.txt',
-    'gga_2025-08-26_f0000.txt'
+    'GGA/gga_2025-08-15_f0000.txt',
+    'GGA/gga_2025-08-06_f0000.txt',
+    'GGA/gga_2025-08-26_f0000.txt'
 ]
 
 # Create the full file paths
@@ -423,7 +421,7 @@ Load each Excel file into a pandas DataFrame. Try using a list comprehension as 
     
 ```python
 # the base path is the same as before
-base_path = "./BAI_StudyProject_LuentenerWald/raw_data/"
+base_path = "./BAI_StudyProject_LuentenerWald/raw_data/Ta"
 
 # --- Load Air Temperature Data ---
 file_names_Ta = [
