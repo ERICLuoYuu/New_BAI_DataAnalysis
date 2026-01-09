@@ -1748,7 +1748,7 @@ GAS_CONFIG = {
         'display_name': 'CO₂'
     },
     'CH4': {
-        'dataframe': df_merged[['CH4pm', 'Ta_C']].dropna(),     # Our CH4 DataFrame
+        'dataframe': df_merged[['CH4_ppm', 'Ta_C']].dropna(),     # Our CH4 DataFrame
         'column': 'CH4_ppm',
         'slope_unit': 'ppm',
         'display_name': 'CH₄'
