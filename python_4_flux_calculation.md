@@ -2056,28 +2056,29 @@ Now we're ready to build the main automation loop. This is the most complex part
 
 Here's the high-level workflow for processing **each measurement**:
 
-```
 flowchart TD
-    subgraph outer["🔄 OUTER LOOP: For each Plot"]
-        A[Get plot info & parse metadata]
-        subgraph inner["🔄 INNER LOOP: For each Measurement"]
-            B[1. Extract data for time window]
-            C[2. Visual inspection]
-            D[3. Refine time window]
-            E[4. Linear regression]
-            F{5. QC Check}
-            G[6. Calculate flux]
-            H[7. Store results]
-            
-            B --> C --> D --> E --> F
-            F -->|Pass| G --> H
-            F -->|Fail| H
+    subgraph OUTER["🔄 For each PLOT (6 plots)"]
+        subgraph INNER["🔄 For each MEASUREMENT"]
+            A[1. Extract Data] --> B[2. Visualize]
+            B --> C[3. Refine Window]
+            C --> D[4. Linear Regression]
+            D --> E{5. QC Check}
+            E -->|"✓ R² ≥ 0.7"| F[Calculate Flux]
+            E -->|"✗ R² < 0.7"| G[Mark Invalid]
+            F --> H[6. Store Results]
+            G --> H
         end
-        A --> inner
     end
     
-    outer --> I[Convert results to DataFrame]
-```
+    style A fill:#e1f5fe
+    style B fill:#e1f5fe
+    style C fill:#e1f5fe
+    style D fill:#fff3e0
+    style E fill:#fff9c4
+    style F fill:#c8e6c9
+    style G fill:#ffcdd2
+    style H fill:#e1f5fe
+
 
 This is a **nested loop** structure:
 - **Outer loop:** Goes through each plot (6 plots)
