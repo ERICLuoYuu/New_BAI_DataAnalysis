@@ -695,22 +695,23 @@ def plot_time_series(df, y_column, title, mode='lines'):
 Now, let's use our new function to look at the raw N₂O data. The interactive plot allows you to zoom and pan to inspect noisy areas.
 
 ```python
-# Plot the raw 'N2O' column from our merged DataFrame
-# 1. Ensure the index is sorted chronologically (crucial for time slicing)
-df_merged = df_merged.set_index('Timestamp')
+# 1. Ensure Timestamp is the index and sorted
+# Only set index if 'Timestamp' is currently a column
+if 'Timestamp' in df_merged.columns:
+    df_merged = df_merged.set_index('Timestamp')
+
 df_merged = df_merged.sort_index()
 
-# 2. slect where N2O has valid values.
-df_N2O = df_merged.loc[df_merged['N2O_ppb'].notna()].loc[:,['N2O_ppb']] 
+# 2. Select where N2O has valid values (Drop NaNs)
+df_N2O = df_merged[['N2O_ppb']].dropna() 
 
 # 3. Plot
 plot_time_series(
     df_N2O, 
     y_column='N2O_ppb', 
     title='N₂O Concentration',
-    mode = 'markers'
-
-)   
+    mode='markers'
+)
 ```
 
 ![raw data plotting](/assets/images/python/5/raw_data_plot.png)
@@ -754,34 +755,28 @@ The approach:
 ### Applying the Filter
 
 ```python
-# Calculate the 10th and 90th percentiles
-p_10 = df_merged['N2O_ppb'].quantile(0.10)
-p_90 = df_merged['N2O_ppb'].quantile(0.90)
-
-print(f"10th percentile: {p_10:.2f} ppb")
-print(f"90th percentile: {p_90:.2f} ppb")
-print(f"Keeping data in range [{p_10:.2f}, {p_90:.2f}]")
-```
-
-```python
-# Calculate the 10th and 90th percentiles
+# Calculate the 3rd and 97th percentiles
 p_3 = df_N2O['N2O_ppb'].quantile(0.03)
 p_97 = df_N2O['N2O_ppb'].quantile(0.97)
 
-print(f"10th percentile: {p_3:.2f} ppb")
-print(f"90th percentile: {p_97:.2f} ppb")
+print(f"3rd percentile:  {p_3:.2f} ppb")
+print(f"97th percentile: {p_97:.2f} ppb")
 print(f"Keeping data in range [{p_3:.2f}, {p_97:.2f}]")
 
-# Apply the filter to create a clean DataFrame
-# We use .copy() to avoid pandas SettingWithCopyWarning
+# Apply the filter
 df_filtered = df_N2O[
     (df_N2O['N2O_ppb'] >= p_3) & 
     (df_N2O['N2O_ppb'] <= p_97)
 ].copy()
 
-print(f"\nRows before filtering: {len(df_merged):,}")
-print(f"Rows after filtering:  {len(df_filtered):,}")
-print(f"Rows removed:          {len(df_merged) - len(df_filtered):,} ({(1 - len(df_filtered)/len(df_merged))*100:.1f}%)")
+# Calculate statistics based on the N2O dataframe, not the merged one
+n_raw = len(df_N2O)
+n_clean = len(df_filtered)
+n_removed = n_raw - n_clean
+
+print(f"\nValid rows before filtering: {n_raw:,}")
+print(f"Rows after filtering:        {n_clean:,}")
+print(f"Outliers removed:            {n_removed:,} ({(n_removed/n_raw)*100:.1f}%)")
 ```
 
 Now let's visualize the filtered data:
