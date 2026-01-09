@@ -2056,20 +2056,19 @@ Now we're ready to build the main automation loop. This is the most complex part
 
 Here's the high-level workflow for processing **each measurement**:
 
-```
+
 ┌─────────────────────────────────────────────────────────────┐
 │  For each PLOT in metadata:                                 │
-│    For each MEASUREMENT in that plot:                       │
-│      1. Look up gas configuration                           │
-│      2. Extract data for the time window                    │
-│      3. Show plot for visual inspection                     │
-│      4. Let user refine the time window                     │
-│      5. Perform linear regression                           │
-│      6. Check quality (R², p-value)                         │
-│      7. If passed: Calculate flux                           │
-│      8. Store all results                                   │
+│    For each MEASUREMENT in that plot:                       │                         │
+│      1. Extract data for the time window                    │
+│      2. Show plot for visual inspection                     │
+│      3. Let user refine the time window                     │
+│      4. Perform linear regression                           │
+│      5. Check quality (R², p-value)                         │
+│      6. If passed: Calculate flux                           │
+│      7. Store all results                                   │
 └─────────────────────────────────────────────────────────────┘
-```
+
 
 This is a **nested loop** structure:
 - **Outer loop:** Goes through each plot (6 plots)
