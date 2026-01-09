@@ -472,6 +472,8 @@ df_gga = df_gga.sort_index()
 # Concatenate and format temperature data
 df_Ta = pd.concat(ta_data_list)
 df_Ta['Timestamp'] = pd.to_datetime(df_Ta['Date-Time (CEST)'])
+# Rename temperature column
+df_Ta['Ta_C'] = df_Ta['Temperature , °C']
 df_Ta = df_Ta.set_index('Timestamp')
 df_Ta = df_Ta.sort_index()
 
@@ -531,7 +533,7 @@ df_Ta_reset = df_Ta.reset_index()
 # direction='backward' means: for each gas reading, find the most recent temperature
 df_merged = pd.merge_asof(
     df_gas_reset.sort_values('Timestamp'),
-    df_Ta_reset[['Timestamp', 'Temperature , °C']].sort_values('Timestamp'),
+    df_Ta_reset[['Timestamp', 'Ta_C']].sort_values('Timestamp'),
     on='Timestamp',
     direction='backward'
 )
@@ -694,8 +696,8 @@ if 'Timestamp' in df_merged.columns:
 
 df_merged = df_merged.sort_index()
 
-# 2. Select where N2O has valid values (Drop NaNs)
-df_N2O = df_merged[['N2O_ppb']].dropna() 
+# 2. Select where N2O has valid values (Drop NaNs), we also need the temperature column for flux calculation later on
+df_N2O = df_merged[['N2O_ppb', 'Ta_C']].dropna() 
 
 # 3. Plot
 plot_time_series(
