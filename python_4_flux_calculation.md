@@ -2056,7 +2056,7 @@ Now we're ready to build the main automation loop. This is the most complex part
 
 Here's the high-level workflow for processing **each measurement**:
 
-
+```
 flowchart TD
     subgraph outer["🔄 OUTER LOOP: For each Plot"]
         A[Get plot info & parse metadata]
@@ -2077,7 +2077,7 @@ flowchart TD
     end
     
     outer --> I[Convert results to DataFrame]
-
+```
 
 This is a **nested loop** structure:
 - **Outer loop:** Goes through each plot (6 plots)
