@@ -834,106 +834,504 @@ jA0EAwMC1o7j8zNG6eRgye1CgI1h0/yQoOa8fycg+...
 <span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"CO2 Flux: </span><span class="si">{</span><span class="n">flux_co2</span><span class="si">:</span><span class="p">.</span><span class="mi">4</span><span class="n">f</span><span class="si">}</span><span class="s"> µmol m⁻² s⁻¹"</span><span class="p">)</span>
 </code></pre></div> </div> </details> <blockquote> <p><strong>Info: Python’s <code class="language-plaintext highlighter-rouge">raise</code> Keyword</strong></p> <p>The <code class="language-plaintext highlighter-rouge">raise</code> keyword is used to trigger an exception (error) when something goes wrong:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">raise</span> <span class="nb">ValueError</span><span class="p">(</span><span class="s">"Your error message here"</span><span class="p">)</span>
-</code></pre></div> </div> <p>Common exception types:</p> <ul> <li><code class="language-plaintext highlighter-rouge">ValueError</code>: Input has wrong value (but correct type)</li> <li><code class="language-plaintext highlighter-rouge">TypeError</code>: Input has wrong type</li> <li><code class="language-plaintext highlighter-rouge">RuntimeError</code>: General runtime error</li> </ul> <p><strong>Resources:</strong> <a href="https://www.geeksforgeeks.org/python-raise-keyword/">Python raise keyword (GeeksforGeeks)</a></p> </blockquote> </div> </div> <h2 id="4-automating-gas-flux-calculation"> <a href="#4-automating-gas-flux-calculation" class="anchor-heading" aria-labelledby="4-automating-gas-flux-calculation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Automating gas flux calculation </h2> <h3 id="41-store-and-structure-measurement-info"> <a href="#41-store-and-structure-measurement-info" class="anchor-heading" aria-labelledby="41-store-and-structure-measurement-info"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 Store and structure measurement info </h3> <p>The first and crucial step of automation is to store the key information (metadata) for each measurement in a structured way that a program can loop through. For this, we will use a Python dictionary. The dictionary keys will be our data “columns” (e.g., ‘plot_id’, ‘land_use’), and the values will be lists containing the data for each plot. Now, there is an issue: we take multiple measurements at the same plot, perhaps on different days or at different times. How can we store this information efficiently? We can store the multiple start and end times for a single plot as a single string, with each timestamp separated by a semicolon (;). Of course, the order of the multiple starttime and endtime for a plot should match. By doing this, we can keep the metadata table concise and still tell our program to perform multiple calculations for that plot.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># --- Create Metadata ---
-</span><span class="n">measurement_info</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s">'plot_id'</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
-    <span class="s">'land_use'</span><span class="p">:</span> <span class="p">[</span><span class="s">'forest'</span><span class="p">,</span> <span class="s">'forest'</span><span class="p">],</span>
-    <span class="s">'start_time'</span><span class="p">:</span> <span class="p">[</span><span class="s">'2025-08-15 12:06:00; 2025-08-15 12:14:00'</span><span class="p">,</span> <span class="s">'2025-08-15 12:13:00'</span><span class="p">],</span>
-    <span class="s">'end_time'</span><span class="p">:</span> <span class="p">[</span><span class="s">'2025-08-15 12:09:00; 2025-08-15 12:17:00'</span><span class="p">,</span> <span class="s">'2025-08-15 12:18:30'</span><span class="p">],</span>
+</code></pre></div> </div> <p>Common exception types:</p> <ul> <li><code class="language-plaintext highlighter-rouge">ValueError</code>: Input has wrong value (but correct type)</li> <li><code class="language-plaintext highlighter-rouge">TypeError</code>: Input has wrong type</li> <li><code class="language-plaintext highlighter-rouge">RuntimeError</code>: General runtime error</li> </ul> <p><strong>Resources:</strong> <a href="https://www.geeksforgeeks.org/python-raise-keyword/">Python raise keyword (GeeksforGeeks)</a></p> </blockquote> </div> </div> <h2 id="4-automating-gas-flux-calculation"> <a href="#4-automating-gas-flux-calculation" class="anchor-heading" aria-labelledby="4-automating-gas-flux-calculation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Automating Gas Flux Calculation </h2> <p>In Section 3, we calculated flux for a single measurement by hand. Now it’s time to scale up! With dozens of measurements across multiple plots, dates, and gas types, we need automation.</p> <h3 id="41-structuring-measurement-metadata"> <a href="#41-structuring-measurement-metadata" class="anchor-heading" aria-labelledby="41-structuring-measurement-metadata"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 Structuring Measurement Metadata </h3> <p>The first and crucial step of automation is to store the key information (metadata) for each measurement in a structured way that a program can loop through. For this, we will use a Python <strong>dictionary</strong> that can be converted to a DataFrame. The dictionary keys will be our data “columns” (e.g., ‘plot_id’, ‘land_use’), and the values will be lists containing the data for each plot.</p> <h3 id="the-challenge-multiple-measurements-per-plot"> <a href="#the-challenge-multiple-measurements-per-plot" class="anchor-heading" aria-labelledby="the-challenge-multiple-measurements-per-plot"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Challenge: Multiple Measurements per Plot </h3> <p>Now, there is an issue: we take multiple measurements at the same plot, perhaps on different days or at different times. How can we store this information efficiently?</p> <p><strong>Solution:</strong> We can store the multiple start and end times for a single <strong>plot</strong> as a single string, with each timestamp separated by a semicolon (;). Of course, the order of the multiple starttime and endtime for a plot should match. By doing this, we can keep the metadata table concise and still tell our program to perform multiple calculations for that plot:</p> <ul> <li><code class="language-plaintext highlighter-rouge">plot_id</code>: The unique plot identifier</li> <li><code class="language-plaintext highlighter-rouge">land_use</code>: The land cover type</li> <li><code class="language-plaintext highlighter-rouge">start_time</code>: All measurement start times, separated by <code class="language-plaintext highlighter-rouge">;</code></li> <li><code class="language-plaintext highlighter-rouge">end_time</code>: All measurement end times, separated by <code class="language-plaintext highlighter-rouge">;</code></li> <li><code class="language-plaintext highlighter-rouge">variable</code>: The gas measured for each time window, separated by <code class="language-plaintext highlighter-rouge">;</code></li> </ul> <blockquote> <p><strong>Important:</strong> The order must match! The 1st start_time goes with the 1st end_time and 1st variable, etc.</p> </blockquote> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># --- Create Compact Measurement Metadata ---
+# Each plot appears only once; multiple measurements are semicolon-separated
+</span>
+<span class="n">measurement_info</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">'plot_id'</span><span class="p">:</span> <span class="p">[</span><span class="s">'1-1'</span><span class="p">,</span> <span class="s">'1-2'</span><span class="p">,</span> <span class="s">'1-3'</span><span class="p">,</span> <span class="s">'2-1'</span><span class="p">,</span> <span class="s">'2-2'</span><span class="p">,</span> <span class="s">'2-3'</span><span class="p">],</span>
+    <span class="s">'land_use'</span><span class="p">:</span> <span class="p">[</span><span class="s">'forest'</span><span class="p">,</span> <span class="s">'forest'</span><span class="p">,</span> <span class="s">'forest'</span><span class="p">,</span> <span class="s">'grassland'</span><span class="p">,</span> <span class="s">'grassland'</span><span class="p">,</span> <span class="s">'grassland'</span><span class="p">],</span>
+    <span class="s">'start_time'</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s">'2025-08-06 11:41:35; 2025-08-06 11:41:35; 2025-08-15 11:08:25; 2025-08-15 11:08:25; 2025-08-15 11:09:36; 2025-08-26 11:12:39; 2025-08-26 11:12:39; 2025-08-26 11:14:16'</span><span class="p">,</span>
+        <span class="s">'2025-08-06 11:52:00; 2025-08-06 11:52:00; 2025-08-15 11:20:30; 2025-08-15 11:20:30; 2025-08-15 11:21:41; 2025-08-26 11:18:35; 2025-08-26 11:18:35; 2025-08-26 11:20:10'</span><span class="p">,</span>
+        <span class="s">'2025-08-26 11:24:51; 2025-08-26 11:24:51; 2025-08-26 11:26:35'</span><span class="p">,</span>
+        <span class="s">'2025-08-06 12:11:13; 2025-08-06 12:11:13; 2025-08-15 12:11:38; 2025-08-15 12:11:38; 2025-08-15 12:12:49; 2025-08-26 11:49:07; 2025-08-26 11:50:40; 2025-08-26 11:50:40'</span><span class="p">,</span>
+        <span class="s">'2025-08-06 12:21:00; 2025-08-06 12:21:00; 2025-08-15 12:03:45; 2025-08-15 12:03:45; 2025-08-15 12:04:56; 2025-08-26 12:04:23; 2025-08-26 12:04:23; 2025-08-26 12:05:31'</span><span class="p">,</span>
+        <span class="s">'2025-08-06 12:27:47; 2025-08-06 12:27:47; 2025-08-15 11:53:30; 2025-08-15 11:53:30; 2025-08-15 11:54:41; 2025-08-26 12:25:48; 2025-08-26 12:25:48; 2025-08-26 12:27:23'</span>
+    <span class="p">],</span>
+    <span class="s">'end_time'</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s">'2025-08-06 11:45:35; 2025-08-06 11:45:35; 2025-08-15 11:12:25; 2025-08-15 11:12:25; 2025-08-15 11:13:36; 2025-08-26 11:16:39; 2025-08-26 11:16:39; 2025-08-26 11:18:16'</span><span class="p">,</span>
+        <span class="s">'2025-08-06 11:56:00; 2025-08-06 11:56:00; 2025-08-15 11:24:30; 2025-08-15 11:24:30; 2025-08-15 11:25:41; 2025-08-26 11:22:35; 2025-08-26 11:22:35; 2025-08-26 11:24:10'</span><span class="p">,</span>
+        <span class="s">'2025-08-26 11:28:51; 2025-08-26 11:28:51; 2025-08-26 11:30:35'</span><span class="p">,</span>
+        <span class="s">'2025-08-06 12:17:00; 2025-08-06 12:17:00; 2025-08-15 12:15:38; 2025-08-15 12:15:38; 2025-08-15 12:16:49; 2025-08-26 11:53:07; 2025-08-26 11:54:40; 2025-08-26 11:54:40'</span><span class="p">,</span>
+        <span class="s">'2025-08-06 12:25:46; 2025-08-06 12:25:46; 2025-08-15 12:07:45; 2025-08-15 12:07:45; 2025-08-15 12:08:56; 2025-08-26 12:08:23; 2025-08-26 12:08:23; 2025-08-26 12:09:31'</span><span class="p">,</span>
+        <span class="s">'2025-08-06 12:31:50; 2025-08-06 12:31:50; 2025-08-15 11:57:59; 2025-08-15 11:57:59; 2025-08-15 11:59:10; 2025-08-26 12:29:48; 2025-08-26 12:29:48; 2025-08-26 12:31:23'</span>
+    <span class="p">],</span>
+    <span class="s">'variable'</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s">'CH4; CO2; CH4; CO2; N2O; CH4; CO2; N2O'</span><span class="p">,</span>
+        <span class="s">'CH4; CO2; CH4; CO2; N2O; CH4; CO2; N2O'</span><span class="p">,</span>
+        <span class="s">'CH4; CO2; N2O'</span><span class="p">,</span>
+        <span class="s">'CH4; CO2; CH4; CO2; N2O; N2O; CH4; CO2'</span><span class="p">,</span>
+        <span class="s">'CH4; CO2; CH4; CO2; N2O; CH4; CO2; N2O'</span><span class="p">,</span>
+        <span class="s">'CH4; CO2; CH4; CO2; N2O; CH4; CO2; N2O'</span>
+    <span class="p">]</span>
 <span class="p">}</span>
-<span class="n">metadata_df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">measurement_info</span><span class="p">)</span>
-</code></pre></div></div> <h3 id="42-automation-calculation"> <a href="#42-automation-calculation" class="anchor-heading" aria-labelledby="42-automation-calculation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Automation Calculation </h3> <p>Now we can build a for loop that iterates through each row (Each row contains infomation for a single plot) of our metadata_df. In here, we are going to use <a href="https://www.geeksforgeeks.org/pandas/pandas-dataframe-iterrows/">‘iterrow()’</a> to iterate through metadata_df. ‘iterrow()’ is a method of data frame object, it generates an iterator object of the DataFrame, allowing us to iterate each row in the DataFrame. Each iteration produces an index object and a row object (a Pandas Series object). Inside the loop, we will split start_time and end_time string for each plot using ‘split()’ method and build a inner loop to iterate all measurements for the plot.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">results</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># Create a empty list we can use to store all calculated fluxes.
-</span><span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">metadata_df</span><span class="p">.</span><span class="n">iterrows</span><span class="p">():</span>
-    <span class="n">start_times</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s">'start_time'</span><span class="p">].</span><span class="n">strip</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">';'</span><span class="p">)</span>  <span class="c1"># Handle potential multiple times
-</span>    <span class="n">end_times</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s">'end_time'</span><span class="p">].</span><span class="n">strip</span><span class="p">().</span><span class="n">split</span><span class="p">(</span><span class="s">';'</span><span class="p">)</span>  <span class="c1"># Handle potential multiple times
+
+<span class="c1"># Convert to DataFrame
+</span><span class="n">metadata_df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">measurement_info</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">"Measurement Metadata (Compact Format):"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Total plots: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">metadata_df</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Forest plots: </span><span class="si">{</span><span class="p">(</span><span class="n">metadata_df</span><span class="p">[</span><span class="s">'land_use'</span><span class="p">]</span> <span class="o">==</span> <span class="s">'forest'</span><span class="p">).</span><span class="nb">sum</span><span class="p">()</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Grassland plots: </span><span class="si">{</span><span class="p">(</span><span class="n">metadata_df</span><span class="p">[</span><span class="s">'land_use'</span><span class="p">]</span> <span class="o">==</span> <span class="s">'grassland'</span><span class="p">).</span><span class="nb">sum</span><span class="p">()</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+<span class="c1"># Count total measurements
+</span><span class="n">total_measurements</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s">'variable'</span><span class="p">].</span><span class="n">split</span><span class="p">(</span><span class="s">';'</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">metadata_df</span><span class="p">.</span><span class="n">iterrows</span><span class="p">())</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Total measurements: </span><span class="si">{</span><span class="n">total_measurements</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+<span class="n">metadata_df</span>
+</code></pre></div></div> <h3 id="understanding-the-structure"> <a href="#understanding-the-structure" class="anchor-heading" aria-labelledby="understanding-the-structure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Understanding the Structure </h3> <p>Let’s look at what’s stored for Plot 1-1:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Example: View measurements for Plot 1-1
+</span><span class="n">plot_data</span> <span class="o">=</span> <span class="n">metadata_df</span><span class="p">[</span><span class="n">metadata_df</span><span class="p">[</span><span class="s">'plot_id'</span><span class="p">]</span> <span class="o">==</span> <span class="s">'1-1'</span><span class="p">].</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Plot: </span><span class="si">{</span><span class="n">plot_data</span><span class="p">[</span><span class="s">'plot_id'</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Land use: </span><span class="si">{</span><span class="n">plot_data</span><span class="p">[</span><span class="s">'land_use'</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="se">\n</span><span class="s">Measurements:"</span><span class="p">)</span>
+
+<span class="n">start_times</span> <span class="o">=</span> <span class="n">plot_data</span><span class="p">[</span><span class="s">'start_time'</span><span class="p">].</span><span class="n">split</span><span class="p">(</span><span class="s">'; '</span><span class="p">)</span>
+<span class="n">end_times</span> <span class="o">=</span> <span class="n">plot_data</span><span class="p">[</span><span class="s">'end_time'</span><span class="p">].</span><span class="n">split</span><span class="p">(</span><span class="s">'; '</span><span class="p">)</span>
+<span class="n">variables</span> <span class="o">=</span> <span class="n">plot_data</span><span class="p">[</span><span class="s">'variable'</span><span class="p">].</span><span class="n">split</span><span class="p">(</span><span class="s">'; '</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">start_times</span><span class="p">,</span> <span class="n">end_times</span><span class="p">,</span> <span class="n">variables</span><span class="p">),</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s">. </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s"> to </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div></div> <p>Output:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Plot: 1-1
+Land use: forest
+
+Measurements:
+  1. CH4: 2025-08-06 11:41:35 to 2025-08-06 11:45:35
+  2. CO2: 2025-08-06 11:41:35 to 2025-08-06 11:45:35
+  3. CH4: 2025-08-15 11:08:25 to 2025-08-15 11:12:25
+  4. CO2: 2025-08-15 11:08:25 to 2025-08-15 11:12:25
+  5. N2O: 2025-08-15 11:09:36 to 2025-08-15 11:13:36
+  6. CH4: 2025-08-26 11:12:39 to 2025-08-26 11:16:39
+  7. CO2: 2025-08-26 11:12:39 to 2025-08-26 11:16:39
+  8. N2O: 2025-08-26 11:14:16 to 2025-08-26 11:18:16
+</code></pre></div></div> <blockquote> <p><strong>Note:</strong> CH₄ and CO₂ share the same measurement times because they come from the same GGA analyzer!</p> </blockquote> <h3 id="42-setting-up-the-data-and-constants"> <a href="#42-setting-up-the-data-and-constants" class="anchor-heading" aria-labelledby="42-setting-up-the-data-and-constants"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Setting Up the Data and Constants </h3> <p>Before we start the automation loop, let’s prepare everything we need.</p> <h3 id="gas-configuration"> <a href="#gas-configuration" class="anchor-heading" aria-labelledby="gas-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Gas Configuration </h3> <p>Different gases have different concentration units and come from different DataFrames. We’ll create a configuration dictionary to handle this:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># --- Gas Configuration ---
+# Maps each gas variable to its DataFrame, column name, and slope unit
 </span>
-    <span class="k">for</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">start_times</span><span class="p">,</span> <span class="n">end_times</span><span class="p">):</span>
-        <span class="n">start_time</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">start_time</span><span class="p">.</span><span class="n">strip</span><span class="p">())</span>
-        <span class="n">end_time</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">end_time</span><span class="p">.</span><span class="n">strip</span><span class="p">())</span>
-        <span class="n">measurement_date</span> <span class="o">=</span> <span class="sa">f</span><span class="s">'</span><span class="si">{</span><span class="n">start_time</span><span class="p">.</span><span class="n">year</span><span class="si">}</span><span class="s">-</span><span class="si">{</span><span class="n">start_time</span><span class="p">.</span><span class="n">month</span><span class="si">:</span><span class="mi">02</span><span class="n">d</span><span class="si">}</span><span class="s">-</span><span class="si">{</span><span class="n">start_time</span><span class="p">.</span><span class="n">day</span><span class="si">:</span><span class="mi">02</span><span class="n">d</span><span class="si">}</span><span class="s">'</span>
-</code></pre></div></div> <p>Within the inner loop, we will perform the exact same steps we did manually in the last section. However, there is one key difference in the visual inspection step. In the manual section, we looked at the plot and then assigned our refined start and end times into variables. To keep the program continuing without needing to stop and edit the script each time, we will use the built-in input() function. This will pause the script, show us a plot, and allow us to enter our refined time window directly into the terminal before the program continues.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        <span class="c1">## step 1: Visual inspection ##
-</span>        <span class="c1"># Select the data for this specific time window
-</span>        <span class="n">measurement_data</span> <span class="o">=</span> <span class="n">df_filtered</span><span class="p">[(</span><span class="n">df_filtered</span><span class="p">.</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df_filtered</span><span class="p">.</span><span class="n">index</span> <span class="o">&lt;</span> <span class="n">end_time</span><span class="p">)]</span>
-        <span class="c1"># Plot the raw data for visual inspection
-</span>        <span class="n">plot_time_series</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">,</span> <span class="n">y_column</span><span class="o">=</span><span class="s">'N2O'</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s">'N2O Concentration Over Time}'</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">'markers'</span><span class="p">)</span>
-        <span class="c1"># Mannually selcect the start and end time for regression
-</span>        <span class="n">start_mea</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s">"Enter the start time for regression (YYYY-MM-DD HH:MM:SS): "</span><span class="p">).</span><span class="n">strip</span><span class="p">()</span>
-        <span class="n">end_mea</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s">"Enter the end time for regression (YYYY-MM-DD HH:MM:SS): "</span><span class="p">).</span><span class="n">strip</span><span class="p">()</span>
-        <span class="c1"># Use the original start and end time if no input is given
-</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">start_mea</span><span class="p">:</span>
-            <span class="n">start_mea</span> <span class="o">=</span> <span class="n">start_time</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">end_mea</span><span class="p">:</span>
-            <span class="n">end_mea</span> <span class="o">=</span> <span class="n">end_time</span>
-        <span class="n">start_time</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">start_mea</span><span class="p">)</span>
-        <span class="n">end_time</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">end_mea</span><span class="p">)</span>
-        <span class="n">measurement_data</span> <span class="o">=</span> <span class="n">measurement_data</span><span class="p">[(</span><span class="n">measurement_data</span><span class="p">.</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">measurement_data</span><span class="p">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">end_time</span><span class="p">)]</span>
-        <span class="c1">## step 2: Linear regression ## 
-</span>        <span class="c1"># Ensure there is enough data to perform a regression
-</span>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Skipping plot </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s">'plot_id'</span><span class="p">]</span><span class="si">}</span><span class="s"> on </span><span class="si">{</span><span class="n">measurement_date</span><span class="si">}</span><span class="s"> due to insufficient data."</span><span class="p">)</span>
+<span class="n">GAS_CONFIG</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">'N2O'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">'dataframe'</span><span class="p">:</span> <span class="n">df_merged</span><span class="p">[[</span><span class="s">'N2O_ppb'</span><span class="p">,</span> <span class="s">'Ta_C'</span><span class="p">]].</span><span class="n">dropna</span><span class="p">(),</span>      <span class="c1"># Our N2O DataFrame
+</span>        <span class="s">'column'</span><span class="p">:</span> <span class="s">'N2O_ppb'</span><span class="p">,</span>           <span class="c1"># Column name in the DataFrame
+</span>        <span class="s">'slope_unit'</span><span class="p">:</span> <span class="s">'ppb'</span><span class="p">,</span>           <span class="c1"># Unit for flux calculation
+</span>        <span class="s">'display_name'</span><span class="p">:</span> <span class="s">'N₂O'</span>
+    <span class="p">},</span>
+    <span class="s">'CO2'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">'dataframe'</span><span class="p">:</span> <span class="n">df_merged</span><span class="p">[[</span><span class="s">'CO2_ppm'</span><span class="p">,</span> <span class="s">'Ta_C'</span><span class="p">]].</span><span class="n">dropna</span><span class="p">(),</span>     <span class="c1"># Our CO2 DataFrame
+</span>        <span class="s">'column'</span><span class="p">:</span> <span class="s">'CO2_ppm'</span><span class="p">,</span>
+        <span class="s">'slope_unit'</span><span class="p">:</span> <span class="s">'ppm'</span><span class="p">,</span>
+        <span class="s">'display_name'</span><span class="p">:</span> <span class="s">'CO₂'</span>
+    <span class="p">},</span>
+    <span class="s">'CH4'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">'dataframe'</span><span class="p">:</span> <span class="n">df_merged</span><span class="p">[[</span><span class="s">'CH4pm'</span><span class="p">,</span> <span class="s">'Ta_C'</span><span class="p">]].</span><span class="n">dropna</span><span class="p">(),</span>     <span class="c1"># Our CH4 DataFrame
+</span>        <span class="s">'column'</span><span class="p">:</span> <span class="s">'CH4_ppm'</span><span class="p">,</span>
+        <span class="s">'slope_unit'</span><span class="p">:</span> <span class="s">'ppm'</span><span class="p">,</span>
+        <span class="s">'display_name'</span><span class="p">:</span> <span class="s">'CH₄'</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">"Configured gases:"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">gas</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">GAS_CONFIG</span><span class="p">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  </span><span class="si">{</span><span class="n">gas</span><span class="si">}</span><span class="s">: column='</span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s">'column'</span><span class="p">]</span><span class="si">}</span><span class="s">', unit=</span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s">'slope_unit'</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div></div> <blockquote> <p><strong>Note:</strong> CH₄ and CO₂ come from the same GGA analyzer and share measurement times! N₂O comes from a separate analyzer with different measurement times.</p> </blockquote> <h3 id="chamber-constants"> <a href="#chamber-constants" class="anchor-heading" aria-labelledby="chamber-constants"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Chamber Constants </h3> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># --- Chamber Constants ---
+# These should match your actual equipment!
+</span>
+<span class="n">CHAMBER_VOLUME_L</span> <span class="o">=</span> <span class="mf">41.4567</span>    <span class="c1"># Chamber volume in liters
+</span><span class="n">COLLAR_AREA_M2</span> <span class="o">=</span> <span class="mf">0.123</span>        <span class="c1"># Collar area in square meters
+</span><span class="n">PRESSURE_ATM</span> <span class="o">=</span> <span class="mf">1.0</span>            <span class="c1"># Atmospheric pressure (assume standard)
+</span>
+<span class="c1"># Quality control thresholds
+</span><span class="n">R_SQUARED_THRESHOLD</span> <span class="o">=</span> <span class="mf">0.70</span>    <span class="c1"># Minimum R² for a valid flux
+</span><span class="n">P_VALUE_THRESHOLD</span> <span class="o">=</span> <span class="mf">0.05</span>      <span class="c1"># Maximum p-value for significance
+</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Chamber Configuration:"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Volume: </span><span class="si">{</span><span class="n">CHAMBER_VOLUME_L</span><span class="si">}</span><span class="s"> L"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Area: </span><span class="si">{</span><span class="n">COLLAR_AREA_M2</span><span class="si">}</span><span class="s"> m²"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Pressure: </span><span class="si">{</span><span class="n">PRESSURE_ATM</span><span class="si">}</span><span class="s"> atm"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="se">\n</span><span class="s">Quality Control Thresholds:"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Minimum R²: </span><span class="si">{</span><span class="n">R_SQUARED_THRESHOLD</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Maximum p-value: </span><span class="si">{</span><span class="n">P_VALUE_THRESHOLD</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div></div> <h3 id="43-building-the-automation-pipeline"> <a href="#43-building-the-automation-pipeline" class="anchor-heading" aria-labelledby="43-building-the-automation-pipeline"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Building the Automation Pipeline </h3> <p>Now we’ll build a <strong>nested loop</strong> that:</p> <ol> <li><strong>Outer loop:</strong> Iterates through each plot</li> <li><strong>Inner loop:</strong> Iterates through each measurement for that plot</li> </ol> <p>The workflow for each measurement is:</p> <ol> <li><strong>Parse</strong> the semicolon-separated times and variables</li> <li><strong>Extract</strong> the correct data based on gas type and time window</li> <li><strong>Visualize</strong> for manual inspection</li> <li><strong>Refine</strong> the time window (remove baseline and drop phases)</li> <li><strong>Regress</strong> to get the slope</li> <li><strong>Quality check</strong> the regression fit</li> <li><strong>Calculate</strong> the flux</li> <li><strong>Store</strong> the results</li> </ol> <h3 id="helper-function-get-temperature-for-a-time-window"> <a href="#helper-function-get-temperature-for-a-time-window" class="anchor-heading" aria-labelledby="helper-function-get-temperature-for-a-time-window"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Helper Function: Get Temperature for a Time Window </h3> <p>Since temperature data might be in a different DataFrame, we need a helper function:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">get_mean_temperature</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">,</span> <span class="n">temp_df</span><span class="p">,</span> <span class="n">temp_column</span><span class="o">=</span><span class="s">'Ta_C'</span><span class="p">):</span>
+    <span class="s">"""
+    Get the mean temperature during a measurement window.
+    
+    Parameters:
+        start_time: Start of measurement window
+        end_time: End of measurement window
+        temp_df: DataFrame containing temperature data
+        temp_column: Name of temperature column
+    
+    Returns:
+        float: Mean temperature in Celsius, or NaN if no data
+    """</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">temp_df</span><span class="p">.</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">temp_df</span><span class="p">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">end_time</span><span class="p">)</span>
+    <span class="n">temp_data</span> <span class="o">=</span> <span class="n">temp_df</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="n">temp_column</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">temp_data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  ⚠ Warning: No temperature data found for this window"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="p">.</span><span class="n">nan</span>
+    
+    <span class="k">return</span> <span class="n">temp_data</span><span class="p">.</span><span class="n">mean</span><span class="p">()</span>
+</code></pre></div></div> <h3 id="the-main-processing-loop"> <a href="#the-main-processing-loop" class="anchor-heading" aria-labelledby="the-main-processing-loop"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Main Processing Loop </h3> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+<span class="c1"># --- Results Storage ---
+</span><span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># --- Counter for progress tracking ---
+</span><span class="n">measurement_counter</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">total_measurements</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s">'variable'</span><span class="p">].</span><span class="n">split</span><span class="p">(</span><span class="s">';'</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">metadata_df</span><span class="p">.</span><span class="n">iterrows</span><span class="p">())</span>
+
+<span class="c1"># --- Process Each Plot ---
+</span><span class="k">print</span><span class="p">(</span><span class="s">"="</span><span class="o">*</span><span class="mi">70</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"STARTING AUTOMATED FLUX CALCULATION"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"="</span><span class="o">*</span><span class="mi">70</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">plot_idx</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">metadata_df</span><span class="p">.</span><span class="n">iterrows</span><span class="p">():</span>
+    
+    <span class="c1"># --- Extract Plot Info ---
+</span>    <span class="n">plot_id</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s">'plot_id'</span><span class="p">]</span>
+    <span class="n">land_use</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s">'land_use'</span><span class="p">]</span>
+    
+    <span class="c1"># --- Parse Semicolon-Separated Values ---
+</span>    <span class="n">start_times</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">row</span><span class="p">[</span><span class="s">'start_time'</span><span class="p">].</span><span class="n">split</span><span class="p">(</span><span class="s">';'</span><span class="p">)]</span>
+    <span class="n">end_times</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">row</span><span class="p">[</span><span class="s">'end_time'</span><span class="p">].</span><span class="n">split</span><span class="p">(</span><span class="s">';'</span><span class="p">)]</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="p">[</span><span class="s">'variable'</span><span class="p">].</span><span class="n">split</span><span class="p">(</span><span class="s">';'</span><span class="p">)]</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="se">\n</span><span class="si">{</span><span class="s">'='</span><span class="o">*</span><span class="mi">70</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"PLOT: </span><span class="si">{</span><span class="n">plot_id</span><span class="si">}</span><span class="s"> (</span><span class="si">{</span><span class="n">land_use</span><span class="si">}</span><span class="s">)"</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Measurements to process: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"="</span><span class="o">*</span><span class="mi">70</span><span class="p">)</span>
+    
+    <span class="c1"># --- Inner Loop: Process Each Measurement for This Plot ---
+</span>    <span class="k">for</span> <span class="n">start_str</span><span class="p">,</span> <span class="n">end_str</span><span class="p">,</span> <span class="n">variable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">start_times</span><span class="p">,</span> <span class="n">end_times</span><span class="p">,</span> <span class="n">variables</span><span class="p">):</span>
+        
+        <span class="n">measurement_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="c1"># Parse timestamps
+</span>        <span class="n">start_time</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">start_str</span><span class="p">)</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">end_str</span><span class="p">)</span>
+        <span class="n">measurement_date</span> <span class="o">=</span> <span class="n">start_time</span><span class="p">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">'%Y-%m-%d'</span><span class="p">)</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="se">\n</span><span class="s">[</span><span class="si">{</span><span class="n">measurement_counter</span><span class="si">}</span><span class="s">/</span><span class="si">{</span><span class="n">total_measurements</span><span class="si">}</span><span class="s">] </span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s"> | </span><span class="si">{</span><span class="n">start_time</span><span class="si">}</span><span class="s"> to </span><span class="si">{</span><span class="n">end_time</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"-"</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+        
+        <span class="c1"># --- Get Gas Configuration ---
+</span>        <span class="k">if</span> <span class="n">variable</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">GAS_CONFIG</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  ✗ ERROR: Unknown variable '</span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s">'. Skipping."</span><span class="p">)</span>
             <span class="k">continue</span>
-
-        <span class="c1"># Create an 'elapsed_seconds' column for the regression
-</span>        <span class="n">measurement_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">measurement_data</span><span class="p">.</span><span class="n">index</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">).</span><span class="n">total_seconds</span><span class="p">()</span>
-
-        <span class="c1"># Perform linear regression: N2O concentration vs. time
-</span>        <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">r_value</span><span class="p">,</span> <span class="n">p_value</span> <span class="o">=</span> <span class="n">stats</span><span class="p">.</span><span class="n">linregress</span><span class="p">(</span>
-            <span class="n">x</span><span class="o">=</span><span class="n">measurement_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">],</span>
-            <span class="n">y</span><span class="o">=</span><span class="n">measurement_data</span><span class="p">[</span><span class="s">'N2O'</span><span class="p">]</span>
+        
+        <span class="n">config</span> <span class="o">=</span> <span class="n">GAS_CONFIG</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span>
+        <span class="n">df_gas</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s">'dataframe'</span><span class="p">]</span>
+        <span class="n">column_name</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s">'column'</span><span class="p">]</span>
+        <span class="n">slope_unit</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s">'slope_unit'</span><span class="p">]</span>
+        <span class="n">display_name</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s">'display_name'</span><span class="p">]</span>
+        
+        <span class="c1"># --- Step 1: Extract Data for Time Window ---
+</span>        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">df_gas</span><span class="p">.</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df_gas</span><span class="p">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">end_time</span><span class="p">)</span>
+        <span class="n">measurement_data</span> <span class="o">=</span> <span class="n">df_gas</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">].</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  ⚠ WARNING: Only </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">)</span><span class="si">}</span><span class="s"> data points. Skipping."</span><span class="p">)</span>
+            <span class="n">results</span><span class="p">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s">'plot_id'</span><span class="p">:</span> <span class="n">plot_id</span><span class="p">,</span>
+                <span class="s">'land_use'</span><span class="p">:</span> <span class="n">land_use</span><span class="p">,</span>
+                <span class="s">'variable'</span><span class="p">:</span> <span class="n">variable</span><span class="p">,</span>
+                <span class="s">'measurement_date'</span><span class="p">:</span> <span class="n">measurement_date</span><span class="p">,</span>
+                <span class="s">'start_time'</span><span class="p">:</span> <span class="n">start_time</span><span class="p">,</span>
+                <span class="s">'end_time'</span><span class="p">:</span> <span class="n">end_time</span><span class="p">,</span>
+                <span class="s">'slope'</span><span class="p">:</span> <span class="n">np</span><span class="p">.</span><span class="n">nan</span><span class="p">,</span>
+                <span class="s">'slope_unit'</span><span class="p">:</span> <span class="n">slope_unit</span><span class="p">,</span>
+                <span class="s">'r_squared'</span><span class="p">:</span> <span class="n">np</span><span class="p">.</span><span class="n">nan</span><span class="p">,</span>
+                <span class="s">'p_value'</span><span class="p">:</span> <span class="n">np</span><span class="p">.</span><span class="n">nan</span><span class="p">,</span>
+                <span class="s">'qc_pass'</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+                <span class="s">'flux_umol_m2_s'</span><span class="p">:</span> <span class="n">np</span><span class="p">.</span><span class="n">nan</span><span class="p">,</span>
+                <span class="s">'note'</span><span class="p">:</span> <span class="s">'Insufficient data'</span>
+            <span class="p">})</span>
+            <span class="k">continue</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Data points in window: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        
+        <span class="c1"># --- Step 2: Visual Inspection ---
+</span>        <span class="n">plot_time_series</span><span class="p">(</span>
+            <span class="n">measurement_data</span><span class="p">,</span> 
+            <span class="n">y_column</span><span class="o">=</span><span class="n">column_name</span><span class="p">,</span> 
+            <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s">'</span><span class="si">{</span><span class="n">display_name</span><span class="si">}</span><span class="s"> - Plot </span><span class="si">{</span><span class="n">plot_id</span><span class="si">}</span><span class="s"> - </span><span class="si">{</span><span class="n">measurement_date</span><span class="si">}</span><span class="s">'</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s">'markers'</span>
         <span class="p">)</span>
-
-        <span class="c1"># --- Quality Control (QC) ---
-</span>        <span class="c1"># We only accept measurements with a good linear fit and a positive slope
-</span>        <span class="n">r_squared</span> <span class="o">=</span> <span class="n">r_value</span><span class="o">**</span><span class="mi">2</span>
-        <span class="c1"># plot the regression line
-</span>        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="p">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="s">'constrained'</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
-        <span class="n">ax</span><span class="p">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">],</span> <span class="n">measurement_data</span><span class="p">[</span><span class="s">'N2O'</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s">'N2O Concentration (ppb)'</span><span class="p">)</span>
-        <span class="n">ax</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">],</span> <span class="n">intercept</span> <span class="o">+</span> <span class="n">slope</span> <span class="o">*</span> <span class="n">measurement_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">],</span> <span class="s">'r'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">'Fitted line'</span><span class="p">)</span>
-        <span class="n">ax</span><span class="p">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">'Elapsed Time (s)'</span><span class="p">)</span>
-        <span class="n">ax</span><span class="p">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">'N2O Concentration (ppb)'</span><span class="p">)</span>
-        <span class="n">ax</span><span class="p">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s">'Linear Regression for Plot </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s">"plot_id"</span><span class="p">]</span><span class="si">}</span><span class="s"> (R²=</span><span class="si">{</span><span class="n">r_squared</span><span class="si">:</span><span class="p">.</span><span class="mi">2</span><span class="n">f</span><span class="si">}</span><span class="s">)'</span><span class="p">)</span>
-        <span class="n">plt</span><span class="p">.</span><span class="n">legend</span><span class="p">()</span>
-        <span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="n">r_squared</span> <span class="o">&lt;</span> <span class="mf">0.70</span> <span class="ow">or</span> <span class="n">p_value</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>
-            <span class="n">flux_umol_m2_s</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Set flux to 0 if QC fails
-</span>            <span class="n">qc_pass</span> <span class="o">=</span> <span class="bp">False</span>
+        
+        <span class="c1"># --- Step 3: Refine Time Window (Interactive) ---
+</span>        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="se">\n</span><span class="s">  Current window: </span><span class="si">{</span><span class="n">start_time</span><span class="p">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">'%H</span><span class="si">:</span><span class="o">%</span><span class="n">M</span><span class="si">:</span><span class="o">%</span><span class="n">S</span><span class="s">')</span><span class="si">}</span><span class="s"> to </span><span class="si">{</span><span class="n">end_time</span><span class="p">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">'%H</span><span class="si">:</span><span class="o">%</span><span class="n">M</span><span class="si">:</span><span class="o">%</span><span class="n">S</span><span class="s">')</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"  Inspect the plot and identify the LINEAR accumulation phase."</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"  Press Enter to keep current times, or enter new times (HH:MM:SS):"</span><span class="p">)</span>
+        
+        <span class="n">start_input</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="sa">f</span><span class="s">"    Start time [</span><span class="si">{</span><span class="n">start_time</span><span class="p">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">'%H</span><span class="si">:</span><span class="o">%</span><span class="n">M</span><span class="si">:</span><span class="o">%</span><span class="n">S</span><span class="s">')</span><span class="si">}</span><span class="s">]: "</span><span class="p">).</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">end_input</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="sa">f</span><span class="s">"    End time [</span><span class="si">{</span><span class="n">end_time</span><span class="p">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">'%H</span><span class="si">:</span><span class="o">%</span><span class="n">M</span><span class="si">:</span><span class="o">%</span><span class="n">S</span><span class="s">')</span><span class="si">}</span><span class="s">]: "</span><span class="p">).</span><span class="n">strip</span><span class="p">()</span>
+        
+        <span class="c1"># Parse refined times (keep date, update time if provided)
+</span>        <span class="k">if</span> <span class="n">start_input</span><span class="p">:</span>
+            <span class="n">refined_start</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">measurement_date</span><span class="si">}</span><span class="s"> </span><span class="si">{</span><span class="n">start_input</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">qc_pass</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">refined_start</span> <span class="o">=</span> <span class="n">start_time</span>
             
-            <span class="c1">## step 3: Flux Calculation Formula ##
-</span>            <span class="c1"># This formula converts the rate of change in concentration (slope) to a flux rate.
-</span>            <span class="c1"># It corrects for ambient pressure and temperature.
-</span>            
-            <span class="n">temp_k</span> <span class="o">=</span> <span class="n">measurement_data</span><span class="p">[</span><span class="s">'temperature'</span><span class="p">].</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="mf">273.15</span>  <span class="c1"># Convert °C to Kelvin
-</span>            <span class="n">pressure_pa</span> <span class="o">=</span> <span class="n">measurement_data</span><span class="p">[</span><span class="s">'pressure'</span><span class="p">].</span><span class="n">mean</span><span class="p">()</span> <span class="o">*</span> <span class="mi">100</span>  <span class="c1"># Convert hPa to Pascals
-</span>
-            <span class="n">flux_umol_m2_s</span> <span class="o">=</span> <span class="n">calculate_flux</span><span class="p">(</span><span class="n">slope</span><span class="p">,</span> <span class="n">temp_k</span><span class="p">,</span> <span class="n">pressure_pa</span><span class="p">,</span> <span class="n">VOLUME</span><span class="p">,</span> <span class="n">AREA</span><span class="p">)</span>
-</code></pre></div></div> <p>At the end of the iteration, we need to save the results of each calculation. Only the flux value is not enough, we also need to save its metadata (e.g., plot_id, ‘land_use’), which are essential for flux analysis and visualization we are going to do later.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        <span class="c1"># Store the results
+        <span class="k">if</span> <span class="n">end_input</span><span class="p">:</span>
+            <span class="n">refined_end</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">measurement_date</span><span class="si">}</span><span class="s"> </span><span class="si">{</span><span class="n">end_input</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">refined_end</span> <span class="o">=</span> <span class="n">end_time</span>
+        
+        <span class="c1"># Re-extract data with refined window
+</span>        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">df_gas</span><span class="p">.</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">refined_start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df_gas</span><span class="p">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">refined_end</span><span class="p">)</span>
+        <span class="n">regression_data</span> <span class="o">=</span> <span class="n">df_gas</span><span class="p">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">].</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">regression_data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  ⚠ WARNING: Refined window has only </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">regression_data</span><span class="p">)</span><span class="si">}</span><span class="s"> points. Skipping."</span><span class="p">)</span>
+            <span class="n">results</span><span class="p">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s">'plot_id'</span><span class="p">:</span> <span class="n">plot_id</span><span class="p">,</span>
+                <span class="s">'land_use'</span><span class="p">:</span> <span class="n">land_use</span><span class="p">,</span>
+                <span class="s">'variable'</span><span class="p">:</span> <span class="n">variable</span><span class="p">,</span>
+                <span class="s">'measurement_date'</span><span class="p">:</span> <span class="n">measurement_date</span><span class="p">,</span>
+                <span class="s">'start_time'</span><span class="p">:</span> <span class="n">refined_start</span><span class="p">,</span>
+                <span class="s">'end_time'</span><span class="p">:</span> <span class="n">refined_end</span><span class="p">,</span>
+                <span class="s">'slope'</span><span class="p">:</span> <span class="n">np</span><span class="p">.</span><span class="n">nan</span><span class="p">,</span>
+                <span class="s">'slope_unit'</span><span class="p">:</span> <span class="n">slope_unit</span><span class="p">,</span>
+                <span class="s">'r_squared'</span><span class="p">:</span> <span class="n">np</span><span class="p">.</span><span class="n">nan</span><span class="p">,</span>
+                <span class="s">'p_value'</span><span class="p">:</span> <span class="n">np</span><span class="p">.</span><span class="n">nan</span><span class="p">,</span>
+                <span class="s">'qc_pass'</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+                <span class="s">'flux_umol_m2_s'</span><span class="p">:</span> <span class="n">np</span><span class="p">.</span><span class="n">nan</span><span class="p">,</span>
+                <span class="s">'note'</span><span class="p">:</span> <span class="s">'Insufficient data after refinement'</span>
+            <span class="p">})</span>
+            <span class="k">continue</span>
+        
+        <span class="c1"># --- Step 4: Linear Regression ---
+</span>        <span class="c1"># Create elapsed seconds column
+</span>        <span class="n">regression_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">regression_data</span><span class="p">.</span><span class="n">index</span> <span class="o">-</span> <span class="n">regression_data</span><span class="p">.</span><span class="n">index</span><span class="p">.</span><span class="nb">min</span><span class="p">()</span>
+        <span class="p">).</span><span class="n">total_seconds</span><span class="p">()</span>
+        
+        <span class="c1"># Perform regression
+</span>        <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">r_value</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">std_err</span> <span class="o">=</span> <span class="n">stats</span><span class="p">.</span><span class="n">linregress</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">regression_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">],</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">regression_data</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span>
+        <span class="p">)</span>
+        
+        <span class="n">r_squared</span> <span class="o">=</span> <span class="n">r_value</span> <span class="o">**</span> <span class="mi">2</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="se">\n</span><span class="s">  Regression Results:"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"    Slope: </span><span class="si">{</span><span class="n">slope</span><span class="si">:</span><span class="p">.</span><span class="mi">6</span><span class="n">f</span><span class="si">}</span><span class="s"> </span><span class="si">{</span><span class="n">slope_unit</span><span class="si">}</span><span class="s">/s"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"    R²: </span><span class="si">{</span><span class="n">r_squared</span><span class="si">:</span><span class="p">.</span><span class="mi">4</span><span class="n">f</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"    p-value: </span><span class="si">{</span><span class="n">p_value</span><span class="si">:</span><span class="p">.</span><span class="mi">2</span><span class="n">e</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        
+        <span class="c1"># --- Step 5: Visualize Regression Fit ---
+</span>        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="p">.</span><span class="n">Figure</span><span class="p">()</span>
+        
+        <span class="n">fig</span><span class="p">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="p">.</span><span class="n">Scatter</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">regression_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">],</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">regression_data</span><span class="p">[</span><span class="n">column_name</span><span class="p">],</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s">'markers'</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s">'Data'</span><span class="p">,</span>
+            <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+        <span class="p">))</span>
+        
+        <span class="n">fig</span><span class="p">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="p">.</span><span class="n">Scatter</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">regression_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">],</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">intercept</span> <span class="o">+</span> <span class="n">slope</span> <span class="o">*</span> <span class="n">regression_data</span><span class="p">[</span><span class="s">'elapsed_seconds'</span><span class="p">],</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s">'lines'</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s">'Fit (R²=</span><span class="si">{</span><span class="n">r_squared</span><span class="si">:</span><span class="p">.</span><span class="mi">3</span><span class="n">f</span><span class="si">}</span><span class="s">)'</span><span class="p">,</span>
+            <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s">'red'</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="p">))</span>
+        
+        <span class="n">fig</span><span class="p">.</span><span class="n">update_layout</span><span class="p">(</span>
+            <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s">'</span><span class="si">{</span><span class="n">display_name</span><span class="si">}</span><span class="s"> Regression - Plot </span><span class="si">{</span><span class="n">plot_id</span><span class="si">}</span><span class="s"> (R²=</span><span class="si">{</span><span class="n">r_squared</span><span class="si">:</span><span class="p">.</span><span class="mi">3</span><span class="n">f</span><span class="si">}</span><span class="s">)'</span><span class="p">,</span>
+            <span class="n">xaxis_title</span><span class="o">=</span><span class="s">'Elapsed Time (s)'</span><span class="p">,</span>
+            <span class="n">yaxis_title</span><span class="o">=</span><span class="sa">f</span><span class="s">'</span><span class="si">{</span><span class="n">display_name</span><span class="si">}</span><span class="s"> Concentration (</span><span class="si">{</span><span class="n">slope_unit</span><span class="si">}</span><span class="s">)'</span><span class="p">,</span>
+            <span class="n">template</span><span class="o">=</span><span class="s">'plotly_white'</span>
+        <span class="p">)</span>
+        
+        <span class="n">fig</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
+        
+        <span class="c1"># --- Step 6: Quality Control ---
+</span>        <span class="k">if</span> <span class="n">r_squared</span> <span class="o">&lt;</span> <span class="n">R_SQUARED_THRESHOLD</span> <span class="ow">or</span> <span class="n">p_value</span> <span class="o">&gt;</span> <span class="n">P_VALUE_THRESHOLD</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  ✗ QC FAILED: R²=</span><span class="si">{</span><span class="n">r_squared</span><span class="si">:</span><span class="p">.</span><span class="mi">3</span><span class="n">f</span><span class="si">}</span><span class="s"> &lt; </span><span class="si">{</span><span class="n">R_SQUARED_THRESHOLD</span><span class="si">}</span><span class="s"> or p=</span><span class="si">{</span><span class="n">p_value</span><span class="si">:</span><span class="p">.</span><span class="mi">3</span><span class="n">f</span><span class="si">}</span><span class="s"> &gt; </span><span class="si">{</span><span class="n">P_VALUE_THRESHOLD</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+            <span class="n">qc_pass</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="n">flux</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">note</span> <span class="o">=</span> <span class="sa">f</span><span class="s">'QC failed: R²=</span><span class="si">{</span><span class="n">r_squared</span><span class="si">:</span><span class="p">.</span><span class="mi">3</span><span class="n">f</span><span class="si">}</span><span class="s">, p=</span><span class="si">{</span><span class="n">p_value</span><span class="si">:</span><span class="p">.</span><span class="mi">3</span><span class="n">f</span><span class="si">}</span><span class="s">'</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  ✓ QC PASSED"</span><span class="p">)</span>
+            <span class="n">qc_pass</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">note</span> <span class="o">=</span> <span class="s">''</span>
+            
+            <span class="c1"># --- Step 7: Calculate Flux ---
+</span>            <span class="c1"># Get mean temperature during measurement
+</span>            <span class="n">avg_temp_c</span> <span class="o">=</span> <span class="n">get_mean_temperature</span><span class="p">(</span><span class="n">refined_start</span><span class="p">,</span> <span class="n">refined_end</span><span class="p">,</span> <span class="n">df_Ta</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">np</span><span class="p">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">avg_temp_c</span><span class="p">):</span>
+                <span class="c1"># Fallback: try to get from regression data or use default
+</span>                <span class="k">if</span> <span class="s">'Ta_C'</span> <span class="ow">in</span> <span class="n">regression_data</span><span class="p">.</span><span class="n">columns</span><span class="p">:</span>
+                    <span class="n">avg_temp_c</span> <span class="o">=</span> <span class="n">regression_data</span><span class="p">[</span><span class="s">'Ta_C'</span><span class="p">].</span><span class="n">mean</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">avg_temp_c</span> <span class="o">=</span> <span class="mf">25.0</span>  <span class="c1"># Default assumption
+</span>                    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  ⚠ Warning: Using default temperature </span><span class="si">{</span><span class="n">avg_temp_c</span><span class="si">}</span><span class="s">°C"</span><span class="p">)</span>
+            
+            <span class="n">avg_temp_k</span> <span class="o">=</span> <span class="n">avg_temp_c</span> <span class="o">+</span> <span class="mf">273.15</span>
+            
+            <span class="c1"># Calculate flux using our function
+</span>            <span class="n">flux</span> <span class="o">=</span> <span class="n">calculate_flux</span><span class="p">(</span>
+                <span class="n">slope</span><span class="o">=</span><span class="n">slope</span><span class="p">,</span>
+                <span class="n">temp_k</span><span class="o">=</span><span class="n">avg_temp_k</span><span class="p">,</span>
+                <span class="n">pressure_atm</span><span class="o">=</span><span class="n">PRESSURE_ATM</span><span class="p">,</span>
+                <span class="n">volume_L</span><span class="o">=</span><span class="n">CHAMBER_VOLUME_L</span><span class="p">,</span>
+                <span class="n">area_m2</span><span class="o">=</span><span class="n">COLLAR_AREA_M2</span><span class="p">,</span>
+                <span class="n">slope_unit</span><span class="o">=</span><span class="n">slope_unit</span>
+            <span class="p">)</span>
+            
+            <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="se">\n</span><span class="s">  Flux Calculation:"</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"    Temperature: </span><span class="si">{</span><span class="n">avg_temp_c</span><span class="si">:</span><span class="p">.</span><span class="mi">1</span><span class="n">f</span><span class="si">}</span><span class="s">°C = </span><span class="si">{</span><span class="n">avg_temp_k</span><span class="si">:</span><span class="p">.</span><span class="mi">1</span><span class="n">f</span><span class="si">}</span><span class="s"> K"</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"    </span><span class="si">{</span><span class="n">display_name</span><span class="si">}</span><span class="s"> Flux: </span><span class="si">{</span><span class="n">flux</span><span class="si">:</span><span class="p">.</span><span class="mi">6</span><span class="n">f</span><span class="si">}</span><span class="s"> µmol m⁻² s⁻¹"</span><span class="p">)</span>
+        
+        <span class="c1"># --- Store Results ---
 </span>        <span class="n">results</span><span class="p">.</span><span class="n">append</span><span class="p">({</span>
-            <span class="s">'plot_id'</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s">'plot_id'</span><span class="p">],</span>
-            <span class="s">'land_use'</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s">'land_use'</span><span class="p">],</span>
+            <span class="s">'plot_id'</span><span class="p">:</span> <span class="n">plot_id</span><span class="p">,</span>
+            <span class="s">'land_use'</span><span class="p">:</span> <span class="n">land_use</span><span class="p">,</span>
+            <span class="s">'variable'</span><span class="p">:</span> <span class="n">variable</span><span class="p">,</span>
             <span class="s">'measurement_date'</span><span class="p">:</span> <span class="n">measurement_date</span><span class="p">,</span>
-            <span class="s">'slope_ppb_s'</span><span class="p">:</span> <span class="n">slope</span><span class="p">,</span>
+            <span class="s">'start_time'</span><span class="p">:</span> <span class="n">refined_start</span><span class="p">,</span>
+            <span class="s">'end_time'</span><span class="p">:</span> <span class="n">refined_end</span><span class="p">,</span>
+            <span class="s">'slope'</span><span class="p">:</span> <span class="n">slope</span><span class="p">,</span>
+            <span class="s">'slope_unit'</span><span class="p">:</span> <span class="n">slope_unit</span><span class="p">,</span>
             <span class="s">'r_squared'</span><span class="p">:</span> <span class="n">r_squared</span><span class="p">,</span>
             <span class="s">'p_value'</span><span class="p">:</span> <span class="n">p_value</span><span class="p">,</span>
             <span class="s">'qc_pass'</span><span class="p">:</span> <span class="n">qc_pass</span><span class="p">,</span>
-            <span class="s">'N2O_flux_umol_m2_s'</span><span class="p">:</span> <span class="n">flux_umol_m2_s</span>
+            <span class="s">'flux_umol_m2_s'</span><span class="p">:</span> <span class="n">flux</span><span class="p">,</span>
+            <span class="s">'note'</span><span class="p">:</span> <span class="n">note</span>
         <span class="p">})</span>
 
-<span class="c1"># Convert the results list to a final DataFrame
+<span class="c1"># --- Convert Results to DataFrame ---
 </span><span class="n">flux_results_df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 
-<span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Flux calculation complete:"</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">flux_results_df</span><span class="p">)</span>
-</code></pre></div></div> <h3 id="43-flux-comparison"> <a href="#43-flux-comparison" class="anchor-heading" aria-labelledby="43-flux-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Flux comparison </h3> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># --- Visualization ---
-</span><span class="n">plt</span><span class="p">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
-<span class="n">sns</span><span class="p">.</span><span class="n">boxplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">flux_results_df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s">'land_use'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s">'N2O_flux_umol_m2_s'</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="s">'viridis'</span><span class="p">)</span>
-<span class="n">sns</span><span class="p">.</span><span class="n">stripplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">flux_results_df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s">'land_use'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s">'N2O_flux_umol_m2_s'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">'black'</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">jitter</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span> <span class="o">+</span> <span class="s">"="</span><span class="o">*</span><span class="mi">70</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"FLUX CALCULATION COMPLETE"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"="</span><span class="o">*</span><span class="mi">70</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="se">\n</span><span class="s">Total measurements processed: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">flux_results_df</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"QC passed: </span><span class="si">{</span><span class="n">flux_results_df</span><span class="p">[</span><span class="s">'qc_pass'</span><span class="p">].</span><span class="nb">sum</span><span class="p">()</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"QC failed: </span><span class="si">{</span><span class="p">(</span><span class="o">~</span><span class="n">flux_results_df</span><span class="p">[</span><span class="s">'qc_pass'</span><span class="p">]).</span><span class="nb">sum</span><span class="p">()</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="p">.</span><span class="n">title</span><span class="p">(</span><span class="s">'N₂O Flux by Land Use Type'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
-<span class="n">plt</span><span class="p">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">'Land Use'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
-<span class="n">plt</span><span class="p">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">'N₂O Flux (µmol m⁻² s⁻¹)'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
-<span class="n">plt</span><span class="p">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s">'y'</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">'--'</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="n">flux_results_df</span>
+</code></pre></div></div> <blockquote> <p><strong>Info: Using <code class="language-plaintext highlighter-rouge">zip()</code> for Parallel Iteration</strong></p> <p>The <code class="language-plaintext highlighter-rouge">zip()</code> function lets us iterate through multiple lists simultaneously:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">start_times</span><span class="p">,</span> <span class="n">end_times</span><span class="p">,</span> <span class="n">variables</span><span class="p">):</span>
+    <span class="c1"># start, end, and var are from the same index position
+</span></code></pre></div> </div> <p>This ensures the 1st start_time pairs with the 1st end_time and 1st variable.</p> <p><strong>Resources:</strong> <a href="https://docs.python.org/3/library/functions.html#zip">Python zip() documentation</a></p> </blockquote> <h3 id="44-reviewing-the-results"> <a href="#44-reviewing-the-results" class="anchor-heading" aria-labelledby="44-reviewing-the-results"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.4 Reviewing the Results </h3> <p>Let’s examine our calculated fluxes:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># --- Summary Statistics by Variable ---
+</span><span class="k">print</span><span class="p">(</span><span class="s">"="</span><span class="o">*</span><span class="mi">60</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"FLUX SUMMARY BY GAS TYPE"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"="</span><span class="o">*</span><span class="mi">60</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">flux_results_df</span><span class="p">[</span><span class="s">'variable'</span><span class="p">].</span><span class="n">unique</span><span class="p">():</span>
+    <span class="n">df_var</span> <span class="o">=</span> <span class="n">flux_results_df</span><span class="p">[</span>
+        <span class="p">(</span><span class="n">flux_results_df</span><span class="p">[</span><span class="s">'variable'</span><span class="p">]</span> <span class="o">==</span> <span class="n">variable</span><span class="p">)</span> <span class="o">&amp;</span> 
+        <span class="p">(</span><span class="n">flux_results_df</span><span class="p">[</span><span class="s">'qc_pass'</span><span class="p">]</span> <span class="o">==</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="p">]</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df_var</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="se">\n</span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s">:"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Valid measurements: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">df_var</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Mean flux: </span><span class="si">{</span><span class="n">df_var</span><span class="p">[</span><span class="s">'flux_umol_m2_s'</span><span class="p">].</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="p">.</span><span class="mi">6</span><span class="n">f</span><span class="si">}</span><span class="s"> µmol m⁻² s⁻¹"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Std dev:   </span><span class="si">{</span><span class="n">df_var</span><span class="p">[</span><span class="s">'flux_umol_m2_s'</span><span class="p">].</span><span class="n">std</span><span class="p">()</span><span class="si">:</span><span class="p">.</span><span class="mi">6</span><span class="n">f</span><span class="si">}</span><span class="s"> µmol m⁻² s⁻¹"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Min:       </span><span class="si">{</span><span class="n">df_var</span><span class="p">[</span><span class="s">'flux_umol_m2_s'</span><span class="p">].</span><span class="nb">min</span><span class="p">()</span><span class="si">:</span><span class="p">.</span><span class="mi">6</span><span class="n">f</span><span class="si">}</span><span class="s"> µmol m⁻² s⁻¹"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Max:       </span><span class="si">{</span><span class="n">df_var</span><span class="p">[</span><span class="s">'flux_umol_m2_s'</span><span class="p">].</span><span class="nb">max</span><span class="p">()</span><span class="si">:</span><span class="p">.</span><span class="mi">6</span><span class="n">f</span><span class="si">}</span><span class="s"> µmol m⁻² s⁻¹"</span><span class="p">)</span>
+</code></pre></div></div> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># --- View All Results ---
+# Show only key columns for clarity
+</span><span class="n">display_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s">'plot_id'</span><span class="p">,</span> <span class="s">'land_use'</span><span class="p">,</span> <span class="s">'variable'</span><span class="p">,</span> <span class="s">'measurement_date'</span><span class="p">,</span> 
+                <span class="s">'r_squared'</span><span class="p">,</span> <span class="s">'qc_pass'</span><span class="p">,</span> <span class="s">'flux_umol_m2_s'</span><span class="p">]</span>
+
+<span class="n">flux_results_df</span><span class="p">[</span><span class="n">display_cols</span><span class="p">].</span><span class="n">sort_values</span><span class="p">([</span><span class="s">'variable'</span><span class="p">,</span> <span class="s">'measurement_date'</span><span class="p">,</span> <span class="s">'plot_id'</span><span class="p">])</span>
+</code></pre></div></div> <h3 id="45-comparing-fluxes-across-land-use-types"> <a href="#45-comparing-fluxes-across-land-use-types" class="anchor-heading" aria-labelledby="45-comparing-fluxes-across-land-use-types"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.5 Comparing Fluxes Across Land Use Types </h3> <p>Now for the exciting part—let’s see if there are differences in gas fluxes between forest and grassland!</p> <h3 id="visualization-with-box-plots"> <a href="#visualization-with-box-plots" class="anchor-heading" aria-labelledby="visualization-with-box-plots"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Visualization with Box Plots </h3> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="n">sns</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="c1"># Filter to only QC-passed measurements
+</span><span class="n">df_valid</span> <span class="o">=</span> <span class="n">flux_results_df</span><span class="p">[</span><span class="n">flux_results_df</span><span class="p">[</span><span class="s">'qc_pass'</span><span class="p">]</span> <span class="o">==</span> <span class="bp">True</span><span class="p">].</span><span class="n">copy</span><span class="p">()</span>
+
+<span class="c1"># Create a figure with subplots for each gas
+</span><span class="n">variables</span> <span class="o">=</span> <span class="n">df_valid</span><span class="p">[</span><span class="s">'variable'</span><span class="p">].</span><span class="n">unique</span><span class="p">()</span>
+<span class="n">n_vars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="p">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_vars</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="o">*</span><span class="n">n_vars</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+<span class="c1"># Handle case of single variable
+</span><span class="k">if</span> <span class="n">n_vars</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">axes</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">variable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">variables</span><span class="p">):</span>
+    <span class="n">df_var</span> <span class="o">=</span> <span class="n">df_valid</span><span class="p">[</span><span class="n">df_valid</span><span class="p">[</span><span class="s">'variable'</span><span class="p">]</span> <span class="o">==</span> <span class="n">variable</span><span class="p">]</span>
+    
+    <span class="c1"># Box plot
+</span>    <span class="n">sns</span><span class="p">.</span><span class="n">boxplot</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">df_var</span><span class="p">,</span> 
+        <span class="n">x</span><span class="o">=</span><span class="s">'land_use'</span><span class="p">,</span> 
+        <span class="n">y</span><span class="o">=</span><span class="s">'flux_umol_m2_s'</span><span class="p">,</span> 
+        <span class="n">palette</span><span class="o">=</span><span class="s">'viridis'</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">ax</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># Overlay individual points
+</span>    <span class="n">sns</span><span class="p">.</span><span class="n">stripplot</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">df_var</span><span class="p">,</span> 
+        <span class="n">x</span><span class="o">=</span><span class="s">'land_use'</span><span class="p">,</span> 
+        <span class="n">y</span><span class="o">=</span><span class="s">'flux_umol_m2_s'</span><span class="p">,</span> 
+        <span class="n">color</span><span class="o">=</span><span class="s">'black'</span><span class="p">,</span> 
+        <span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> 
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">ax</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># Get display name
+</span>    <span class="n">display_name</span> <span class="o">=</span> <span class="n">GAS_CONFIG</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="p">{}).</span><span class="n">get</span><span class="p">(</span><span class="s">'display_name'</span><span class="p">,</span> <span class="n">variable</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="p">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s">'</span><span class="si">{</span><span class="n">display_name</span><span class="si">}</span><span class="s"> Flux by Land Use'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">'Land Use'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">'Flux (µmol m⁻² s⁻¹)'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s">'y'</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">'--'</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="p">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div></div> <h3 id="statistical-comparison-optional"> <a href="#statistical-comparison-optional" class="anchor-heading" aria-labelledby="statistical-comparison-optional"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Statistical Comparison (Optional) </h3> <p>For a more rigorous comparison, we can perform statistical tests:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">mannwhitneyu</span><span class="p">,</span> <span class="n">ttest_ind</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">"="</span><span class="o">*</span><span class="mi">60</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"STATISTICAL COMPARISON: Forest vs Grassland"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"="</span><span class="o">*</span><span class="mi">60</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">df_valid</span><span class="p">[</span><span class="s">'variable'</span><span class="p">].</span><span class="n">unique</span><span class="p">():</span>
+    <span class="n">df_var</span> <span class="o">=</span> <span class="n">df_valid</span><span class="p">[</span><span class="n">df_valid</span><span class="p">[</span><span class="s">'variable'</span><span class="p">]</span> <span class="o">==</span> <span class="n">variable</span><span class="p">]</span>
+    
+    <span class="n">forest_flux</span> <span class="o">=</span> <span class="n">df_var</span><span class="p">[</span><span class="n">df_var</span><span class="p">[</span><span class="s">'land_use'</span><span class="p">]</span> <span class="o">==</span> <span class="s">'forest'</span><span class="p">][</span><span class="s">'flux_umol_m2_s'</span><span class="p">]</span>
+    <span class="n">grassland_flux</span> <span class="o">=</span> <span class="n">df_var</span><span class="p">[</span><span class="n">df_var</span><span class="p">[</span><span class="s">'land_use'</span><span class="p">]</span> <span class="o">==</span> <span class="s">'grassland'</span><span class="p">][</span><span class="s">'flux_umol_m2_s'</span><span class="p">]</span>
+    
+    <span class="n">display_name</span> <span class="o">=</span> <span class="n">GAS_CONFIG</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="p">{}).</span><span class="n">get</span><span class="p">(</span><span class="s">'display_name'</span><span class="p">,</span> <span class="n">variable</span><span class="p">)</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="se">\n</span><span class="si">{</span><span class="n">display_name</span><span class="si">}</span><span class="s">:"</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Forest (n=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">forest_flux</span><span class="p">)</span><span class="si">}</span><span class="s">):    mean = </span><span class="si">{</span><span class="n">forest_flux</span><span class="p">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="p">.</span><span class="mi">6</span><span class="n">f</span><span class="si">}</span><span class="s"> µmol m⁻² s⁻¹"</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Grassland (n=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">grassland_flux</span><span class="p">)</span><span class="si">}</span><span class="s">): mean = </span><span class="si">{</span><span class="n">grassland_flux</span><span class="p">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="p">.</span><span class="mi">6</span><span class="n">f</span><span class="si">}</span><span class="s"> µmol m⁻² s⁻¹"</span><span class="p">)</span>
+    
+    <span class="c1"># Only perform test if we have data in both groups
+</span>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">forest_flux</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">grassland_flux</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="c1"># Mann-Whitney U test (non-parametric, good for small samples)
+</span>        <span class="n">stat</span><span class="p">,</span> <span class="n">p_value</span> <span class="o">=</span> <span class="n">mannwhitneyu</span><span class="p">(</span><span class="n">forest_flux</span><span class="p">,</span> <span class="n">grassland_flux</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="s">'two-sided'</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  Mann-Whitney U test: p = </span><span class="si">{</span><span class="n">p_value</span><span class="si">:</span><span class="p">.</span><span class="mi">4</span><span class="n">f</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">p_value</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  → Significant difference detected (p &lt; 0.05)"</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  → No significant difference (p ≥ 0.05)"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"  → Insufficient data for statistical test"</span><span class="p">)</span>
+</code></pre></div></div> <h3 id="46-exporting-results"> <a href="#46-exporting-results" class="anchor-heading" aria-labelledby="46-exporting-results"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.6 Exporting Results </h3> <p>Finally, let’s save our results for future use or reporting:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># --- Export to CSV ---
+</span><span class="n">output_path</span> <span class="o">=</span> <span class="s">'flux_results.csv'</span>
+<span class="n">flux_results_df</span><span class="p">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Results exported to: </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+<span class="c1"># --- Export Summary Statistics ---
+</span><span class="n">summary_stats</span> <span class="o">=</span> <span class="n">df_valid</span><span class="p">.</span><span class="n">groupby</span><span class="p">([</span><span class="s">'variable'</span><span class="p">,</span> <span class="s">'land_use'</span><span class="p">]).</span><span class="n">agg</span><span class="p">({</span>
+    <span class="s">'flux_umol_m2_s'</span><span class="p">:</span> <span class="p">[</span><span class="s">'count'</span><span class="p">,</span> <span class="s">'mean'</span><span class="p">,</span> <span class="s">'std'</span><span class="p">,</span> <span class="s">'min'</span><span class="p">,</span> <span class="s">'max'</span><span class="p">]</span>
+<span class="p">}).</span><span class="nb">round</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+
+<span class="n">summary_stats</span><span class="p">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">'n'</span><span class="p">,</span> <span class="s">'mean'</span><span class="p">,</span> <span class="s">'std'</span><span class="p">,</span> <span class="s">'min'</span><span class="p">,</span> <span class="s">'max'</span><span class="p">]</span>
+<span class="n">summary_stats</span><span class="p">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s">'flux_summary.csv'</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Summary statistics exported to: flux_summary.csv"</span><span class="p">)</span>
+
+<span class="n">summary_stats</span>
 </code></pre></div></div> </main> <hr> <footer> <div class="d-md-none"> <div class="mt-4 fs-2"> This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll. </div> </div> </footer> </div> </div> <div class="search-overlay"></div> </div> </body> </html>
