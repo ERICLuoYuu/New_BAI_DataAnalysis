@@ -1053,14 +1053,26 @@ Charlie is 35 from Chicago
         <span class="n">gas_with_most_data</span> <span class="o">=</span> <span class="n">gas_name</span>
 
 <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="se">\n</span><span class="s">→ </span><span class="si">{</span><span class="n">gas_with_most_data</span><span class="si">}</span><span class="s"> has the most data points: </span><span class="si">{</span><span class="n">max_points</span><span class="si">:</span><span class="p">,</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
-</code></pre></div> </div> </details> </div> </div> <h3 id="43-building-the-automation-pipeline"> <a href="#43-building-the-automation-pipeline" class="anchor-heading" aria-labelledby="43-building-the-automation-pipeline"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Building the Automation Pipeline </h3> <p>Now we’re ready to build the main automation loop. This is the most complex part of the tutorial, so we’ll break it into clear steps and explain each one thoroughly.</p> <h3 id="overview-what-will-our-pipeline-do"> <a href="#overview-what-will-our-pipeline-do" class="anchor-heading" aria-labelledby="overview-what-will-our-pipeline-do"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview: What Will Our Pipeline Do? </h3> <p>Here’s the high-level workflow for processing <strong>each measurement</strong>:</p> <p>flowchart TD subgraph outer[“🔄 OUTER LOOP: For each Plot”] A[Get plot info &amp; parse metadata] subgraph inner[“🔄 INNER LOOP: For each Measurement”] B[1. Extract data for time window] C[2. Visual inspection] D[3. Refine time window] E[4. Linear regression] F{5. QC Check} G[6. Calculate flux] H[7. Store results]</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        B --&gt; C --&gt; D --&gt; E --&gt; F
-        F --&gt;|Pass| G --&gt; H
-        F --&gt;|Fail| H
+</code></pre></div> </div> </details> </div> </div> <h3 id="43-building-the-automation-pipeline"> <a href="#43-building-the-automation-pipeline" class="anchor-heading" aria-labelledby="43-building-the-automation-pipeline"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Building the Automation Pipeline </h3> <p>Now we’re ready to build the main automation loop. This is the most complex part of the tutorial, so we’ll break it into clear steps and explain each one thoroughly.</p> <h3 id="overview-what-will-our-pipeline-do"> <a href="#overview-what-will-our-pipeline-do" class="anchor-heading" aria-labelledby="overview-what-will-our-pipeline-do"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Overview: What Will Our Pipeline Do? </h3> <p>Here’s the high-level workflow for processing <strong>each measurement</strong>:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>flowchart TD
+    subgraph outer["🔄 OUTER LOOP: For each Plot"]
+        A[Get plot info &amp; parse metadata]
+        subgraph inner["🔄 INNER LOOP: For each Measurement"]
+            B[1. Extract data for time window]
+            C[2. Visual inspection]
+            D[3. Refine time window]
+            E[4. Linear regression]
+            F{5. QC Check}
+            G[6. Calculate flux]
+            H[7. Store results]
+            
+            B --&gt; C --&gt; D --&gt; E --&gt; F
+            F --&gt;|Pass| G --&gt; H
+            F --&gt;|Fail| H
+        end
+        A --&gt; inner
     end
-    A --&gt; inner
-end
-
-outer --&gt; I[Convert results to DataFrame]
+    
+    outer --&gt; I[Convert results to DataFrame]
 </code></pre></div></div> <p>This is a <strong>nested loop</strong> structure:</p> <ul> <li><strong>Outer loop:</strong> Goes through each plot (6 plots)</li> <li><strong>Inner loop:</strong> Goes through each measurement within that plot (varies per plot)</li> </ul> <h3 id="step-1-create-storage-for-results"> <a href="#step-1-create-storage-for-results" class="anchor-heading" aria-labelledby="step-1-create-storage-for-results"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Step 1: Create Storage for Results </h3> <p>Before we start processing, we need a place to store all our calculated fluxes. We’ll use a <strong>list of dictionaries</strong> that can later be converted to a DataFrame.</p> <p><strong>Why a list of dictionaries?</strong></p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Each measurement's results will be a dictionary
 </span><span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s">'plot_id'</span><span class="p">:</span> <span class="s">'1-1'</span><span class="p">,</span>
