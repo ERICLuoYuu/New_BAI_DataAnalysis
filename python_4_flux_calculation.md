@@ -1142,7 +1142,7 @@ Looking at the plot, we can identify **three distinct phases**:
 | **2. Accumulation (Linear Increase)** | Chamber sealed, N₂O accumulating from soil | Steady, linear rise ✓ |
 | **3. Post-measurement Drop** | Chamber lifted, sensor exposed to ambient air | Sharp, sudden drop |
 
-> **⚠️ Critical: Use Only the Linear Phase**
+> **Critical: Use Only the Linear Phase**
 > 
 > Our flux calculation relies on the **slope** from linear regression. If we include the flat baseline or the sharp drop, the regression line will not represent the true accumulation rate, leading to **inaccurate flux values**.
 > 
