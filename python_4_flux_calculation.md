@@ -1635,7 +1635,13 @@ Now, there is an issue: we take multiple measurements at the same plot, perhaps 
 
 > **Important:** The order must match! The 1st start_time goes with the 1st end_time and 1st variable, etc.
 
+### Creating the Metadata Dictionary
+
+Now let's create our metadata. A Python dictionary uses **keys** (column names) and **values** (lists of data):
+
 ```python
+import pandas as pd
+
 # --- Create Compact Measurement Metadata ---
 # Each plot appears only once; multiple measurements are semicolon-separated
 
@@ -1668,39 +1674,69 @@ measurement_info = {
     ]
 }
 
-# Convert to DataFrame
+# Convert dictionary to DataFrame
 metadata_df = pd.DataFrame(measurement_info)
+```
 
-print("Measurement Metadata (Compact Format):")
+Let's verify our metadata:
+
+```python
+print("Measurement Metadata Summary:")
 print(f"  Total plots: {len(metadata_df)}")
 print(f"  Forest plots: {(metadata_df['land_use'] == 'forest').sum()}")
 print(f"  Grassland plots: {(metadata_df['land_use'] == 'grassland').sum()}")
 
-# Count total measurements
+# Count total measurements across all plots
 total_measurements = sum(len(row['variable'].split(';')) for _, row in metadata_df.iterrows())
 print(f"  Total measurements: {total_measurements}")
 
 metadata_df
 ```
 
-### Understanding the Structure
+### How to Parse Semicolon-Separated Values
 
-Let's look at what's stored for Plot 1-1:
+Now we need to learn how to **split** these combined strings back into individual values. Python provides the `split()` method for this.
+
+> **Info: The `split()` Method**
+> 
+> The `split()` method breaks a string into a list of substrings based on a delimiter (separator).
+> 
+> ```python
+> # Basic usage
+> text = "apple; banana; cherry"
+> fruits = text.split('; ')  # Split by '; '
+> print(fruits)  # ['apple', 'banana', 'cherry']
+> 
+> # Access individual items
+> print(fruits[0])  # 'apple'
+> print(fruits[1])  # 'banana'
+> ```
+> 
+> **Common delimiters:**
+> - `'; '` — semicolon with space (our format)
+> - `','` — comma
+> - `' '` — space
+> - `'\t'` — tab
+> - `'\n'` — newline
+>
+> **Resources:** [Python split() documentation](https://docs.python.org/3/library/stdtypes.html#str.split)
+
+Let's practice parsing one plot's data:
 
 ```python
-# Example: View measurements for Plot 1-1
+# Get data for Plot 1-1
 plot_data = metadata_df[metadata_df['plot_id'] == '1-1'].iloc[0]
 
 print(f"Plot: {plot_data['plot_id']}")
 print(f"Land use: {plot_data['land_use']}")
-print(f"\nMeasurements:")
 
-start_times = plot_data['start_time'].split('; ')
-end_times = plot_data['end_time'].split('; ')
+# The raw string looks like this:
+print(f"\nRaw variable string: {plot_data['variable']}")
+
+# Split it into a list
 variables = plot_data['variable'].split('; ')
-
-for i, (start, end, var) in enumerate(zip(start_times, end_times, variables), 1):
-    print(f"  {i}. {var}: {start} to {end}")
+print(f"\nAfter split(): {variables}")
+print(f"Number of measurements: {len(variables)}")
 ```
 
 Output:
@@ -1708,154 +1744,583 @@ Output:
 Plot: 1-1
 Land use: forest
 
-Measurements:
-  1. CH4: 2025-08-06 11:41:35 to 2025-08-06 11:45:35
-  2. CO2: 2025-08-06 11:41:35 to 2025-08-06 11:45:35
-  3. CH4: 2025-08-15 11:08:25 to 2025-08-15 11:12:25
-  4. CO2: 2025-08-15 11:08:25 to 2025-08-15 11:12:25
-  5. N2O: 2025-08-15 11:09:36 to 2025-08-15 11:13:36
-  6. CH4: 2025-08-26 11:12:39 to 2025-08-26 11:16:39
-  7. CO2: 2025-08-26 11:12:39 to 2025-08-26 11:16:39
-  8. N2O: 2025-08-26 11:14:16 to 2025-08-26 11:18:16
+Raw variable string: CH4; CO2; CH4; CO2; N2O; CH4; CO2; N2O
+
+After split(): ['CH4', 'CO2', 'CH4', 'CO2', 'N2O', 'CH4', 'CO2', 'N2O']
+Number of measurements: 8
 ```
 
-> **Note:** CH₄ and CO₂ share the same measurement times because they come from the same GGA analyzer!
+### Iterating Through Parallel Lists with `zip()`
 
+We now have three lists that need to be processed together:
+- `start_times` — when each measurement started
+- `end_times` — when each measurement ended  
+- `variables` — which gas was measured
 
-### 4.2 Setting Up the Data and Constants
+These lists are **parallel**: the 1st item in each list belongs together, the 2nd items belong together, etc. How do we loop through them simultaneously?
 
-Before we start the automation loop, let's prepare everything we need.
+> **Info: The `zip()` Function**
+> 
+> `zip()` takes multiple lists and combines them element-by-element, like a zipper bringing two sides together:
+> 
+> ```python
+> names = ['Alice', 'Bob', 'Charlie']
+> ages = [25, 30, 35]
+> cities = ['NYC', 'LA', 'Chicago']
+> 
+> # Without zip - awkward index-based loop
+> for i in range(len(names)):
+>     print(f"{names[i]} is {ages[i]} from {cities[i]}")
+> 
+> # With zip - clean and readable
+> for name, age, city in zip(names, ages, cities):
+>     print(f"{name} is {age} from {city}")
+> ```
+> 
+> Output:
+> ```
+> Alice is 25 from NYC
+> Bob is 30 from LA
+> Charlie is 35 from Chicago
+> ```
+> 
+> **Why use `zip()`?**
+> - Cleaner, more readable code
+> - No need to manage index variables
+> - Less prone to off-by-one errors
+> - Pythonic way to handle parallel iteration
+>
+> **Resources:** [Python zip() documentation](https://docs.python.org/3/library/functions.html#zip)
 
-### Gas Configuration
-
-Different gases have different concentration units and come from different DataFrames. We'll create a configuration dictionary to handle this:
+Let's use `zip()` to display all measurements for Plot 1-1:
 
 ```python
-# --- Gas Configuration ---
-# Maps each gas variable to its DataFrame, column name, and slope unit
+# Parse all three columns
+start_times = plot_data['start_time'].split('; ')
+end_times = plot_data['end_time'].split('; ')
+variables = plot_data['variable'].split('; ')
+
+print(f"Plot {plot_data['plot_id']} ({plot_data['land_use']}):")
+print(f"Total measurements: {len(variables)}\n")
+
+# Use zip() to iterate through all three lists together
+for i, (start, end, var) in enumerate(zip(start_times, end_times, variables), 1):
+    print(f"  {i}. {var}: {start} → {end}")
+```
+
+> **Note:** We also use `enumerate(..., 1)` to get a counter starting from 1. This is another useful Python pattern for numbered loops.
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
+### Exercise: Parse and Display Another Plot
+
+Now it's your turn! Write code to parse and display measurements for Plot `2-1` (a grassland plot).
+
+**Your code should:**
+1. Extract the row for plot_id == '2-1'
+2. Split the start_time, end_time, and variable strings
+3. Use `zip()` to print each measurement with its number
+
+**Bonus questions to answer:**
+- How many measurements does Plot 2-1 have?
+- Which unique gases were measured? (Hint: use `set()`)
+- On which dates were measurements taken?
+
+<details markdown="1">
+<summary>Click here for the solution!</summary>
+
+```python
+# Get data for Plot 2-1
+plot_2_1 = metadata_df[metadata_df['plot_id'] == '2-1'].iloc[0]
+
+# Parse the semicolon-separated values
+start_times = plot_2_1['start_time'].split('; ')
+end_times = plot_2_1['end_time'].split('; ')
+variables = plot_2_1['variable'].split('; ')
+
+print(f"Plot: {plot_2_1['plot_id']} ({plot_2_1['land_use']})")
+print(f"Number of measurements: {len(variables)}")
+
+# Find unique gases using set()
+unique_gases = set(variables)
+print(f"Gases measured: {unique_gases}")
+
+# Find unique dates (extract date part from timestamps)
+unique_dates = set(s.split()[0] for s in start_times)
+print(f"Measurement dates: {sorted(unique_dates)}")
+
+print(f"\nAll measurements:")
+for i, (start, end, var) in enumerate(zip(start_times, end_times, variables), 1):
+    print(f"  {i}. {var}: {start} → {end}")
+```
+
+**Answers:**
+- Plot 2-1 has **8 measurements**
+- Gases: **{'CH4', 'CO2', 'N2O'}**
+- Dates: **['2025-08-06', '2025-08-15', '2025-08-26']**
+</details>
+{% endcapture %}
+
+<div class="notice--primary">
+{{ exercise | markdownify }}
+</div>
+</div>
+
+### 4.2 Setting Up Configuration and Constants
+
+### Why Use a Configuration Dictionary?
+
+Different gases have different properties:
+- **N₂O** concentrations are in **ppb** (parts per billion)
+- **CO₂** and **CH₄** concentrations are in **ppm** (parts per million)
+- Each gas is stored in a different column of our DataFrame
+
+We *could* write separate code for each gas:
+```python
+# Bad approach - lots of repetition!
+if variable == 'N2O':
+    df = df_n2o
+    column = 'N2O_ppb'
+    unit = 'ppb'
+elif variable == 'CO2':
+    df = df_co2
+    column = 'CO2_ppm'
+    unit = 'ppm'
+elif variable == 'CH4':
+    # ... and so on
+```
+
+But this is repetitive and hard to maintain. What if we add a new gas? We'd have to update multiple places.
+
+**Better approach:** Store all gas-specific settings in a **configuration dictionary**. Then our code can look up any gas's settings dynamically.
+
+> **Info: Nested Dictionaries**
+> 
+> A dictionary can contain other dictionaries as values, creating a nested structure:
+> 
+> ```python
+> # Simple dictionary
+> person = {'name': 'Alice', 'age': 30}
+> 
+> # Nested dictionary
+> people = {
+>     'alice': {'name': 'Alice', 'age': 30, 'city': 'NYC'},
+>     'bob': {'name': 'Bob', 'age': 25, 'city': 'LA'}
+> }
+> 
+> # Accessing nested values
+> print(people['alice']['city'])  # 'NYC'
+> print(people['bob']['age'])     # 25
+> ```
+> 
+> This is perfect for storing configuration where each "category" (gas type) has multiple properties.
+
+### Creating the Gas Configuration
+
+```python
+# --- Gas Configuration Dictionary ---
+# Maps each gas name to its specific settings
 
 GAS_CONFIG = {
     'N2O': {
-        'dataframe': df_merged[['N2O_ppb', 'Ta_C']].dropna(),      # Our N2O DataFrame
-        'column': 'N2O_ppb',           # Column name in the DataFrame
-        'slope_unit': 'ppb',           # Unit for flux calculation
+        'dataframe': df_merged[['N2O_ppb', 'Ta_C']].dropna(),
+        'column': 'N2O_ppb',
+        'slope_unit': 'ppb',
         'display_name': 'N₂O'
     },
     'CO2': {
-        'dataframe': df_merged[['CO2_ppm', 'Ta_C']].dropna(),     # Our CO2 DataFrame
+        'dataframe': df_merged[['CO2_ppm', 'Ta_C']].dropna(),
         'column': 'CO2_ppm',
         'slope_unit': 'ppm',
         'display_name': 'CO₂'
     },
     'CH4': {
-        'dataframe': df_merged[['CH4_ppm', 'Ta_C']].dropna(),     # Our CH4 DataFrame
+        'dataframe': df_merged[['CH4_ppm', 'Ta_C']].dropna(),
         'column': 'CH4_ppm',
         'slope_unit': 'ppm',
         'display_name': 'CH₄'
     }
 }
-
-print("Configured gases:")
-for gas, config in GAS_CONFIG.items():
-    print(f"  {gas}: column='{config['column']}', unit={config['slope_unit']}")
 ```
 
-> **Note:** CH₄ and CO₂ come from the same GGA analyzer and share measurement times!
-> N₂O comes from a separate analyzer with different measurement times.
-
-### Chamber Constants
+Now we can access any gas's settings with a simple lookup:
 
 ```python
-# --- Chamber Constants ---
-# These should match your actual equipment!
+# Example: Get settings for CO2
+gas_name = 'CO2'
+config = GAS_CONFIG[gas_name]
 
-CHAMBER_VOLUME_L = 41.4567    # Chamber volume in liters
-COLLAR_AREA_M2 = 0.123        # Collar area in square meters
+print(f"Settings for {gas_name}:")
+print(f"  Column name: {config['column']}")
+print(f"  Slope unit: {config['slope_unit']}")
+print(f"  Display name: {config['display_name']}")
+print(f"  Data points available: {len(config['dataframe'])}")
+```
+
+**Benefits of this approach:**
+- **DRY (Don't Repeat Yourself):** One loop handles all gases
+- **Extensible:** Adding a new gas = adding one dictionary entry
+- **Maintainable:** All settings are in one place
+
+### Setting Up Chamber Constants
+
+Our flux calculation also needs physical constants about our measurement chamber. Let's define these clearly:
+
+```python
+# --- Chamber Physical Constants ---
+# Measure these for YOUR specific equipment!
+
+CHAMBER_VOLUME_L = 41.4567    # Internal volume in liters
+COLLAR_AREA_M2 = 0.123        # Ground area covered in square meters
 PRESSURE_ATM = 1.0            # Atmospheric pressure (assume standard)
-
-# Quality control thresholds
-R_SQUARED_THRESHOLD = 0.70    # Minimum R² for a valid flux
-P_VALUE_THRESHOLD = 0.05      # Maximum p-value for significance
 
 print("Chamber Configuration:")
 print(f"  Volume: {CHAMBER_VOLUME_L} L")
-print(f"  Area: {COLLAR_AREA_M2} m²")
+print(f"  Collar Area: {COLLAR_AREA_M2} m²")
 print(f"  Pressure: {PRESSURE_ATM} atm")
-print(f"\nQuality Control Thresholds:")
-print(f"  Minimum R²: {R_SQUARED_THRESHOLD}")
-print(f"  Maximum p-value: {P_VALUE_THRESHOLD}")
 ```
+
+### Setting Up Quality Control Thresholds
+
+Not every measurement will produce a valid flux. Sometimes the chamber leaks, or the soil flux is too small to detect, or there's instrument noise. We need **quality control (QC) thresholds** to identify good vs. bad measurements.
+
+```python
+# --- Quality Control Thresholds ---
+R_SQUARED_THRESHOLD = 0.70    # Minimum R² (coefficient of determination)
+P_VALUE_THRESHOLD = 0.05      # Maximum p-value for statistical significance
+
+print("Quality Control Thresholds:")
+print(f"  Minimum R²: {R_SQUARED_THRESHOLD} (regression must explain ≥70% of variance)")
+print(f"  Maximum p-value: {P_VALUE_THRESHOLD} (slope must be statistically significant)")
+```
+
+**What do these thresholds mean?**
+- **R² ≥ 0.70:** The linear fit must explain at least 70% of the variation in concentration
+- **p-value ≤ 0.05:** The slope must be statistically significant (not due to random chance)
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
+### Exercise: Explore the Configuration
+
+Write code to:
+1. Loop through all gases in `GAS_CONFIG` and print their settings
+2. Find which gas has the most data points available
+3. Verify that we have data for all three measurement dates
+
+**Hint:** Use `for gas_name, config in GAS_CONFIG.items():` to iterate through dictionary items.
+
+<details markdown="1">
+<summary>Click here for the solution!</summary>
+
+```python
+print("="*50)
+print("GAS CONFIGURATION SUMMARY")
+print("="*50)
+
+max_points = 0
+gas_with_most_data = None
+
+for gas_name, config in GAS_CONFIG.items():
+    n_points = len(config['dataframe'])
+    
+    print(f"\n{config['display_name']} ({gas_name}):")
+    print(f"  Column: {config['column']}")
+    print(f"  Unit: {config['slope_unit']}")
+    print(f"  Data points: {n_points:,}")
+    
+    # Check date range
+    df = config['dataframe']
+    print(f"  Date range: {df.index.min()} to {df.index.max()}")
+    
+    # Track which has most data
+    if n_points > max_points:
+        max_points = n_points
+        gas_with_most_data = gas_name
+
+print(f"\n→ {gas_with_most_data} has the most data points: {max_points:,}")
+```
+</details>
+{% endcapture %}
+
+<div class="notice--primary">
+{{ exercise | markdownify }}
+</div>
+</div>
 
 
 ### 4.3 Building the Automation Pipeline
 
-Now we'll build a **nested loop** that:
-1. **Outer loop:** Iterates through each plot
-2. **Inner loop:** Iterates through each measurement for that plot
+Now we're ready to build the main automation loop. This is the most complex part of the tutorial, so we'll break it into clear steps and explain each one thoroughly.
 
-The workflow for each measurement is:
-1. **Parse** the semicolon-separated times and variables
-2. **Extract** the correct data based on gas type and time window
-3. **Visualize** for manual inspection
-4. **Refine** the time window (remove baseline and drop phases)
-5. **Regress** to get the slope
-6. **Quality check** the regression fit
-7. **Calculate** the flux
-8. **Store** the results
+### Overview: What Will Our Pipeline Do?
 
-### Helper Function: Get Temperature for a Time Window
+Here's the high-level workflow for processing **each measurement**:
 
-Since temperature data might be in a different DataFrame, we need a helper function:
-
-```python
-def get_mean_temperature(start_time, end_time, temp_df, temp_column='Ta_C'):
-    """
-    Get the mean temperature during a measurement window.
-    
-    Parameters:
-        start_time: Start of measurement window
-        end_time: End of measurement window
-        temp_df: DataFrame containing temperature data
-        temp_column: Name of temperature column
-    
-    Returns:
-        float: Mean temperature in Celsius, or NaN if no data
-    """
-    mask = (temp_df.index >= start_time) & (temp_df.index <= end_time)
-    temp_data = temp_df.loc[mask, temp_column]
-    
-    if len(temp_data) == 0:
-        print(f"  ⚠ Warning: No temperature data found for this window")
-        return np.nan
-    
-    return temp_data.mean()
+```
+┌─────────────────────────────────────────────────────────────┐
+│  For each PLOT in metadata:                                 │
+│    For each MEASUREMENT in that plot:                       │
+│      1. Look up gas configuration                           │
+│      2. Extract data for the time window                    │
+│      3. Show plot for visual inspection                     │
+│      4. Let user refine the time window                     │
+│      5. Perform linear regression                           │
+│      6. Check quality (R², p-value)                         │
+│      7. If passed: Calculate flux                           │
+│      8. Store all results                                   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### The Main Processing Loop
+This is a **nested loop** structure:
+- **Outer loop:** Goes through each plot (6 plots)
+- **Inner loop:** Goes through each measurement within that plot (varies per plot)
+
+### Step 1: Create Storage for Results
+
+Before we start processing, we need a place to store all our calculated fluxes. We'll use a **list of dictionaries** that can later be converted to a DataFrame.
+
+**Why a list of dictionaries?**
+
+```python
+# Each measurement's results will be a dictionary
+result = {
+    'plot_id': '1-1',
+    'variable': 'CO2',
+    'flux': 1.234,
+    # ... more fields
+}
+
+# We append each result to a list
+results = []
+results.append(result)
+
+# At the end, convert to DataFrame
+results_df = pd.DataFrame(results)
+```
+
+This pattern is very common in Python data processing!
 
 ```python
 from scipy import stats
 import numpy as np
 
-# --- Results Storage ---
-results = []
+# --- Initialize Results Storage ---
+results = []  # Will hold one dictionary per measurement
+```
 
-# --- Counter for progress tracking ---
-measurement_counter = 0
-total_measurements = sum(len(row['variable'].split(';')) for _, row in metadata_df.iterrows())
+### Step 2: Create a Helper Function for Temperature
 
-# --- Process Each Plot ---
-print("="*70)
-print("STARTING AUTOMATED FLUX CALCULATION")
-print("="*70)
+During flux calculation, we need the average temperature during each measurement. Let's create a reusable function for this:
 
-for plot_idx, row in metadata_df.iterrows():
+```python
+def get_mean_temperature(start_time, end_time, temp_df, temp_column='Ta_C'):
+    """
+    Calculate mean temperature during a measurement window.
     
-    # --- Extract Plot Info ---
+    Parameters:
+        start_time: Start of measurement (datetime)
+        end_time: End of measurement (datetime)
+        temp_df: DataFrame with temperature data (DatetimeIndex)
+        temp_column: Name of temperature column
+    
+    Returns:
+        float: Mean temperature in °C, or NaN if no data found
+    """
+    # Create a boolean mask for the time window
+    mask = (temp_df.index >= start_time) & (temp_df.index <= end_time)
+    
+    # Extract temperature values in that window
+    temp_values = temp_df.loc[mask, temp_column]
+    
+    # Handle case where no data is found
+    if len(temp_values) == 0:
+        print(f"  ⚠ Warning: No temperature data found")
+        return np.nan
+    
+    return temp_values.mean()
+```
+
+### Step 3: Count Total Measurements
+
+For progress tracking, let's count how many measurements we'll process:
+
+```python
+# Count total measurements across all plots
+total_measurements = 0
+for _, row in metadata_df.iterrows():
+    n_measurements = len(row['variable'].split(';'))
+    total_measurements += n_measurements
+
+print(f"Total measurements to process: {total_measurements}")
+```
+
+Or more concisely using a **generator expression**:
+
+```python
+total_measurements = sum(
+    len(row['variable'].split(';')) 
+    for _, row in metadata_df.iterrows()
+)
+print(f"Total measurements to process: {total_measurements}")
+```
+
+### Step 4: Understanding the Nested Loop Structure
+
+Before writing the full loop, let's understand its structure with a simplified version that just prints what it would do:
+
+> **Info: Nested Loops**
+> 
+> A nested loop is a loop inside another loop. The inner loop runs completely for each iteration of the outer loop.
+> 
+> ```python
+> # Example: Print a multiplication table
+> for i in range(1, 4):        # Outer loop: i = 1, 2, 3
+>     for j in range(1, 4):    # Inner loop: j = 1, 2, 3
+>         print(f"{i} × {j} = {i*j}")
+>     print("---")  # Runs after inner loop completes
+> ```
+> 
+> Output:
+> ```
+> 1 × 1 = 1
+> 1 × 2 = 2
+> 1 × 3 = 3
+> ---
+> 2 × 1 = 2
+> 2 × 2 = 4
+> ...
+> ```
+> 
+> In our case:
+> - **Outer loop:** Each plot
+> - **Inner loop:** Each measurement within that plot
+
+```python
+# --- Preview the loop structure (no calculations) ---
+print("="*60)
+print("LOOP STRUCTURE PREVIEW")
+print("="*60)
+
+measurement_counter = 0
+
+# OUTER LOOP: Each plot
+for plot_idx, row in metadata_df.iterrows():
     plot_id = row['plot_id']
     land_use = row['land_use']
     
-    # --- Parse Semicolon-Separated Values ---
+    # Parse the semicolon-separated values
+    variables = [v.strip() for v in row['variable'].split(';')]
+    
+    print(f"\nPlot {plot_id} ({land_use}): {len(variables)} measurements")
+    
+    # INNER LOOP: Each measurement for this plot
+    for var in variables:
+        measurement_counter += 1
+        print(f"  [{measurement_counter}] {var}")
+
+print(f"\n→ Total: {measurement_counter} measurements")
+```
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
+### Exercise: Understand the Loop Structure
+
+Before running the full automation, let's make sure you understand the nested loop structure.
+
+**Task:** Modify the preview loop above to also count:
+1. How many measurements per gas type (N2O, CO2, CH4)
+2. How many measurements per land use (forest, grassland)
+
+**Hint:** Create dictionaries like `gas_counts = {'N2O': 0, 'CO2': 0, 'CH4': 0}` and increment them inside the loop.
+
+<details markdown="1">
+<summary>Click here for the solution!</summary>
+
+```python
+# Initialize counters
+gas_counts = {'N2O': 0, 'CO2': 0, 'CH4': 0}
+landuse_counts = {'forest': 0, 'grassland': 0}
+
+# Loop through all measurements
+for plot_idx, row in metadata_df.iterrows():
+    land_use = row['land_use']
+    variables = [v.strip() for v in row['variable'].split(';')]
+    
+    for var in variables:
+        # Count by gas
+        if var in gas_counts:
+            gas_counts[var] += 1
+        
+        # Count by land use
+        landuse_counts[land_use] += 1
+
+print("Measurements by Gas Type:")
+for gas, count in gas_counts.items():
+    print(f"  {gas}: {count}")
+
+print(f"\nMeasurements by Land Use:")
+for lu, count in landuse_counts.items():
+    print(f"  {lu}: {count}")
+
+print(f"\nTotal: {sum(gas_counts.values())}")
+```
+
+**Expected Output:**
+```
+Measurements by Gas Type:
+  N2O: 11
+  CO2: 16
+  CH4: 16
+
+Measurements by Land Use:
+  forest: 19
+  grassland: 24
+
+Total: 43
+```
+</details>
+{% endcapture %}
+
+<div class="notice--primary">
+{{ exercise | markdownify }}
+</div>
+</div>
+
+### Step 5: The Outer Loop - Iterating Through Plots
+
+Now let's start building the real loop. The outer loop uses `iterrows()` to go through each row (plot) in our metadata DataFrame:
+
+> **Info: DataFrame `iterrows()`**
+> 
+> `iterrows()` lets you loop through a DataFrame row by row:
+> 
+> ```python
+> for index, row in df.iterrows():
+>     # index = row number (or index label)
+>     # row = a Series containing that row's data
+>     print(row['column_name'])
+> ```
+> 
+> Each `row` acts like a dictionary—access columns with `row['column_name']`.
+
+```python
+# --- Initialize ---
+results = []
+measurement_counter = 0
+
+print("="*70)
+print("STARTING AUTOMATED FLUX CALCULATION")
+print(f"Processing {total_measurements} measurements across {len(metadata_df)} plots")
+print("="*70)
+
+# --- OUTER LOOP: Each Plot ---
+for plot_idx, row in metadata_df.iterrows():
+    
+    # Extract plot information
+    plot_id = row['plot_id']
+    land_use = row['land_use']
+    
+    # Parse semicolon-separated values into lists
     start_times = [s.strip() for s in row['start_time'].split(';')]
     end_times = [s.strip() for s in row['end_time'].split(';')]
     variables = [v.strip() for v in row['variable'].split(';')]
@@ -1865,72 +2330,107 @@ for plot_idx, row in metadata_df.iterrows():
     print(f"Measurements to process: {len(variables)}")
     print("="*70)
     
-    # --- Inner Loop: Process Each Measurement for This Plot ---
+    # Inner loop will go here...
+```
+
+### Step 6: The Inner Loop - Processing Each Measurement
+
+Inside the outer loop, we iterate through each measurement using `zip()`:
+
+```python
+    # --- INNER LOOP: Each Measurement for This Plot ---
     for start_str, end_str, variable in zip(start_times, end_times, variables):
         
         measurement_counter += 1
         
-        # Parse timestamps
+        # Convert string timestamps to datetime objects
         start_time = pd.to_datetime(start_str)
         end_time = pd.to_datetime(end_str)
         measurement_date = start_time.strftime('%Y-%m-%d')
         
-        print(f"\n[{measurement_counter}/{total_measurements}] {variable} | {start_time} to {end_time}")
+        print(f"\n[{measurement_counter}/{total_measurements}] {variable} | {measurement_date}")
         print("-" * 50)
         
+        # Processing steps continue here...
+```
+
+### Step 7: Look Up Gas Configuration
+
+For each measurement, we need to get the correct settings from our configuration dictionary:
+
+```python
         # --- Get Gas Configuration ---
+        # Check if this gas is in our configuration
         if variable not in GAS_CONFIG:
-            print(f"  ✗ ERROR: Unknown variable '{variable}'. Skipping.")
-            continue
+            print(f"  ✗ ERROR: Unknown gas '{variable}'. Skipping.")
+            continue  # Skip to next measurement
         
+        # Look up settings for this gas
         config = GAS_CONFIG[variable]
-        df_gas = config['dataframe']
-        column_name = config['column']
-        slope_unit = config['slope_unit']
-        display_name = config['display_name']
-        
-        # --- Step 1: Extract Data for Time Window ---
+        df_gas = config['dataframe']      # The DataFrame containing this gas's data
+        column_name = config['column']    # Column name (e.g., 'CO2_ppm')
+        slope_unit = config['slope_unit'] # Unit (e.g., 'ppm')
+        display_name = config['display_name']  # Pretty name (e.g., 'CO₂')
+```
+
+### Step 8: Extract Data for the Time Window
+
+Now we filter the gas data to only include rows within our measurement time window:
+
+```python
+        # --- Extract Data for Time Window ---
+        # Create a boolean mask for rows between start and end time
         mask = (df_gas.index >= start_time) & (df_gas.index <= end_time)
         measurement_data = df_gas.loc[mask].copy()
         
+        # Check if we have enough data points
         if len(measurement_data) < 10:
             print(f"  ⚠ WARNING: Only {len(measurement_data)} data points. Skipping.")
+            
+            # Still record this measurement, but mark it as failed
             results.append({
                 'plot_id': plot_id,
                 'land_use': land_use,
                 'variable': variable,
                 'measurement_date': measurement_date,
-                'start_time': start_time,
-                'end_time': end_time,
-                'slope': np.nan,
-                'slope_unit': slope_unit,
-                'r_squared': np.nan,
-                'p_value': np.nan,
                 'qc_pass': False,
                 'flux_umol_m2_s': np.nan,
                 'note': 'Insufficient data'
             })
-            continue
+            continue  # Skip to next measurement
         
         print(f"  Data points in window: {len(measurement_data)}")
-        
-        # --- Step 2: Visual Inspection ---
+```
+
+### Step 9: Visual Inspection
+
+We display the data so the user can inspect it before regression:
+
+```python
+        # --- Visual Inspection ---
+        # Plot the data to let the user see the pattern
         plot_time_series(
             measurement_data, 
             y_column=column_name, 
             title=f'{display_name} - Plot {plot_id} - {measurement_date}',
             mode='markers'
         )
+```
+
+### Step 10: Interactive Time Window Refinement
+
+We may need to adjust the time window to exclude baseline or drop phases:
+
+```python
+        # --- Refine Time Window (Interactive) ---
+        print(f"\n  Current window: {start_time.strftime('%H:%M:%S')} → {end_time.strftime('%H:%M:%S')}")
+        print("  Look at the plot and identify the LINEAR accumulation phase.")
+        print("  Enter new times to refine, or press Enter to keep current:")
         
-        # --- Step 3: Refine Time Window (Interactive) ---
-        print(f"\n  Current window: {start_time.strftime('%H:%M:%S')} to {end_time.strftime('%H:%M:%S')}")
-        print("  Inspect the plot and identify the LINEAR accumulation phase.")
-        print("  Press Enter to keep current times, or enter new times (HH:MM:SS):")
+        start_input = input(f"    New start time (HH:MM:SS) [{start_time.strftime('%H:%M:%S')}]: ").strip()
+        end_input = input(f"    New end time (HH:MM:SS) [{end_time.strftime('%H:%M:%S')}]: ").strip()
         
-        start_input = input(f"    Start time [{start_time.strftime('%H:%M:%S')}]: ").strip()
-        end_input = input(f"    End time [{end_time.strftime('%H:%M:%S')}]: ").strip()
-        
-        # Parse refined times (keep date, update time if provided)
+        # Parse the input (keep original if empty)
         if start_input:
             refined_start = pd.to_datetime(f"{measurement_date} {start_input}")
         else:
@@ -1945,98 +2445,115 @@ for plot_idx, row in metadata_df.iterrows():
         mask = (df_gas.index >= refined_start) & (df_gas.index <= refined_end)
         regression_data = df_gas.loc[mask].copy()
         
+        # Check again if we have enough data
         if len(regression_data) < 10:
-            print(f"  ⚠ WARNING: Refined window has only {len(regression_data)} points. Skipping.")
+            print(f"  ⚠ Refined window has only {len(regression_data)} points. Skipping.")
             results.append({
                 'plot_id': plot_id,
                 'land_use': land_use,
                 'variable': variable,
                 'measurement_date': measurement_date,
-                'start_time': refined_start,
-                'end_time': refined_end,
-                'slope': np.nan,
-                'slope_unit': slope_unit,
-                'r_squared': np.nan,
-                'p_value': np.nan,
                 'qc_pass': False,
                 'flux_umol_m2_s': np.nan,
                 'note': 'Insufficient data after refinement'
             })
             continue
-        
-        # --- Step 4: Linear Regression ---
-        # Create elapsed seconds column
+```
+
+### Step 11: Perform Linear Regression
+
+Now we fit a line to get the slope (rate of concentration change):
+
+```python
+        # --- Linear Regression ---
+        # First, convert timestamps to "elapsed seconds" for regression
         regression_data['elapsed_seconds'] = (
             regression_data.index - regression_data.index.min()
         ).total_seconds()
         
-        # Perform regression
+        # Perform linear regression using scipy
         slope, intercept, r_value, p_value, std_err = stats.linregress(
             x=regression_data['elapsed_seconds'],
             y=regression_data[column_name]
         )
         
+        # Calculate R-squared
         r_squared = r_value ** 2
         
         print(f"\n  Regression Results:")
         print(f"    Slope: {slope:.6f} {slope_unit}/s")
         print(f"    R²: {r_squared:.4f}")
         print(f"    p-value: {p_value:.2e}")
+```
+
+### Step 12: Visualize the Regression Fit
+
+We show the data with the fitted line overlaid:
+
+```python
+        # --- Visualize Regression Fit ---
+        import plotly.graph_objects as go
         
-        # --- Step 5: Visualize Regression Fit ---
         fig = go.Figure()
         
+        # Add data points
         fig.add_trace(go.Scatter(
             x=regression_data['elapsed_seconds'],
             y=regression_data[column_name],
             mode='markers',
-            name='Data',
+            name='Measured Data',
             marker=dict(size=6)
         ))
         
+        # Add fitted line
         fig.add_trace(go.Scatter(
             x=regression_data['elapsed_seconds'],
             y=intercept + slope * regression_data['elapsed_seconds'],
             mode='lines',
-            name=f'Fit (R²={r_squared:.3f})',
+            name=f'Linear Fit (R²={r_squared:.3f})',
             line=dict(color='red', width=2)
         ))
         
         fig.update_layout(
-            title=f'{display_name} Regression - Plot {plot_id} (R²={r_squared:.3f})',
-            xaxis_title='Elapsed Time (s)',
+            title=f'{display_name} Regression - Plot {plot_id}',
+            xaxis_title='Elapsed Time (seconds)',
             yaxis_title=f'{display_name} Concentration ({slope_unit})',
             template='plotly_white'
         )
         
         fig.show()
-        
-        # --- Step 6: Quality Control ---
+```
+
+### Step 13: Quality Control
+
+We check if the regression meets our thresholds:
+
+```python
+        # --- Quality Control ---
         if r_squared < R_SQUARED_THRESHOLD or p_value > P_VALUE_THRESHOLD:
-            print(f"  ✗ QC FAILED: R²={r_squared:.3f} < {R_SQUARED_THRESHOLD} or p={p_value:.3f} > {P_VALUE_THRESHOLD}")
+            print(f"  ✗ QC FAILED: R²={r_squared:.3f} or p={p_value:.3f} outside thresholds")
             qc_pass = False
-            flux = 0.0
+            flux = np.nan
             note = f'QC failed: R²={r_squared:.3f}, p={p_value:.3f}'
         else:
             print(f"  ✓ QC PASSED")
             qc_pass = True
             note = ''
             
-            # --- Step 7: Calculate Flux ---
+            # Proceed to flux calculation...
+```
+
+### Step 14: Calculate Flux (if QC passed)
+
+If quality control passed, we calculate the flux:
+
+```python
+            # --- Calculate Flux ---
             # Get mean temperature during measurement
-            avg_temp_c = get_mean_temperature(refined_start, refined_end, df_Ta)
+            avg_temp_c = regression_data['Ta_C'].mean()
+            avg_temp_k = avg_temp_c + 273.15  # Convert to Kelvin
             
-            if np.isnan(avg_temp_c):
-                # Fallback: try to get from regression data or use default
-                if 'Ta_C' in regression_data.columns:
-                    avg_temp_c = regression_data['Ta_C'].mean()
-                else:
-                    avg_temp_c = 25.0  # Default assumption
-                    print(f"  ⚠ Warning: Using default temperature {avg_temp_c}°C")
-            
-            avg_temp_k = avg_temp_c + 273.15
-            
-            # Calculate flux using our function
+            # Calculate flux using our function from Section 3
             flux = calculate_flux(
                 slope=slope,
                 temp_k=avg_temp_k,
@@ -2049,7 +2566,13 @@ for plot_idx, row in metadata_df.iterrows():
             print(f"\n  Flux Calculation:")
             print(f"    Temperature: {avg_temp_c:.1f}°C = {avg_temp_k:.1f} K")
             print(f"    {display_name} Flux: {flux:.6f} µmol m⁻² s⁻¹")
-        
+```
+
+### Step 15: Store Results
+
+Finally, we save all the information for this measurement:
+
+```python
         # --- Store Results ---
         results.append({
             'plot_id': plot_id,
@@ -2066,84 +2589,305 @@ for plot_idx, row in metadata_df.iterrows():
             'flux_umol_m2_s': flux,
             'note': note
         })
+```
 
-# --- Convert Results to DataFrame ---
+
+### 4.4 The Complete Processing Script
+
+Now that we understand each piece, here's the complete script. All the steps above are combined into one runnable block:
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
+### Exercise: Run the Complete Pipeline
+
+Run the complete code below. Process all measurements to get familiar with the pipline and get the result.
+
+**Tips for visual inspection:**
+- Look for the **linear accumulation phase** (steady increase)
+- Exclude the **baseline** (flat part before chamber closes)
+- Exclude the **drop** (sudden decrease when chamber opens)
+- If the data looks good, just press Enter to keep the original times
+
+```python
+from scipy import stats
+import numpy as np
+import plotly.graph_objects as go
+
+# ============================================================
+# AUTOMATED FLUX CALCULATION - COMPLETE SCRIPT
+# ============================================================
+
+# --- Initialize ---
+results = []
+measurement_counter = 0
+total_measurements = sum(len(row['variable'].split(';')) for _, row in metadata_df.iterrows())
+
+print("="*70)
+print("AUTOMATED FLUX CALCULATION")
+print(f"Processing {total_measurements} measurements across {len(metadata_df)} plots")
+print("="*70)
+
+# --- OUTER LOOP: Each Plot ---
+for plot_idx, row in metadata_df.iterrows():
+    
+    plot_id = row['plot_id']
+    land_use = row['land_use']
+    
+    # Parse semicolon-separated values
+    start_times = [s.strip() for s in row['start_time'].split(';')]
+    end_times = [s.strip() for s in row['end_time'].split(';')]
+    variables = [v.strip() for v in row['variable'].split(';')]
+    
+    print(f"\n{'='*70}")
+    print(f"PLOT: {plot_id} ({land_use}) - {len(variables)} measurements")
+    print("="*70)
+    
+    # --- INNER LOOP: Each Measurement ---
+    for start_str, end_str, variable in zip(start_times, end_times, variables):
+        
+        measurement_counter += 1
+        start_time = pd.to_datetime(start_str)
+        end_time = pd.to_datetime(end_str)
+        measurement_date = start_time.strftime('%Y-%m-%d')
+        
+        print(f"\n[{measurement_counter}/{total_measurements}] {variable} | {measurement_date}")
+        print("-" * 50)
+        
+        # --- Get gas configuration ---
+        if variable not in GAS_CONFIG:
+            print(f"  ✗ Unknown gas '{variable}'. Skipping.")
+            continue
+        
+        config = GAS_CONFIG[variable]
+        df_gas = config['dataframe']
+        column_name = config['column']
+        slope_unit = config['slope_unit']
+        display_name = config['display_name']
+        
+        # --- Extract data ---
+        mask = (df_gas.index >= start_time) & (df_gas.index <= end_time)
+        measurement_data = df_gas.loc[mask].copy()
+        
+        if len(measurement_data) < 10:
+            print(f"  ⚠ Only {len(measurement_data)} points. Skipping.")
+            results.append({
+                'plot_id': plot_id, 'land_use': land_use, 'variable': variable,
+                'measurement_date': measurement_date, 'slope': np.nan,
+                'slope_unit': slope_unit, 'r_squared': np.nan, 'p_value': np.nan,
+                'qc_pass': False, 'flux_umol_m2_s': np.nan, 'note': 'Insufficient data'
+            })
+            continue
+        
+        print(f"  Data points: {len(measurement_data)}")
+        
+        # --- Visual inspection ---
+        plot_time_series(measurement_data, y_column=column_name, 
+                        title=f'{display_name} - Plot {plot_id} - {measurement_date}',
+                        mode='markers')
+        
+        # --- Refine time window ---
+        print(f"\n  Window: {start_time.strftime('%H:%M:%S')} → {end_time.strftime('%H:%M:%S')}")
+        start_input = input(f"    New start (HH:MM:SS) or Enter to keep: ").strip()
+        end_input = input(f"    New end (HH:MM:SS) or Enter to keep: ").strip()
+        
+        refined_start = pd.to_datetime(f"{measurement_date} {start_input}") if start_input else start_time
+        refined_end = pd.to_datetime(f"{measurement_date} {end_input}") if end_input else end_time
+        
+        mask = (df_gas.index >= refined_start) & (df_gas.index <= refined_end)
+        regression_data = df_gas.loc[mask].copy()
+        
+        if len(regression_data) < 10:
+            print(f"  ⚠ Refined window too small. Skipping.")
+            results.append({
+                'plot_id': plot_id, 'land_use': land_use, 'variable': variable,
+                'measurement_date': measurement_date, 'slope': np.nan,
+                'slope_unit': slope_unit, 'r_squared': np.nan, 'p_value': np.nan,
+                'qc_pass': False, 'flux_umol_m2_s': np.nan, 'note': 'Insufficient data after refinement'
+            })
+            continue
+        
+        # --- Linear regression ---
+        regression_data['elapsed_seconds'] = (
+            regression_data.index - regression_data.index.min()
+        ).total_seconds()
+        
+        slope, intercept, r_value, p_value, std_err = stats.linregress(
+            x=regression_data['elapsed_seconds'],
+            y=regression_data[column_name]
+        )
+        r_squared = r_value ** 2
+        
+        print(f"\n  Slope: {slope:.6f} {slope_unit}/s | R²: {r_squared:.4f} | p: {p_value:.2e}")
+        
+        # --- Visualize fit ---
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=regression_data['elapsed_seconds'], 
+                                  y=regression_data[column_name],
+                                  mode='markers', name='Data'))
+        fig.add_trace(go.Scatter(x=regression_data['elapsed_seconds'],
+                                  y=intercept + slope * regression_data['elapsed_seconds'],
+                                  mode='lines', name=f'Fit (R²={r_squared:.3f})',
+                                  line=dict(color='red')))
+        fig.update_layout(title=f'{display_name} Regression - Plot {plot_id}',
+                         xaxis_title='Elapsed Time (s)',
+                         yaxis_title=f'{display_name} ({slope_unit})',
+                         template='plotly_white')
+        fig.show()
+        
+        # --- Quality control ---
+        if r_squared < R_SQUARED_THRESHOLD or p_value > P_VALUE_THRESHOLD:
+            print(f"  ✗ QC FAILED")
+            qc_pass, flux, note = False, np.nan, f'QC failed: R²={r_squared:.3f}'
+        else:
+            print(f"  ✓ QC PASSED")
+            qc_pass, note = True, ''
+            
+            avg_temp_c = regression_data['Ta_C'].mean()
+            avg_temp_k = avg_temp_c + 273.15
+            
+            flux = calculate_flux(
+                slope=slope, temp_k=avg_temp_k, pressure_atm=PRESSURE_ATM,
+                volume_L=CHAMBER_VOLUME_L, area_m2=COLLAR_AREA_M2,
+                slope_unit=slope_unit
+            )
+            print(f"  {display_name} Flux: {flux:.6f} µmol m⁻² s⁻¹")
+        
+        # --- Store results ---
+        results.append({
+            'plot_id': plot_id, 'land_use': land_use, 'variable': variable,
+            'measurement_date': measurement_date, 'slope': slope,
+            'slope_unit': slope_unit, 'r_squared': r_squared, 'p_value': p_value,
+            'qc_pass': qc_pass, 'flux_umol_m2_s': flux, 'note': note
+        })
+
+# --- Convert to DataFrame ---
 flux_results_df = pd.DataFrame(results)
 
 print("\n" + "="*70)
-print("FLUX CALCULATION COMPLETE")
+print("PROCESSING COMPLETE")
 print("="*70)
-print(f"\nTotal measurements processed: {len(flux_results_df)}")
+print(f"Total processed: {len(flux_results_df)}")
 print(f"QC passed: {flux_results_df['qc_pass'].sum()}")
 print(f"QC failed: {(~flux_results_df['qc_pass']).sum()}")
-
-flux_results_df
 ```
+{% endcapture %}
 
-> **Info: Using `zip()` for Parallel Iteration**
-> 
-> The `zip()` function lets us iterate through multiple lists simultaneously:
-> ```python
-> for start, end, var in zip(start_times, end_times, variables):
->     # start, end, and var are from the same index position
-> ```
-> This ensures the 1st start_time pairs with the 1st end_time and 1st variable.
->
-> **Resources:** [Python zip() documentation](https://docs.python.org/3/library/functions.html#zip)
+<div class="notice--primary">
+{{ exercise | markdownify }}
+</div>
+</div>
 
 
-### 4.4 Reviewing the Results
+### 4.5 Analyzing the Results
 
-Let's examine our calculated fluxes:
+After processing all measurements, we have a complete DataFrame of results. Let's analyze it!
+
+### Viewing the Results
 
 ```python
-# --- Summary Statistics by Variable ---
+# Display key columns
+display_cols = ['plot_id', 'land_use', 'variable', 'measurement_date', 
+                'r_squared', 'qc_pass', 'flux_umol_m2_s']
+
+# Sort by variable, then plot, then date
+flux_results_df[display_cols].sort_values(['variable', 'plot_id', 'measurement_date'])
+```
+
+### Summary Statistics by Gas Type
+
+```python
 print("="*60)
 print("FLUX SUMMARY BY GAS TYPE")
 print("="*60)
 
 for variable in flux_results_df['variable'].unique():
+    # Filter to QC-passed measurements of this gas
     df_var = flux_results_df[
         (flux_results_df['variable'] == variable) & 
         (flux_results_df['qc_pass'] == True)
     ]
     
     if len(df_var) > 0:
-        print(f"\n{variable}:")
+        display_name = GAS_CONFIG[variable]['display_name']
+        print(f"\n{display_name}:")
         print(f"  Valid measurements: {len(df_var)}")
-        print(f"  Mean flux: {df_var['flux_umol_m2_s'].mean():.6f} µmol m⁻² s⁻¹")
-        print(f"  Std dev:   {df_var['flux_umol_m2_s'].std():.6f} µmol m⁻² s⁻¹")
-        print(f"  Min:       {df_var['flux_umol_m2_s'].min():.6f} µmol m⁻² s⁻¹")
-        print(f"  Max:       {df_var['flux_umol_m2_s'].max():.6f} µmol m⁻² s⁻¹")
+        print(f"  Mean flux:  {df_var['flux_umol_m2_s'].mean():.6f} µmol m⁻² s⁻¹")
+        print(f"  Std dev:    {df_var['flux_umol_m2_s'].std():.6f} µmol m⁻² s⁻¹")
+        print(f"  Min:        {df_var['flux_umol_m2_s'].min():.6f} µmol m⁻² s⁻¹")
+        print(f"  Max:        {df_var['flux_umol_m2_s'].max():.6f} µmol m⁻² s⁻¹")
 ```
+
+<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+{% capture exercise %}
+### Exercise: Investigate Your Results
+
+Using the `flux_results_df` DataFrame, answer these questions:
+
+1. What percentage of measurements passed QC?
+2. Which plot had the highest CO₂ flux? On which date?
+3. What was the average R² for measurements that passed QC?
+4. Are there any patterns in which measurements failed QC?
+
+<details markdown="1">
+<summary>Click here for the solution!</summary>
 
 ```python
-# --- View All Results ---
-# Show only key columns for clarity
-display_cols = ['plot_id', 'land_use', 'variable', 'measurement_date', 
-                'r_squared', 'qc_pass', 'flux_umol_m2_s']
+# 1. QC pass rate
+total = len(flux_results_df)
+passed = flux_results_df['qc_pass'].sum()
+print(f"QC Pass Rate: {passed}/{total} = {100*passed/total:.1f}%")
 
-flux_results_df[display_cols].sort_values(['variable', 'measurement_date', 'plot_id'])
+# 2. Highest CO2 flux
+co2_valid = flux_results_df[
+    (flux_results_df['variable'] == 'CO2') & 
+    (flux_results_df['qc_pass'] == True)
+]
+if len(co2_valid) > 0:
+    max_idx = co2_valid['flux_umol_m2_s'].idxmax()
+    max_row = co2_valid.loc[max_idx]
+    print(f"\nHighest CO₂ flux:")
+    print(f"  Plot: {max_row['plot_id']}")
+    print(f"  Date: {max_row['measurement_date']}")
+    print(f"  Flux: {max_row['flux_umol_m2_s']:.4f} µmol m⁻² s⁻¹")
+
+# 3. Average R² for passed measurements
+passed_df = flux_results_df[flux_results_df['qc_pass'] == True]
+print(f"\nAverage R² (passed): {passed_df['r_squared'].mean():.4f}")
+
+# 4. Analyze failures
+failed_df = flux_results_df[flux_results_df['qc_pass'] == False]
+print(f"\nQC Failures:")
+print(f"  By variable: {failed_df['variable'].value_counts().to_dict()}")
+print(f"  By land use: {failed_df['land_use'].value_counts().to_dict()}")
+print(f"  Reasons: {failed_df['note'].value_counts().to_dict()}")
 ```
+</details>
+{% endcapture %}
+
+<div class="notice--primary">
+{{ exercise | markdownify }}
+</div>
+</div>
 
 
-### 4.5 Comparing Fluxes Across Land Use Types
+### 4.6 Comparing Fluxes Across Land Use Types
 
-Now for the exciting part—let's see if there are differences in gas fluxes between forest and grassland!
+The key scientific question: **Do forest and grassland ecosystems have different gas fluxes?**
 
-### Visualization with Box Plots
+### Creating Box Plot Comparisons
 
 ```python
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# Filter to only QC-passed measurements
+# Filter to QC-passed only
 df_valid = flux_results_df[flux_results_df['qc_pass'] == True].copy()
 
-# Create a figure with subplots for each gas
+# Get unique variables
 variables = df_valid['variable'].unique()
 n_vars = len(variables)
 
+# Create subplots - one for each gas
 fig, axes = plt.subplots(1, n_vars, figsize=(5*n_vars, 6))
 
 # Handle case of single variable
@@ -2152,29 +2896,15 @@ if n_vars == 1:
 
 for ax, variable in zip(axes, variables):
     df_var = df_valid[df_valid['variable'] == variable]
+    display_name = GAS_CONFIG[variable]['display_name']
     
-    # Box plot
-    sns.boxplot(
-        data=df_var, 
-        x='land_use', 
-        y='flux_umol_m2_s', 
-        palette='viridis',
-        ax=ax
-    )
+    # Box plot showing distribution
+    sns.boxplot(data=df_var, x='land_use', y='flux_umol_m2_s', 
+                palette='viridis', ax=ax)
     
-    # Overlay individual points
-    sns.stripplot(
-        data=df_var, 
-        x='land_use', 
-        y='flux_umol_m2_s', 
-        color='black', 
-        size=8, 
-        alpha=0.7,
-        ax=ax
-    )
-    
-    # Get display name
-    display_name = GAS_CONFIG.get(variable, {}).get('display_name', variable)
+    # Overlay individual data points
+    sns.stripplot(data=df_var, x='land_use', y='flux_umol_m2_s',
+                  color='black', size=8, alpha=0.7, ax=ax)
     
     ax.set_title(f'{display_name} Flux by Land Use', fontsize=14)
     ax.set_xlabel('Land Use', fontsize=12)
@@ -2185,63 +2915,24 @@ plt.tight_layout()
 plt.show()
 ```
 
-### Statistical Comparison (Optional)
+### 4.7 Exporting Results
 
-For a more rigorous comparison, we can perform statistical tests:
-
-```python
-from scipy.stats import mannwhitneyu, ttest_ind
-
-print("="*60)
-print("STATISTICAL COMPARISON: Forest vs Grassland")
-print("="*60)
-
-for variable in df_valid['variable'].unique():
-    df_var = df_valid[df_valid['variable'] == variable]
-    
-    forest_flux = df_var[df_var['land_use'] == 'forest']['flux_umol_m2_s']
-    grassland_flux = df_var[df_var['land_use'] == 'grassland']['flux_umol_m2_s']
-    
-    display_name = GAS_CONFIG.get(variable, {}).get('display_name', variable)
-    
-    print(f"\n{display_name}:")
-    print(f"  Forest (n={len(forest_flux)}):    mean = {forest_flux.mean():.6f} µmol m⁻² s⁻¹")
-    print(f"  Grassland (n={len(grassland_flux)}): mean = {grassland_flux.mean():.6f} µmol m⁻² s⁻¹")
-    
-    # Only perform test if we have data in both groups
-    if len(forest_flux) >= 3 and len(grassland_flux) >= 3:
-        # Mann-Whitney U test (non-parametric, good for small samples)
-        stat, p_value = mannwhitneyu(forest_flux, grassland_flux, alternative='two-sided')
-        print(f"  Mann-Whitney U test: p = {p_value:.4f}")
-        
-        if p_value < 0.05:
-            print(f"  → Significant difference detected (p < 0.05)")
-        else:
-            print(f"  → No significant difference (p ≥ 0.05)")
-    else:
-        print(f"  → Insufficient data for statistical test")
-```
-
-
-### 4.6 Exporting Results
-
-Finally, let's save our results for future use or reporting:
+Finally, save your results for future use or reporting:
 
 ```python
-# --- Export to CSV ---
-output_path = 'flux_results.csv'
-flux_results_df.to_csv(output_path, index=False)
-print(f"Results exported to: {output_path}")
+# Export full results
+flux_results_df.to_csv('flux_results.csv', index=False)
+print("Saved: flux_results.csv")
 
-# --- Export Summary Statistics ---
-summary_stats = df_valid.groupby(['variable', 'land_use']).agg({
+# Export summary by gas and land use
+summary = df_valid.groupby(['variable', 'land_use']).agg({
     'flux_umol_m2_s': ['count', 'mean', 'std', 'min', 'max']
 }).round(6)
+summary.columns = ['n', 'mean', 'std', 'min', 'max']
+summary.to_csv('flux_summary.csv')
+print("Saved: flux_summary.csv")
 
-summary_stats.columns = ['n', 'mean', 'std', 'min', 'max']
-summary_stats.to_csv('flux_summary.csv')
-print("Summary statistics exported to: flux_summary.csv")
-
-summary_stats
+summary
 ```
+
 
