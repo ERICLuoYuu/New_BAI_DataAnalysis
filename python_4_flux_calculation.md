@@ -569,14 +569,6 @@ The master DataFrame now contains:
 ## 2. Visualizing and Cleaning the Data
 
 Now that we have a single, merged DataFrame, our next step is to inspect the data quality. Raw sensor data from the field is almost never perfect. Visualizing it is the best way to diagnose issues like noise, drift, or outliers before we attempt any calculations. 
-
-In this section, we will:
-1. Create a reusable plotting function with Plotly
-2. Visualize the raw gas data to identify problems
-3. Apply a quantile filter to remove outliers
-4. Understand the patterns in our cleaned data
-
-
 ### 2.1 Creating a Reusable Plotting Function with Plotly
 
 For visualization, we'll use **Plotly**, a powerful library for creating interactive plots. Unlike static plots from Matplotlib, Plotly allows you to zoom, pan, and hover over data points—perfect for inspecting time-series data. Just as we did with data loading, we'll be plotting our time-series data multiple times. To make this efficient and keep our plots looking consistent, let's create a dedicated function.
@@ -940,12 +932,6 @@ After loading and filtering our raw data and getting an overview of the patterns
 
 In this section, we will focus on a **single measurement period** to understand the process in detail. We'll break it down into these key steps:
 
-1. Review the flux calculation formula to understand what components we need
-2. Isolate the data for a specific time window and visualize it
-3. Perform a linear regression to get the rate of concentration change
-4. Combine all the pieces to calculate the final flux
-
----
 
 ### 3.1 The Flux Calculation Formula
 
@@ -968,41 +954,69 @@ To make measurements comparable, we need to convert our raw observation into a s
 
 #### The Formula
 
-The flux calculation formula is:
+The flux calculation is a two-step process:
+
+**Step 1: Calculate moles of air in the chamber** using the Ideal Gas Law:
 
 $$
-\text{Flux} = \frac{\Delta C / \Delta t \cdot V \cdot P}{R \cdot T \cdot A}
+n = \frac{P \cdot V}{R \cdot T}
+$$
+
+**Step 2: Calculate flux** by combining the slope with moles of air:
+
+$$
+\text{Flux} = \frac{n \cdot \text{slope}}{A}
 $$
 
 Where:
 
 | Symbol | Description | Unit |
 |--------|-------------|------|
-| $\Delta C / \Delta t$ | Rate of concentration change (slope from regression) | ppm s⁻¹ |
-| $V$ | Chamber headspace volume | m³ |
-| $P$ | Air pressure | Pa |
-| $R$ | Ideal gas constant | 8.314 J K⁻¹ mol⁻¹ |
+| $n$ | Moles of air in the chamber | mol |
+| $P$ | Atmospheric pressure | atm |
+| $V$ | Chamber headspace volume | L (liters) |
+| $R$ | Ideal gas constant | 0.0821 L·atm·K⁻¹·mol⁻¹ |
 | $T$ | Air temperature | K (Kelvin) |
+| slope | Rate of concentration change | ppm s⁻¹ |
 | $A$ | Surface area covered by chamber | m² |
 
-#### Understanding the Formula
+#### Understanding Why This Works
 
-To better understand the formula, we can rearrange it into three intuitive components:
+The key insight is understanding what **ppm** means:
 
-$$
-\text{Flux} = \underbrace{\frac{\Delta C}{\Delta t}}_{\text{slope}} \times \underbrace{\frac{P \cdot V}{R \cdot T}}_{\text{moles of gas}} \times \underbrace{\frac{1}{A}}_{\text{per unit area}}
-$$
+> **ppm = parts per million = µmol per mol of air**
 
-This shows that: **Flux = Slope × Gas Moles × Area⁻¹**
+So when we multiply:
+- `slope (ppm/s)` × `n (moles of air)` = **µmol/s**
+
+Then dividing by area gives us:
+- `µmol/s` ÷ `area (m²)` = **µmol m⁻² s⁻¹**
+
+This is our final flux unit—no additional conversion factor needed!
+
+> **Info: ppb vs ppm - Which Unit to Use?**
+> 
+> Gas concentrations can be expressed in different units:
+> - **ppm** (parts per million) = 1 molecule per 1,000,000 air molecules
+> - **ppb** (parts per billion) = 1 molecule per 1,000,000,000 air molecules
+> - **1 ppm = 1000 ppb**
+> 
+> Typical usage by gas type:
+> - **CO₂**: Usually measured in **ppm** (atmospheric ~420 ppm)
+> - **CH₄**: Can be ppm or ppb (atmospheric ~1.9 ppm = 1900 ppb)
+> - **N₂O**: Usually measured in **ppb** (atmospheric ~330 ppb)
+> 
+> Always check your instrument output to know which unit your slope is in!
 
 > **Info: The Ideal Gas Law**
 > 
-> The middle term comes from the Ideal Gas Law: $PV = nRT$
+> The equation $PV = nRT$ relates pressure, volume, and temperature to the number of moles of gas.
 > 
-> Rearranging for $n$ (number of moles):
-> $$n = \frac{PV}{RT}$$
+> Rearranging: $n = \frac{PV}{RT}$
 > 
-> This converts our concentration measurement into an actual amount of gas molecules.
+> **Important:** Be careful with units! If using:
+> - $R = 0.0821$ L·atm·K⁻¹·mol⁻¹ → use $V$ in liters, $P$ in atm
+> - $R = 8.314$ J·K⁻¹·mol⁻¹ → use $V$ in m³, $P$ in Pa
 >
 > **Resources:**
 > - [Ideal Gas Law (Khan Academy)](https://www.khanacademy.org/science/physics/thermodynamics/temp-kinetic-theory-ideal-gas-law/a/what-is-the-ideal-gas-law)
@@ -1019,36 +1033,42 @@ Now let's implement this formula as a Python function.
 The function `calculate_flux` is provided below but is incomplete. Fill in the missing parts based on the formula.
 
 **Hints:**
-- Convert slope from ppb/s to ppm/s by dividing by 1000
+- Handle both ppb/s and ppm/s slope units using a parameter
 - Use the Ideal Gas Law to calculate moles: $n = \frac{PV}{RT}$
-- Multiply by 10⁶ to convert from mol to µmol
+- Remember: ppm means µmol per mol, so `slope_ppm × n` already gives µmol!
 
 ```python
-# Define the ideal gas constant
-R = 8.314  # J K⁻¹ mol⁻¹
+# Define the ideal gas constant (using L, atm, K, mol units)
+R = 0.0821  # L·atm·K⁻¹·mol⁻¹
 
-def calculate_flux(slope_ppb_s, temp_k, pressure_pa, volume_m3, area_m2):
+def calculate_flux(slope, temp_k, pressure_atm, volume_L, area_m2, slope_unit='ppb'):
     """
     Calculates gas flux from chamber measurements.
 
     Parameters:
-    - slope_ppb_s (float): Rate of concentration change in ppb/s
+    - slope (float): Rate of concentration change
     - temp_k (float): Temperature in Kelvin
-    - pressure_pa (float): Pressure in Pascals
-    - volume_m3 (float): Chamber volume in cubic meters
+    - pressure_atm (float): Pressure in atmospheres (typically 1 atm)
+    - volume_L (float): Chamber volume in liters
     - area_m2 (float): Chamber area in square meters
+    - slope_unit (str): Unit of slope - 'ppb' for ppb/s or 'ppm' for ppm/s
     
     Returns:
     - float: Flux in µmol m⁻² s⁻¹
     """
-    # Convert slope from ppb/s to ppm/s
-    slope_ppm_s = ...
+    # Step 1: Convert slope to ppm/s if needed
+    if slope_unit == 'ppb':
+        slope_ppm_s = ...
+    elif slope_unit == 'ppm':
+        slope_ppm_s = ...
+    else:
+        raise ValueError(...)
     
-    # Calculate moles of gas using Ideal Gas Law (n = PV/RT)
-    gas_moles = ...
+    # Step 2: Calculate moles of air using Ideal Gas Law (n = PV/RT)
+    n_moles = ...
     
-    # Calculate flux in µmol m⁻² s⁻¹
-    # Multiply by 1e6 to convert mol to µmol
+    # Step 3: Calculate flux in µmol m⁻² s⁻¹
+    # Note: ppm = µmol/mol, so (slope_ppm × n_moles) gives µmol/s
     flux = ...
     
     return flux
@@ -1058,34 +1078,68 @@ def calculate_flux(slope_ppb_s, temp_k, pressure_pa, volume_m3, area_m2):
 <summary>Click here for the solution!</summary>
 
 ```python
-# Define the ideal gas constant
-R = 8.314  # J K⁻¹ mol⁻¹
+# Define the ideal gas constant (using L, atm, K, mol units)
+R = 0.0821  # L·atm·K⁻¹·mol⁻¹
 
-def calculate_flux(slope_ppb_s, temp_k, pressure_pa, volume_m3, area_m2):
+def calculate_flux(slope, temp_k, pressure_atm, volume_L, area_m2, slope_unit='ppb'):
     """
     Calculates gas flux from chamber measurements.
 
     Parameters:
-    - slope_ppb_s (float): Rate of concentration change in ppb/s
+    - slope (float): Rate of concentration change
     - temp_k (float): Temperature in Kelvin
-    - pressure_pa (float): Pressure in Pascals
-    - volume_m3 (float): Chamber volume in cubic meters
+    - pressure_atm (float): Pressure in atmospheres (typically 1 atm)
+    - volume_L (float): Chamber volume in liters
     - area_m2 (float): Chamber area in square meters
+    - slope_unit (str): Unit of slope - 'ppb' for ppb/s or 'ppm' for ppm/s
     
     Returns:
     - float: Flux in µmol m⁻² s⁻¹
     """
-    # Convert slope from ppb/s to ppm/s
-    slope_ppm_s = slope_ppb_s / 1000.0
+    # Step 1: Convert slope to ppm/s if needed
+    if slope_unit == 'ppb':
+        slope_ppm_s = slope / 1000.0  # Convert ppb to ppm
+    elif slope_unit == 'ppm':
+        slope_ppm_s = slope  # Already in ppm
+    else:
+        raise ValueError(f"slope_unit must be 'ppb' or 'ppm', got '{slope_unit}'")
     
-    # Calculate moles of gas using Ideal Gas Law (n = PV/RT)
-    gas_moles = (pressure_pa * volume_m3) / (R * temp_k)
+    # Step 2: Calculate moles of air using Ideal Gas Law (n = PV/RT)
+    n_moles = (pressure_atm * volume_L) / (R * temp_k)
     
-    # Calculate flux in µmol m⁻² s⁻¹
-    # Multiply by 1e6 to convert mol to µmol
-    flux = slope_ppm_s * gas_moles / area_m2 * 1e6
+    # Step 3: Calculate flux in µmol m⁻² s⁻¹
+    # Note: ppm = µmol/mol, so (slope_ppm × n_moles) gives µmol/s
+    # Dividing by area gives µmol/m²/s - NO additional conversion needed!
+    flux = (n_moles * slope_ppm_s) / area_m2
     
     return flux
+```
+
+**Example calculations:**
+
+```python
+# Example 1: Using slope in ppb/s (typical for N2O)
+flux_n2o = calculate_flux(
+    slope=0.05,           # 0.05 ppb/s
+    temp_k=298.15,
+    pressure_atm=1.0,
+    volume_L=12.6,
+    area_m2=0.1257,
+    slope_unit='ppb'      # Specify unit
+)
+print(f"N2O Flux: {flux_n2o:.6f} µmol m⁻² s⁻¹")
+
+# Example 2: Using slope in ppm/s (typical for CO2)
+flux_co2 = calculate_flux(
+    slope=0.0842,         # 0.0842 ppm/s
+    temp_k=306.11,
+    pressure_atm=1.0,
+    volume_L=41.46,
+    area_m2=0.123,
+    slope_unit='ppm'      # Specify unit
+)
+print(f"CO2 Flux: {flux_co2:.4f} µmol m⁻² s⁻¹")
+# Expected: ~1.13 µmol m⁻² s⁻¹
 ```
 </details>
 {% endcapture %}
@@ -1095,7 +1149,6 @@ def calculate_flux(slope_ppb_s, temp_k, pressure_pa, volume_m3, area_m2):
 </div>
 </div>
 
----
 
 ### 3.2 Isolating and Visualizing the Measurement Data
 
@@ -1142,7 +1195,7 @@ Looking at the plot, we can identify **three distinct phases**:
 | **2. Accumulation (Linear Increase)** | Chamber sealed, N₂O accumulating from soil | Steady, linear rise ✓ |
 | **3. Post-measurement Drop** | Chamber lifted, sensor exposed to ambient air | Sharp, sudden drop |
 
-> **Critical: Use Only the Linear Phase**
+> **⚠️ Critical: Use Only the Linear Phase**
 > 
 > Our flux calculation relies on the **slope** from linear regression. If we include the flat baseline or the sharp drop, the regression line will not represent the true accumulation rate, leading to **inaccurate flux values**.
 > 
@@ -1193,7 +1246,6 @@ plot_time_series(
 
 Great! The plot should now show a clear, linear increase in N₂O concentration. This is exactly what we need for our regression.
 
----
 
 ### 3.3 Linear Regression to Derive the Rate of Change
 
@@ -1256,7 +1308,6 @@ print(f"P-value: {p_value:.2e}")
 > - [SciPy linregress documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.linregress.html)
 > - [Linear Regression (Khan Academy)](https://www.khanacademy.org/math/statistics-probability/describing-relationships-quantitative-data/introduction-to-trend-lines/a/linear-regression-review)
 
----
 
 ### 3.4 Visualizing the Regression Fit
 
@@ -1298,7 +1349,6 @@ fig.show()
 
 If the red line closely follows the data points and $R^2 > 0.7$, we can proceed with confidence!
 
----
 
 ### 3.5 Final Flux Calculation
 
@@ -1313,56 +1363,83 @@ We need the mean temperature and pressure during the measurement. **Unit convers
 avg_temp_c = regression_data['Ta_C'].mean()
 avg_temp_k = avg_temp_c + 273.15
 
-# Get average pressure (assuming data is in hPa, convert to Pa)
-# Note: Check your data to confirm the original unit!
-avg_pressure_hpa = regression_data['P_Pa'].mean()  # If already in Pa, skip conversion
-avg_pressure_pa = avg_pressure_hpa  # Adjust if needed: * 100 for hPa to Pa
+# For pressure, we assume standard atmospheric pressure
+# (If you have measured pressure data, use that instead)
+pressure_atm = 1.0  # atm
 
 print(f"Average Temperature: {avg_temp_c:.2f} °C = {avg_temp_k:.2f} K")
-print(f"Average Pressure: {avg_pressure_pa:.0f} Pa")
+print(f"Pressure: {pressure_atm} atm")
 ```
 
 #### Step 2: Define Chamber Dimensions
 
-The chamber volume and area are constants for our setup:
+The chamber volume and area are constants for our setup. **Make sure volume is in liters!**
 
 ```python
 # Chamber specifications (measure these for your specific equipment!)
-CHAMBER_VOLUME = 0.0126  # m³ (example: 12.6 liters)
-COLLAR_AREA = 0.1257     # m² (example: circle with radius 0.2 m → π × 0.2²)
+# Volume = chamber height × footprint area (convert to liters)
+CHAMBER_VOLUME_L = 12.6    # liters
+COLLAR_AREA_M2 = 0.1257    # m² (example: circle with radius 0.2 m → π × 0.2²)
 
-print(f"Chamber Volume: {CHAMBER_VOLUME} m³")
-print(f"Collar Area: {COLLAR_AREA} m²")
+print(f"Chamber Volume: {CHAMBER_VOLUME_L} L")
+print(f"Collar Area: {COLLAR_AREA_M2} m²")
 ```
 
-#### Step 3: Calculate the Flux
+#### Step 3: Calculate Moles of Air
+
+Using the Ideal Gas Law:
 
 ```python
-# Calculate the flux!
-flux_n2o = calculate_flux(
-    slope_ppb_s=slope,
-    temp_k=avg_temp_k,
-    pressure_pa=avg_pressure_pa,
-    volume_m3=CHAMBER_VOLUME,
-    area_m2=COLLAR_AREA
-)
+# Ideal gas constant (L·atm·K⁻¹·mol⁻¹)
+R = 0.0821
+
+# Calculate moles of air in the chamber
+n_moles = (pressure_atm * CHAMBER_VOLUME_L) / (R * avg_temp_k)
+
+print(f"Moles of air in chamber: {n_moles:.4f} mol")
+```
+
+#### Step 4: Calculate the Flux
+
+```python
+# Convert slope from ppb/s to ppm/s
+slope_ppm_s = slope / 1000.0
+
+# Calculate flux!
+# Remember: ppm = µmol/mol, so (n × slope_ppm) gives µmol/s
+flux_n2o = (n_moles * slope_ppm_s) / COLLAR_AREA_M2
 
 print("\n" + "="*50)
 print("        FINAL FLUX CALCULATION RESULT")
 print("="*50)
-print(f"  Slope:       {slope:.4f} ppb/s")
+print(f"  Slope:       {slope:.4f} ppb/s = {slope_ppm_s:.6f} ppm/s")
 print(f"  Temperature: {avg_temp_k:.2f} K")
-print(f"  Pressure:    {avg_pressure_pa:.0f} Pa")
-print(f"  Volume:      {CHAMBER_VOLUME} m³")
-print(f"  Area:        {COLLAR_AREA} m²")
+print(f"  Pressure:    {pressure_atm} atm")
+print(f"  Volume:      {CHAMBER_VOLUME_L} L")
+print(f"  Moles (n):   {n_moles:.4f} mol")
+print(f"  Area:        {COLLAR_AREA_M2} m²")
 print("-"*50)
 print(f"  N₂O Flux:    {flux_n2o:.5f} µmol m⁻² s⁻¹")
 print("="*50)
 ```
 
-**Congratulations!** You've successfully converted raw gas concentration data into a standardized flux value!
+Or use our function:
 
----
+```python
+flux_n2o = calculate_flux(
+    slope=slope,
+    temp_k=avg_temp_k,
+    pressure_atm=pressure_atm,
+    volume_L=CHAMBER_VOLUME_L,
+    area_m2=COLLAR_AREA_M2,
+    slope_unit='ppb'  # Our regression slope is in ppb/s
+)
+
+print(f"N₂O Flux: {flux_n2o:.5f} µmol m⁻² s⁻¹")
+```
+
+🎉 **Congratulations!** You've successfully converted raw gas concentration data into a standardized flux value!
+
 
 ### 3.6 Challenge: Making the Function More Robust
 
@@ -1384,8 +1461,8 @@ Our `calculate_flux` function works, but it has a hidden weakness: it assumes th
 |----------|------------------------|------------------|
 | Temperature | -50 to 60 | Celsius |
 | Temperature | 220 to 330 | Kelvin |
-| Pressure | 800 to 1100 | hPa (hectopascals) |
-| Pressure | 80,000 to 110,000 | Pa (pascals) |
+| Pressure | 0.8 to 1.2 | atm |
+| Pressure | 800 to 1200 | hPa/mbar |
 | Volume | 1 to 1000 | Liters |
 | Volume | 0.001 to 1 | m³ |
 | Area | 100 to 10,000 | cm² |
@@ -1395,22 +1472,38 @@ Our `calculate_flux` function works, but it has a hidden weakness: it assumes th
 <summary>Click here for the solution!</summary>
 
 ```python
-R = 8.314  # Ideal gas constant (J K⁻¹ mol⁻¹)
+# Ideal gas constant (using L, atm, K, mol units)
+R = 0.0821  # L·atm·K⁻¹·mol⁻¹
 
-def calculate_flux_robust(slope_ppb_s, temperature, pressure, volume, area):
+def calculate_flux_robust(slope, temperature, pressure, volume, area, slope_unit='ppb'):
     """
     Calculates gas flux with automatic unit detection and conversion.
+    
+    All inputs are auto-converted to standard units:
+    - Temperature → Kelvin
+    - Pressure → atm
+    - Volume → Liters
+    - Area → m²
 
     Parameters:
-    - slope_ppb_s (float): Rate of change in ppb/s
+    - slope (float): Rate of concentration change
     - temperature (float): Temperature in Celsius or Kelvin (auto-detected)
-    - pressure (float): Pressure in Pa or hPa (auto-detected)
+    - pressure (float): Pressure in atm or hPa (auto-detected)
     - volume (float): Chamber volume in m³ or Liters (auto-detected)
     - area (float): Chamber area in m² or cm² (auto-detected)
+    - slope_unit (str): Unit of slope - 'ppb' for ppb/s or 'ppm' for ppm/s
     
     Returns:
     - float: Flux in µmol m⁻² s⁻¹
     """
+    
+    # --- Slope Unit Check ---
+    if slope_unit == 'ppb':
+        slope_ppm_s = slope / 1000.0
+    elif slope_unit == 'ppm':
+        slope_ppm_s = slope
+    else:
+        raise ValueError(f"slope_unit must be 'ppb' or 'ppm', got '{slope_unit}'")
     
     # --- Temperature Check ---
     if -50 <= temperature <= 60:
@@ -1425,23 +1518,23 @@ def calculate_flux_robust(slope_ppb_s, temperature, pressure, volume, area):
         )
 
     # --- Pressure Check ---
-    if 800 <= pressure <= 1100:
-        print(f"  [Auto-convert] Pressure {pressure} detected as hPa → converting to Pa")
-        pressure_pa = pressure * 100
-    elif 80000 <= pressure <= 110000:
-        pressure_pa = pressure  # Already in Pa
+    if 0.8 <= pressure <= 1.2:
+        pressure_atm = pressure  # Already in atm
+    elif 800 <= pressure <= 1200:
+        print(f"  [Auto-convert] Pressure {pressure} detected as hPa → converting to atm")
+        pressure_atm = pressure / 1013.25  # Convert hPa to atm
     else:
         raise ValueError(
             f"Pressure ({pressure}) outside plausible range. "
-            f"Expected: 800 to 1100 (hPa) or 80000 to 110000 (Pa)"
+            f"Expected: 0.8 to 1.2 (atm) or 800 to 1200 (hPa)"
         )
         
     # --- Volume Check ---
     if 1 <= volume <= 1000:
-        print(f"  [Auto-convert] Volume {volume} detected as Liters → converting to m³")
-        volume_m3 = volume / 1000.0
+        volume_L = volume  # Already in Liters
     elif 0.001 <= volume <= 1:
-        volume_m3 = volume  # Already in m³
+        print(f"  [Auto-convert] Volume {volume} detected as m³ → converting to L")
+        volume_L = volume * 1000.0  # Convert m³ to L
     else:
         raise ValueError(
             f"Volume ({volume}) outside plausible range. "
@@ -1461,9 +1554,13 @@ def calculate_flux_robust(slope_ppb_s, temperature, pressure, volume, area):
         )
 
     # --- Core Calculation ---
-    slope_ppm_s = slope_ppb_s / 1000.0
-    gas_moles = (pressure_pa * volume_m3) / (R * temp_k)
-    flux = slope_ppm_s * gas_moles / area_m2 * 1e6
+    # Calculate moles of air (n = PV/RT)
+    n_moles = (pressure_atm * volume_L) / (R * temp_k)
+    
+    # Calculate flux
+    # ppm = µmol/mol, so (n × slope_ppm) gives µmol/s
+    # Dividing by area gives µmol/m²/s
+    flux = (n_moles * slope_ppm_s) / area_m2
     
     return flux
 ```
@@ -1471,15 +1568,27 @@ def calculate_flux_robust(slope_ppb_s, temperature, pressure, volume, area):
 **Example usage:**
 
 ```python
-# This will auto-convert units and print messages
-flux = calculate_flux_robust(
-    slope_ppb_s=0.05,
-    temperature=25,      # Celsius - will be converted
-    pressure=1013,       # hPa - will be converted  
-    volume=12.6,         # Liters - will be converted
-    area=1257            # cm² - will be converted
+# Example 1: N2O with slope in ppb/s
+flux_n2o = calculate_flux_robust(
+    slope=50,             # 50 ppb/s
+    temperature=25,       # Celsius - will be converted to K
+    pressure=1013,        # hPa - will be converted to atm
+    volume=12.6,          # Liters - already correct
+    area=1257,            # cm² - will be converted to m²
+    slope_unit='ppb'
 )
-print(f"\nFlux: {flux:.5f} µmol m⁻² s⁻¹")
+print(f"N2O Flux: {flux_n2o:.5f} µmol m⁻² s⁻¹")
+
+# Example 2: CO2 with slope in ppm/s
+flux_co2 = calculate_flux_robust(
+    slope=0.0842,         # 0.0842 ppm/s
+    temperature=33,       # Celsius
+    pressure=1.0,         # atm - already correct
+    volume=41.46,         # Liters
+    area=0.123,           # m² - already correct
+    slope_unit='ppm'
+)
+print(f"CO2 Flux: {flux_co2:.4f} µmol m⁻² s⁻¹")
 ```
 
 </details>
@@ -1505,8 +1614,6 @@ print(f"\nFlux: {flux:.5f} µmol m⁻² s⁻¹")
 {{ exercise | markdownify }}
 </div>
 </div>
-
-
 
 ## 4. Automating gas flux calculation
 ### 4.1 Store and structure measurement info 
