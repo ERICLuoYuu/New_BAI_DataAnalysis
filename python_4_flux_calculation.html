@@ -233,6 +233,8 @@ jA0EAwMC1o7j8zNG6eRgye1CgI1h0/yQoOa8fycg+...
 <span class="c1"># Concatenate and format temperature data
 </span><span class="n">df_Ta</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">concat</span><span class="p">(</span><span class="n">ta_data_list</span><span class="p">)</span>
 <span class="n">df_Ta</span><span class="p">[</span><span class="s">'Timestamp'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df_Ta</span><span class="p">[</span><span class="s">'Date-Time (CEST)'</span><span class="p">])</span>
+<span class="c1"># Rename temperature column
+</span><span class="n">df_Ta</span><span class="p">[</span><span class="s">'Ta_C'</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_Ta</span><span class="p">[</span><span class="s">'Temperature , °C'</span><span class="p">]</span>
 <span class="n">df_Ta</span> <span class="o">=</span> <span class="n">df_Ta</span><span class="p">.</span><span class="n">set_index</span><span class="p">(</span><span class="s">'Timestamp'</span><span class="p">)</span>
 <span class="n">df_Ta</span> <span class="o">=</span> <span class="n">df_Ta</span><span class="p">.</span><span class="n">sort_index</span><span class="p">()</span>
 
@@ -273,7 +275,7 @@ jA0EAwMC1o7j8zNG6eRgye1CgI1h0/yQoOa8fycg+...
 # direction='backward' means: for each gas reading, find the most recent temperature
 </span><span class="n">df_merged</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">merge_asof</span><span class="p">(</span>
     <span class="n">df_gas_reset</span><span class="p">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s">'Timestamp'</span><span class="p">),</span>
-    <span class="n">df_Ta_reset</span><span class="p">[[</span><span class="s">'Timestamp'</span><span class="p">,</span> <span class="s">'Temperature , °C'</span><span class="p">]].</span><span class="n">sort_values</span><span class="p">(</span><span class="s">'Timestamp'</span><span class="p">),</span>
+    <span class="n">df_Ta_reset</span><span class="p">[[</span><span class="s">'Timestamp'</span><span class="p">,</span> <span class="s">'Ta_C'</span><span class="p">]].</span><span class="n">sort_values</span><span class="p">(</span><span class="s">'Timestamp'</span><span class="p">),</span>
     <span class="n">on</span><span class="o">=</span><span class="s">'Timestamp'</span><span class="p">,</span>
     <span class="n">direction</span><span class="o">=</span><span class="s">'backward'</span>
 <span class="p">)</span>
@@ -382,8 +384,8 @@ jA0EAwMC1o7j8zNG6eRgye1CgI1h0/yQoOa8fycg+...
 
 <span class="n">df_merged</span> <span class="o">=</span> <span class="n">df_merged</span><span class="p">.</span><span class="n">sort_index</span><span class="p">()</span>
 
-<span class="c1"># 2. Select where N2O has valid values (Drop NaNs)
-</span><span class="n">df_N2O</span> <span class="o">=</span> <span class="n">df_merged</span><span class="p">[[</span><span class="s">'N2O_ppb'</span><span class="p">]].</span><span class="n">dropna</span><span class="p">()</span> 
+<span class="c1"># 2. Select where N2O has valid values (Drop NaNs), we also need the temperature column for flux calculation later on
+</span><span class="n">df_N2O</span> <span class="o">=</span> <span class="n">df_merged</span><span class="p">[[</span><span class="s">'N2O_ppb'</span><span class="p">,</span> <span class="s">'Ta_C'</span><span class="p">]].</span><span class="n">dropna</span><span class="p">()</span> 
 
 <span class="c1"># 3. Plot
 </span><span class="n">plot_time_series</span><span class="p">(</span>
