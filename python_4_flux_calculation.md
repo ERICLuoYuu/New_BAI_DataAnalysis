@@ -2055,7 +2055,7 @@ Now we're ready to build the main automation loop. This is the most complex part
 ### Overview: What Will Our Pipeline Do?
 
 Here's the high-level workflow for processing **each measurement**:
-
+```
 For each PLOT in metadata:
     │
     └── For each MEASUREMENT in that plot:
@@ -2074,7 +2074,7 @@ For each PLOT in metadata:
             │       └── ✗ Failed → Mark as invalid
             │
             └── 6️⃣ Store results
-
+```
 
 This is a **nested loop** structure:
 - **Outer loop:** Goes through each plot (6 plots)
