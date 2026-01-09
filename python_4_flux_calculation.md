@@ -1377,9 +1377,8 @@ The chamber volume and area are constants for our setup. **Make sure volume is i
 
 ```python
 # Chamber specifications (measure these for your specific equipment!)
-# Volume = chamber height × footprint area (convert to liters)
-CHAMBER_VOLUME_L = 12.6    # liters
-COLLAR_AREA_M2 = 0.1257    # m² (example: circle with radius 0.2 m → π × 0.2²)
+CHAMBER_VOLUME_L = 41.4567    # liters
+COLLAR_AREA_M2 = 0.123    # m²
 
 print(f"Chamber Volume: {CHAMBER_VOLUME_L} L")
 print(f"Collar Area: {COLLAR_AREA_M2} m²")
@@ -1438,7 +1437,7 @@ flux_n2o = calculate_flux(
 print(f"N₂O Flux: {flux_n2o:.5f} µmol m⁻² s⁻¹")
 ```
 
-🎉 **Congratulations!** You've successfully converted raw gas concentration data into a standardized flux value!
+**Congratulations!** You've successfully converted raw gas concentration data into a standardized flux value!
 
 
 ### 3.6 Challenge: Making the Function More Robust
