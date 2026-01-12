@@ -51,7 +51,34 @@ First, we read the entire file into a single string, and then split that string 
 > **Info: The `split()` Method**
 > 
 > The `split()` method breaks a string into a **list of substrings** based on a delimiter (separator character). You can specify the speperator by passing it to the split method as an agrgument (if nothing is passed to the method, it would be ' '(spaces) by default).
-
+> 
+> ```python
+> # Split by spaces (default)
+> sentence = "Hello World Python"
+> words = sentence.split()
+> print(words)  # ['Hello', 'World', 'Python']
+> 
+> # Split by a specific character
+> data = "apple,banana,cherry"
+> fruits = data.split(',')
+> print(fruits)  # ['apple', 'banana', 'cherry']
+> 
+> # Split by newline character
+> text = "Line 1\nLine 2\nLine 3"
+> lines = text.split('\n')
+> print(lines)  # ['Line 1', 'Line 2', 'Line 3']
+> ```
+> 
+> **Common delimiters:**
+>
+> | Delimiter | Meaning | Use Case |
+> |-----------|---------|----------|
+> | `'\n'` | Newline | Split text into lines |
+> | `'\t'` | Tab | Tab-separated data |
+> | `','` | Comma | CSV-style data |
+> | `'; '` | Semicolon+space | Custom lists |
+> 
+> **Resources:** [Python split() documentation](https://docs.python.org/3/library/stdtypes.html#str.split)
 
 Now let's apply this to our file, first we read in the raw data as a string, then we split the string into lines making use of '\n' speperator (as we know that '\n' are always used to speperate lines).
 ```python
