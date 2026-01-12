@@ -555,6 +555,7 @@ $$
 
 > **Note:** N₂O data from the LI-7820 analyzer is already reported as dry mole fraction, so no additional correction is needed.
 
+
 ```python
 # Select key columns from N2O data
 df_n2o_clean = df_n2o[['N2O']].copy()
@@ -590,6 +591,7 @@ print(df_gas.loc[df_gas['CH4_ppm'].notna()].head(3))
 The gas analyzers record data every second, while the weather station might record only every minute. A simple merge would leave many empty rows. The solution is `pd.merge_asof()`, which performs a "nearest-neighbor" merge. It is ideal for combining time-series data with different frequencies.
 
 > **Note:** pd.merge() performs exact matches and links rows only when keys are identical, whereas pd.merge_asof() performs approximate matches, finding the closest prior key in the second DataFrame to the key in the first. While pd.merge() is a general-purpose tool for relational data that works regardless of order, pd.merge_asof() is specialized for time-series data (or other ordered data) where timestamps might not align perfectly; consequently, pd.merge_asof() strictly requires the join keys to be sorted to function correctly.
+
 ```python
 # Reset index for merge_asof (requires sorted column, not index)
 df_gas_reset = df_gas.reset_index()
@@ -855,11 +857,11 @@ plot_time_series(
 
 This looks much better! The noise is gone, now please pan and zoom in to check the N2O data measured on 15th and 26th of Aug. You can see a clear, meaningful pattern.
 
-filtered N2O data on 08-15
+**filtered N2O data on `08-15`**
 
 ![Filtered_N2O_0815](/assets/images/python/5/Filtered_N2O_0815.png)
 
-filtered N2O data on 08-26
+**filtered N2O data on `08-26`**
 
 ![Filtered_N2O_0826](/assets/images/python/5/Filtered_N2O_0826.png)
 
