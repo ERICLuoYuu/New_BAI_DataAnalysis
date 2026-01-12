@@ -2831,4 +2831,4 @@ summary
 
 ## Congratulations!
 
-You've completed the entire tutorial series! From Python basics and data manipulation, through visualization and regression, to this final chapter where you built a complete automated flux calculation pipeline—you now have the same skills used by professional environmental scientists worldwide. The messy raw data that once seemed intimidating is now something you can confidently load, clean, analyze, and interpret. Keep experimenting, keep coding, and apply these tools to your own research questions. Enjoy coding!
+You've completed the entire tutorial series! From Python basics and data manipulation, through visualization and regression, to this final chapter where you built a complete automated flux calculation pipeline—you now have the same skills used by professional ecologists worldwide. The messy raw data that once seemed intimidating is now something you can confidently load, clean, analyze, and interpret. Keep experimenting, keep coding, and apply these tools to your own research questions. Enjoy coding!
