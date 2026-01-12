@@ -1012,7 +1012,7 @@ In this section, we will focus on a **single measurement period** to understand 
 
 Before we start coding, let's understand the physics behind flux calculation.
 
-#### What is "Flux"?
+### What is "Flux"?
 
 In the context of greenhouse gas research, **flux** refers to the exchange of gases between different parts of the Earth system, in our case, between the **soil** and the **atmosphere** inside our measurement chamber.
 
@@ -1696,7 +1696,7 @@ In Section 3, we calculated flux for a single measurement by hand. Now it's time
 
 ### 4.1 Structuring Measurement Metadata
 The first and crucial step of automation is to store the key information (metadata) for each measurement in a structured way that a program can loop through. For this, we will use a Python **dictionary** that can be converted to a DataFrame. The dictionary keys will be our data “columns” (e.g., ‘plot_id’, ‘land_use’), and the values will be lists containing the data for each plot.  
-### The Challenge: Multiple Measurements per Plot
+### **The Challenge**: Multiple Measurements per Plot
 
 Now, there is an issue: we take multiple measurements at the same plot, perhaps on different days or at different times. How can we store this information efficiently?
 
@@ -1769,33 +1769,7 @@ metadata_df
 
 ### How to Parse Semicolon-Separated Values
 
-Now we need to learn how to **split** these combined strings back into individual values. Python provides the `split()` method for this.
-
-> **Info: The `split()` Method**
-> 
-> The `split()` method breaks a string into a list of substrings based on a delimiter (separator).
-> 
-> ```python
-> # Basic usage
-> text = "apple; banana; cherry"
-> fruits = text.split('; ')  # Split by '; '
-> print(fruits)  # ['apple', 'banana', 'cherry']
-> 
-> # Access individual items
-> print(fruits[0])  # 'apple'
-> print(fruits[1])  # 'banana'
-> ```
-> 
-> **Common delimiters:**
-> - `'; '` — semicolon with space (our format)
-> - `','` — comma
-> - `' '` — space
-> - `'\t'` — tab
-> - `'\n'` — newline
->
-> **Resources:** [Python split() documentation](https://docs.python.org/3/library/stdtypes.html#str.split)
-
-Let's practice parsing one plot's data:
+Now we need to learn how to split these combined strings back into individual values. Remember the `split()` method we learned in Section 1? We used it to split file contents by newlines (`'\n'`) and to split header lines by tabs (`'\t'`). Now we'll use it again to split our semicolon-separated values, Let's practice parsing one plot's data:
 
 ```python
 # Get data for Plot 1-1
@@ -1826,7 +1800,7 @@ Number of measurements: 8
 
 ### Iterating Through Parallel Lists with `zip()`
 
-We now have three lists that need to be processed together:
+We now have three lists that need to be processed together (they are required information to process a single measurement):
 - `start_times` — when each measurement started
 - `end_times` — when each measurement ended  
 - `variables` — which gas was measured
@@ -1858,12 +1832,6 @@ These lists are **parallel**: the 1st item in each list belongs together, the 2n
 > Charlie is 35 from Chicago
 > ```
 > 
-> **Why use `zip()`?**
-> - Cleaner, more readable code
-> - No need to manage index variables
-> - Less prone to off-by-one errors
-> - Pythonic way to handle parallel iteration
->
 > **Resources:** [Python zip() documentation](https://docs.python.org/3/library/functions.html#zip)
 
 Let's use `zip()` to display all measurements for Plot 1-1:
@@ -1940,7 +1908,7 @@ for i, (start, end, var) in enumerate(zip(start_times, end_times, variables), 1)
 </div>
 </div>
 
-### 4.2 Setting Up Configuration and Constants
+### 4.2 Setting Up Gas Configuration and Constants
 
 ### Why Use a Configuration Dictionary?
 
@@ -2032,7 +2000,7 @@ print(f"  Data points available: {len(config['dataframe'])}")
 ```
 
 **Benefits of this approach:**
-- **DRY (Don't Repeat Yourself):** One loop handles all gases
+- **Least repetition:** One loop handles all gases
 - **Extensible:** Adding a new gas = adding one dictionary entry
 - **Maintainable:** All settings are in one place
 
@@ -2138,7 +2106,7 @@ For each PLOT in metadata:
             │
             ├── 2️⃣ Show plot for visual inspection
             │
-            ├── 3️⃣ Let user refine the time window
+            ├── 3️⃣ Refine the time window if nedd
             │
             ├── 4️⃣ Perform linear regression
             │
@@ -2156,11 +2124,13 @@ This is a **nested loop** structure:
 
 ### Step 1: Create Storage for Results
 
-Before we start processing, we need a place to store all our calculated fluxes. We'll use a **list of dictionaries** that can later be converted to a DataFrame.
+Before we start processing, we need a place to store all our calculated fluxes. We will first initialize an empty list to hold result of all measurements. A dictionary will be used to stored the result of a single measurement, as the result of one measurement contains multiple properties (e.g., plot_id, flux, quality_pass). once we get the result of a measurement it will be appended to the list.
 
-**Why a list of dictionaries?**
 
 ```python
+from scipy import stats
+import numpy as np
+
 # Each measurement's results will be a dictionary
 result = {
     'plot_id': '1-1',
@@ -2175,16 +2145,6 @@ results.append(result)
 
 # At the end, convert to DataFrame
 results_df = pd.DataFrame(results)
-```
-
-This pattern is very common in Python data processing!
-
-```python
-from scipy import stats
-import numpy as np
-
-# --- Initialize Results Storage ---
-results = []  # Will hold one dictionary per measurement
 ```
 
 ### Step 2: Create a Helper Function for Temperature
@@ -2219,155 +2179,10 @@ def get_mean_temperature(start_time, end_time, temp_df, temp_column='Ta_C'):
     return temp_values.mean()
 ```
 
-### Step 3: Count Total Measurements
 
-For progress tracking, let's count how many measurements we'll process:
+### Step 3: The Outer Loop - Iterating Through Plots
 
-```python
-# Count total measurements across all plots
-total_measurements = 0
-for _, row in metadata_df.iterrows():
-    n_measurements = len(row['variable'].split(';'))
-    total_measurements += n_measurements
-
-print(f"Total measurements to process: {total_measurements}")
-```
-
-Or more concisely using a **generator expression**:
-
-```python
-total_measurements = sum(
-    len(row['variable'].split(';')) 
-    for _, row in metadata_df.iterrows()
-)
-print(f"Total measurements to process: {total_measurements}")
-```
-
-### Step 4: Understanding the Nested Loop Structure
-
-Before writing the full loop, let's understand its structure with a simplified version that just prints what it would do:
-
-> **Info: Nested Loops**
-> 
-> A nested loop is a loop inside another loop. The inner loop runs completely for each iteration of the outer loop.
-> 
-> ```python
-> # Example: Print a multiplication table
-> for i in range(1, 4):        # Outer loop: i = 1, 2, 3
->     for j in range(1, 4):    # Inner loop: j = 1, 2, 3
->         print(f"{i} × {j} = {i*j}")
->     print("---")  # Runs after inner loop completes
-> ```
-> 
-> Output:
-> ```
-> 1 × 1 = 1
-> 1 × 2 = 2
-> 1 × 3 = 3
-> ---
-> 2 × 1 = 2
-> 2 × 2 = 4
-> ...
-> ```
-> 
-> In our case:
-> - **Outer loop:** Each plot
-> - **Inner loop:** Each measurement within that plot
-
-```python
-# --- Preview the loop structure (no calculations) ---
-print("="*60)
-print("LOOP STRUCTURE PREVIEW")
-print("="*60)
-
-measurement_counter = 0
-
-# OUTER LOOP: Each plot
-for plot_idx, row in metadata_df.iterrows():
-    plot_id = row['plot_id']
-    land_use = row['land_use']
-    
-    # Parse the semicolon-separated values
-    variables = [v.strip() for v in row['variable'].split(';')]
-    
-    print(f"\nPlot {plot_id} ({land_use}): {len(variables)} measurements")
-    
-    # INNER LOOP: Each measurement for this plot
-    for var in variables:
-        measurement_counter += 1
-        print(f"  [{measurement_counter}] {var}")
-
-print(f"\n→ Total: {measurement_counter} measurements")
-```
-
-<div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
-{% capture exercise %}
-### Exercise: Understand the Loop Structure
-
-Before running the full automation, let's make sure you understand the nested loop structure.
-
-**Task:** Modify the preview loop above to also count:
-1. How many measurements per gas type (N2O, CO2, CH4)
-2. How many measurements per land use (forest, grassland)
-
-**Hint:** Create dictionaries like `gas_counts = {'N2O': 0, 'CO2': 0, 'CH4': 0}` and increment them inside the loop.
-
-<details markdown="1">
-<summary>Click here for the solution!</summary>
-
-```python
-# Initialize counters
-gas_counts = {'N2O': 0, 'CO2': 0, 'CH4': 0}
-landuse_counts = {'forest': 0, 'grassland': 0}
-
-# Loop through all measurements
-for plot_idx, row in metadata_df.iterrows():
-    land_use = row['land_use']
-    variables = [v.strip() for v in row['variable'].split(';')]
-    
-    for var in variables:
-        # Count by gas
-        if var in gas_counts:
-            gas_counts[var] += 1
-        
-        # Count by land use
-        landuse_counts[land_use] += 1
-
-print("Measurements by Gas Type:")
-for gas, count in gas_counts.items():
-    print(f"  {gas}: {count}")
-
-print(f"\nMeasurements by Land Use:")
-for lu, count in landuse_counts.items():
-    print(f"  {lu}: {count}")
-
-print(f"\nTotal: {sum(gas_counts.values())}")
-```
-
-**Expected Output:**
-```
-Measurements by Gas Type:
-  N2O: 11
-  CO2: 16
-  CH4: 16
-
-Measurements by Land Use:
-  forest: 19
-  grassland: 24
-
-Total: 43
-```
-</details>
-{% endcapture %}
-
-<div class="notice--primary">
-{{ exercise | markdownify }}
-</div>
-</div>
-
-### Step 5: The Outer Loop - Iterating Through Plots
-
-Now let's start building the real loop. The outer loop uses `iterrows()` to go through each row (plot) in our metadata DataFrame:
+Now let's start building the loop. In this step, we are going to use `iterrows()` to go through each row (plot) in our metadata DataFrame and parse semicolon-separated values into lists for inner loop:
 
 > **Info: DataFrame `iterrows()`**
 > 
@@ -2412,7 +2227,7 @@ for plot_idx, row in metadata_df.iterrows():
     # Inner loop will go here...
 ```
 
-### Step 6: The Inner Loop - Processing Each Measurement
+### Step 4: The Inner Loop - Processing Each Measurement
 
 Inside the outer loop, we iterate through each measurement using `zip()`:
 
@@ -2433,9 +2248,9 @@ Inside the outer loop, we iterate through each measurement using `zip()`:
         # Processing steps continue here...
 ```
 
-### Step 7: Look Up Gas Configuration
+### Step 5: Look Up Gas Configuration
 
-For each measurement, we need to get the correct settings from our configuration dictionary:
+For each measurement, we need to get the correct gas settings from our configuration dictionary, which are required infomation for gas calculation:
 
 ```python
         # --- Get Gas Configuration ---
@@ -2452,9 +2267,9 @@ For each measurement, we need to get the correct settings from our configuration
         display_name = config['display_name']  # Pretty name (e.g., 'CO₂')
 ```
 
-### Step 8: Extract Data for the Time Window
+### Step 6: Extract Data for the Time Window
 
-Now we filter the gas data to only include rows within our measurement time window:
+Now we filter the gas data to only include rows within our measurement time window and check if it has enough data for gas calculation:
 
 ```python
         # --- Extract Data for Time Window ---
@@ -2481,9 +2296,9 @@ Now we filter the gas data to only include rows within our measurement time wind
         print(f"  Data points in window: {len(measurement_data)}")
 ```
 
-### Step 9: Visual Inspection
+### Step 7: Visual Inspection
 
-We display the data so the user can inspect it before regression:
+We display the data so the we can inspect it before regression:
 
 ```python
         # --- Visual Inspection ---
@@ -2496,9 +2311,9 @@ We display the data so the user can inspect it before regression:
         )
 ```
 
-### Step 10: Interactive Time Window Refinement
+### Step 8: Interactive Time Window Refinement
 
-We may need to adjust the time window to exclude baseline or drop phases:
+In this step, we will inspect the data checking if it contains baseline and drop-off parts. If the data look irregular, the time window must be adjusted to capture only the linear accumulation phase. The script pauses to prompt for manual refinement, allowing us to enter new start and end timestamps based on a visual inspection of the plot. If the data looks fine, the input can be skipped. Once these inputs are applied, the system re-slices the dataset to the specified window and performs a validation check to ensure that at least 10 data points remain; if the refined window yields insufficient data, the specific measurement is flagged and skipped to avoid unreliable regression results. 
 
 ```python
         # --- Refine Time Window (Interactive) ---
@@ -2539,7 +2354,7 @@ We may need to adjust the time window to exclude baseline or drop phases:
             continue
 ```
 
-### Step 11: Perform Linear Regression
+### Step 9: Perform Linear Regression
 
 Now we fit a line to get the slope (rate of concentration change):
 
@@ -2565,7 +2380,7 @@ Now we fit a line to get the slope (rate of concentration change):
         print(f"    p-value: {p_value:.2e}")
 ```
 
-### Step 12: Visualize the Regression Fit
+### Step 10: Visualize the Regression Fit
 
 We show the data with the fitted line overlaid:
 
@@ -2603,7 +2418,7 @@ We show the data with the fitted line overlaid:
         fig.show()
 ```
 
-### Step 13: Quality Control
+### Step 11: Quality Control
 
 We check if the regression meets our thresholds:
 
@@ -2622,9 +2437,9 @@ We check if the regression meets our thresholds:
             # Proceed to flux calculation...
 ```
 
-### Step 14: Calculate Flux (if QC passed)
+### Step 12: Calculate Flux (if QC passed)
 
-If quality control passed, we calculate the flux:
+If quality control passed, it is time to calculate flux!
 
 ```python
             # --- Calculate Flux ---
@@ -2647,7 +2462,7 @@ If quality control passed, we calculate the flux:
             print(f"    {display_name} Flux: {flux:.6f} µmol m⁻² s⁻¹")
 ```
 
-### Step 15: Store Results
+### Step 13: Store Results
 
 Finally, we save all the information for this measurement:
 
@@ -3014,4 +2829,6 @@ print("Saved: flux_summary.csv")
 summary
 ```
 
+## Congratulations!
 
+You've completed the entire tutorial series! From Python basics and data manipulation, through visualization and regression, to this final chapter where you built a complete automated flux calculation pipeline—you now have the same skills used by professional environmental scientists worldwide. The messy raw data that once seemed intimidating is now something you can confidently load, clean, analyze, and interpret. Keep experimenting, keep coding, and apply these tools to your own research questions. Enjoy coding!
