@@ -39,25 +39,62 @@ import io
 ```
     
 Our strategy will be to read the file line-by-line, find the start of the data, and then pass only those lines to pandas.
+
 ### 1.1 Loading N₂O Data
+
 The analyzer produces tab-separated files with a metadata block at the top. The data section is marked by a line starting with DATAH. Our strategy is to read the file line-by-line, find the DATAH marker, and pass only the data lines to pandas.
 
 ### Reading and parsing the file
+
 First, we read the entire file into a single string, and then split that string into a list of individual lines. This gives us the flexibility to find our data "landmarks."
 
-```python
+> **Info: The `split()` Method**
+> 
+> The `split()` method breaks a string into a **list of substrings** based on a delimiter (separator character). You can specify the speperator by passing it to the split method as an agrgument (if nothing is passed to the method, it would be ' '(spaces) by default).
+> 
+> ```python
+> # Split by spaces (default)
+> sentence = "Hello World Python"
+> words = sentence.split()
+> print(words)  # ['Hello', 'World', 'Python']
+> 
+> # Split by a specific character
+> data = "apple,banana,cherry"
+> fruits = data.split(',')
+> print(fruits)  # ['apple', 'banana', 'cherry']
+> 
+> # Split by newline character
+> text = "Line 1\nLine 2\nLine 3"
+> lines = text.split('\n')
+> print(lines)  # ['Line 1', 'Line 2', 'Line 3']
+> ```
+> 
+> **Common delimiters:**
+> | Delimiter | Meaning | Use Case |
+> |-----------|---------|----------|
+> | `'\n'` | Newline | Split text into lines |
+> | `'\t'` | Tab | Tab-separated data |
+> | `','` | Comma | CSV-style data |
+> | `'; '` | Semicolon+space | Custom lists |
+> 
+> **Resources:** [Python split() documentation](https://docs.python.org/3/library/stdtypes.html#str.split)
 
+Now let's apply this to our file, first we read in the raw data as a string, then we split the string into lines making use of '\n' speperator (as we know that '\n' are always used to speperate lines).
+```python
 # Read in raw data as a string
 with open("./BAI_StudyProject_LuentenerWald/raw_data/N2O/TG20-01072-2025-08-15T110000.data.txt") as f:
     file_content = f.read()
 
-# Split the string into a list of lines. 
-# '\n' is the special character for a newline.
+# Split the string into a list of lines
+# '\n' is the special character for a newline
 lines = file_content.strip().split('\n')
+
+print(f"Total lines in file: {len(lines)}")
+print(f"First line: {lines[0]}")
+print(f"Last line: {lines[-1]}")
 ```
 
-Next, we need to find the exact line that contains our column headers. Looking at the file, we know this line always starts with the word DATAH. We can write a short command to find the index of that line.
-
+Next, we need to find the exact line that contains our column headers to further locate and extract lines containing data. Looking at the file, we know this line always starts with the word DATAH. We can write a short command to find the index of that line.
 ```python
 # This code searches through our list 'lines' and gets the index of the first line that starts with 'DATAH'
 header_index = next(i for i, line in enumerate(lines) if line.startswith('DATAH'))
@@ -65,8 +102,13 @@ header_index = next(i for i, line in enumerate(lines) if line.startswith('DATAH'
 # The actual data starts 2 lines after the header line (to skip the "DATAU" units line)
 data_start_index = header_index + 2
 
-# Now we can grab the headers themselves from that line. The values are separated by tabs ('\t').
+# Now we can grab the headers themselves from that line
+# The values are separated by tabs ('\t'), so we split by tab
 headers = lines[header_index].split('\t')
+
+print(f"Header found at line: {header_index}")
+print(f"Number of columns: {len(headers)}")
+print(f"Column names: {headers[:5]}...")  # Show first 5 columns
 ```
 ### Using io.StringIO to Read Our Cleaned Data
 The pd.read_csv() function is built to read from a file. We don't have a clean file; we have a list of Python strings (lines) that we've already processed.
@@ -82,16 +124,16 @@ df_n2o = pd.read_csv(
     io.StringIO(data_string),  # Treat our string as a file
     sep='\t',                  # Tell pandas the data is separated by tabs
     header=None,               # We are providing the headers ourselves, so there isn't one in the data
-    names=headers,             # Use the 'headers' list we extracted earlier
+    names=headers,             # Use the 'headers' list we extracted earlier to set headers
     na_values='nan'            # Recognize 'nan' strings as missing values
 )
 ```
 
 ### Data Formatting
 The last step is to tidy up the DataFrame. We will:
-Remove the useless DATAH column.
-Combine the separate DATE and TIME columns into a single Timestamp object. This is crucial for time-series analysis.
-Set this new Timestamp as the DataFrame's index, which makes plotting and selecting data by time much easier.
+1. Remove the useless DATAH column.
+2. Combine the separate DATE and TIME columns into a single Timestamp object. This is crucial for the gas flux calculation later on. The original files use speperate 'DATE' (day/month/year) and 'TIME' (hour/minute/second) columns to store time infomation, we can not locate a single measurement period based on one of them, so we need they to be combined. 
+3. Set this new Timestamp as the DataFrame's index, which makes plotting and selecting data by time much easier.
 
 ```python
 # Drop the first column which is just the 'DATAH' label
@@ -120,7 +162,7 @@ Try to write this function yourself based on the code snippets we created for da
 Tip: The function will need to accept one argument: the filepath of the file you want to open.
 
 <details markdown="1"><summary>Solution!</summary>
-Note: how it's the exact same logic as before, just defined within a def block.
+Hint: it's the exact same logic as before, just defined within a def block. The function should take a filepath as input and return a formatted dataframe.
     
 ```python
 def load_n2o_data(filepath: str) -> pd.DataFrame:
@@ -170,7 +212,7 @@ def load_n2o_data(filepath: str) -> pd.DataFrame:
 
 ### 1.2 Loading CH₄ and CO₂ Data
 
-The GGA analyzer produces comma-separated files with a different structure: The first line includes instrument metadata (version, serial number, etc.), The second are column headers, Lines 3+ hold measurement data.
+Different from N2O files, the GGA analyzer produces **comma-separated files** with a different structure: The first line includes instrument metadata (version, serial number, etc.), The second are column headers, Lines 3+ hold measurement data.
 
 Here's an example of the first few lines:
 
@@ -180,7 +222,7 @@ VC:2f90039 BD:Jan 16 2014 SN:
   08/15/2025 11:00:03.747,   2.080375e+00,   0.000000e+00,   1.103072e+03, ...
 ```
 
-However, GGA files contain extra non-data content at the end (such as digital signatures or log messages). We need to filter these out. Let's build our loader step by step.
+Besides, GGA files contain extra non-data content at the end (such as digital signatures or log messages). We need to filter these out. Let's build our loader step by step.
 
 ### Read the CSV File
 
@@ -271,7 +313,7 @@ Output:
 'nan                           ' → False
 ```
 
-Now we can use this pattern to filter our DataFrame:
+Now we can use this pattern to filter our DataFrame: first we convert the 'Time' column into string format and utilize the regex to create a mask where only rows with valid timestamp are hold and lastly apply the mask to get clean data.
 
 ```python
 # Create a boolean mask: True for valid rows, False for invalid
@@ -355,7 +397,7 @@ df_gga.tail()
 
 
 ### 1.3 Loading Multiple Files
-Now that we have loader functions, we can easily handle data from multiple field trips. Instead of copying code, we can simply call our function in a loop.
+Now that we have loader functions, we can easily handle data from multiple field trips (data were measured on 06, 15 and 26th Aug). Instead of copying code, we can simply iterate data files and apply our function on files.
 First, we create a list of all the file paths we want to load. Then, we can loop through this list, call our function for each path, and store the resulting DataFrames in a new list.
 
 ```python
@@ -411,7 +453,7 @@ We will use the same workflow as before: load each file and then combine them.
 {% capture exercise %}
 ### Exercise
 
-You have two Excel files containing air temperature.
+You have three Excel files containing air temperature.
 Create lists of the file paths for the temperature data.
 Load each Excel file into a pandas DataFrame. Try using a list comprehension as we learned before!
 
@@ -446,9 +488,9 @@ print(f"Successfully loaded {len(ta_data_list)} air temperature files.")
 
 ### 1.4 Concatenating and Merging All Data
 
-Now we combine everything into one master DataFrame. Understanding our data structure is important:
+Now we will combine everything into one master DataFrame. Understanding our data structure is important:
 
-- **Gas measurements (N₂O, CH₄, CO₂):** Recorded at different times. They do NOT overlap in time, we simply need to stack them together.
+- **Gas measurements (N₂O, CH₄, CO₂):** Recorded at different times. It doesn't matter if they overlap in time, we simply need to stack them together.
 - **Temperature data:** Recorded continuously and DOES overlap with all gas measurements. We need to match each gas reading with its corresponding temperature.
 
 This means our workflow is:
@@ -458,7 +500,7 @@ This means our workflow is:
 
 ### Concatenate Gas Data from All Files
 
-First, let's combine files of the same type:
+First, let's combine files from differnt filed trip of the same type (gga, n2o and temperature) into one dataframe:
 
 ```python
 # Concatenate N2O data from multiple files
@@ -491,9 +533,32 @@ print(f"  Rows: {len(df_Ta):,}, Time range: {df_Ta.index.min()} to {df_Ta.index.
 
 Since N₂O and CH₄/CO₂ measurements don't overlap in time, we can safely stack them together. First, we need to select and rename columns so they're consistent:
 
+When selecting columns from the GGA data, you'll notice two versions of each gas measurement:
+- `[CH4]_ppm` — Raw (wet) concentration
+- `[CH4]d_ppm` — Dry-corrected concentration
+
+**What's the difference?**
+
+The air inside your chamber contains water vapor. This water vapor **dilutes** the sample, it takes up space that would otherwise be occupied by other gas molecules. The raw `[CH4]_ppm` value measures CH₄ as a fraction of the **total air (including water vapor)**.
+
+The problem: humidity varies between measurements! A humid day will show artificially lower CH₄ concentrations simply because more of the sample is water.
+
+**The solution: Dry correction**
+
+The analyzer also measures water vapor content `[H2O]_ppm`. It then calculates what the concentration **would be** if there were no water vapor present:
+
+$$
+[\text{CH}_4]_{\text{dry}} = \frac{[\text{CH}_4]_{\text{wet}}}{1 - \frac{[\text{H}_2\text{O}]}{10^6}}
+$$
+
+> **Rule:** Always use **dry-corrected values** (`_d_ppm`) for flux calculations. This ensures your measurements are comparable across different humidity conditions.
+
+> **Note:** N₂O data from the LI-7820 analyzer is already reported as dry mole fraction, so no additional correction is needed.
+
 ```python
 # Select key columns from N2O data
 df_n2o_clean = df_n2o[['N2O']].copy()
+# Rename the column with unit
 df_n2o_clean.columns = ['N2O_ppb']
 
 # Select key columns from GGA data (dry-corrected values)
@@ -522,8 +587,9 @@ print(df_gas.loc[df_gas['CH4_ppm'].notna()].head(3))
 
 ### Merge Temperature with Gas Data
 
-The gas analyzers record data every second, while the weather station might record only every minute. A simple merge would leave many empty rows. The solution is `pd.merge_asof()`, which performs a "nearest-neighbor" merge—ideal for combining time-series data with different frequencies.
+The gas analyzers record data every second, while the weather station might record only every minute. A simple merge would leave many empty rows. The solution is `pd.merge_asof()`, which performs a "nearest-neighbor" merge. It is ideal for combining time-series data with different frequencies.
 
+> **Note:** pd.merge() performs exact matches and links rows only when keys are identical, whereas pd.merge_asof() performs approximate matches, finding the closest prior key in the second DataFrame to the key in the first. While pd.merge() is a general-purpose tool for relational data that works regardless of order, pd.merge_asof() is specialized for time-series data (or other ordered data) where timestamps might not align perfectly; consequently, pd.merge_asof() strictly requires the join keys to be sorted to function correctly.
 ```python
 # Reset index for merge_asof (requires sorted column, not index)
 df_gas_reset = df_gas.reset_index()
@@ -573,7 +639,7 @@ The master DataFrame now contains:
 Now that we have a single, merged DataFrame, our next step is to inspect the data quality. Raw sensor data from the field is almost never perfect. Visualizing it is the best way to diagnose issues like noise, drift, or outliers before we attempt any calculations. 
 ### 2.1 Creating a Reusable Plotting Function with Plotly
 
-For visualization, we'll use **Plotly**, a powerful library for creating interactive plots. Unlike static plots from Matplotlib, Plotly allows you to zoom, pan, and hover over data points—perfect for inspecting time-series data. Just as we did with data loading, we'll be plotting our time-series data multiple times. To make this efficient and keep our plots looking consistent, let's create a dedicated function.
+For visualization, we'll use **Plotly**, a powerful library for creating interactive plots. Unlike static plots from Matplotlib, Plotly allows you to zoom, pan, and hover over data points—perfect for inspecting time-series data. Just as we did with data loading, we'll be plotting our time-series data many times. To make this efficient and keep our plots looking consistent, let's create a dedicated function.
 
 <div style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
 {% capture exercise %}
@@ -789,7 +855,11 @@ plot_time_series(
 
 This looks much better! The noise is gone, now please pan and zoom in to check the N2O data measured on 15th and 26th of Aug. You can see a clear, meaningful pattern.
 
+filtered N2O data on 08-15
+
 ![Filtered_N2O_0815](/assets/images/python/5/Filtered_N2O_0815.png)
+
+filtered N2O data on 08-26
 
 ![Filtered_N2O_0826](/assets/images/python/5/Filtered_N2O_0826.png)
 
@@ -932,7 +1002,7 @@ plot_time_series(
 
 After loading and filtering our raw data and getting an overview of the patterns, it's time to calculate the fluxes. Excited?
 
-In this section, we will focus on a **single measurement period** to understand the process in detail. We'll break it down into these key steps:
+In this section, we will focus on a **single measurement period** to understand the process in detail.
 
 
 ### 3.1 The Flux Calculation Formula
@@ -941,7 +1011,7 @@ Before we start coding, let's understand the physics behind flux calculation.
 
 #### What is "Flux"?
 
-In the context of greenhouse gas research, **flux** refers to the exchange of gases between different parts of the Earth system—in our case, between the **soil** and the **atmosphere** inside our measurement chamber.
+In the context of greenhouse gas research, **flux** refers to the exchange of gases between different parts of the Earth system, in our case, between the **soil** and the **atmosphere** inside our measurement chamber.
 
 > **Learn More:** [Greenhouse Gas Fluxes - Sustainability Directory](https://climate.sustainability-directory.com/term/greenhouse-gas-fluxes/)
 
@@ -954,7 +1024,7 @@ Not quite! The raw concentration change rate (in ppb/s) is evidence of a flux, b
 
 To make measurements comparable, we need to convert our raw observation into a standardized unit: **µmol m⁻² s⁻¹** (micromoles per square meter per second).
 
-#### The Formula
+### The Formula
 
 The flux calculation is a two-step process:
 
@@ -982,7 +1052,7 @@ Where:
 | slope | Rate of concentration change | ppm s⁻¹ |
 | $A$ | Surface area covered by chamber | m² |
 
-#### Understanding Why This Works
+### Understanding Why This Works
 
 The key insight is understanding what **ppm** means:
 
@@ -1024,7 +1094,7 @@ This is our final flux unit—no additional conversion factor needed!
 > - [Ideal Gas Law (Khan Academy)](https://www.khanacademy.org/science/physics/thermodynamics/temp-kinetic-theory-ideal-gas-law/a/what-is-the-ideal-gas-law)
 > - [Gas Laws (Chemistry LibreTexts)](https://chem.libretexts.org/Bookshelves/General_Chemistry/Map%3A_Chemistry_-_The_Central_Science_(Brown_et_al.)/10%3A_Gases/10.04%3A_The_Ideal_Gas_Law)
 
-#### Creating the Flux Calculation Function
+### Creating the Flux Calculation Function
 
 Now let's implement this formula as a Python function.
 
@@ -1156,7 +1226,7 @@ print(f"CO2 Flux: {flux_co2:.4f} µmol m⁻² s⁻¹")
 
 Now let's apply our formula to real data. We'll use an example measurement period from our field campaign.
 
-#### Step 1: Define the Time Window
+### Define the Time Window
 
 Let's select a measurement window from our filtered data:
 
@@ -1175,7 +1245,7 @@ print(f"Selected {len(measurement_data)} data points")
 print(f"Time range: {measurement_data.index.min()} to {measurement_data.index.max()}")
 ```
 
-#### Step 2: Visualize the Raw Measurement Window
+### Visualize the Raw Measurement Window
 
 ```python
 # Plot the measurement window
@@ -1187,7 +1257,7 @@ plot_time_series(
 )
 ```
 
-#### Understanding the Pattern
+### Understanding the Pattern
 
 Looking at the plot, we can identify **three distinct phases**:
 
@@ -1197,13 +1267,13 @@ Looking at the plot, we can identify **three distinct phases**:
 | **2. Accumulation (Linear Increase)** | Chamber sealed, N₂O accumulating from soil | Steady, linear rise ✓ |
 | **3. Post-measurement Drop** | Chamber lifted, sensor exposed to ambient air | Sharp, sudden drop |
 
-> **⚠️ Critical: Use Only the Linear Phase**
+> ** Critical: Use Only the Linear Phase**
 > 
 > Our flux calculation relies on the **slope** from linear regression. If we include the flat baseline or the sharp drop, the regression line will not represent the true accumulation rate, leading to **inaccurate flux values**.
 > 
 > We must visually inspect the data and select **only the linear increase phase**.
 
-#### Step 3: Refine the Time Window
+### Refine the Time Window
 
 Use the zoom and pan features on the interactive plot to identify the linear portion. In this example, the clean linear increase occurs approximately between **12:05:30** and **12:09:00**.
 
@@ -1253,9 +1323,9 @@ Great! The plot should now show a clear, linear increase in N₂O concentration.
 
 Now we'll fit a linear regression line to our data. The **slope** of this line is the $\frac{\Delta C}{\Delta t}$ we need for our flux formula.
 
-#### Step 1: Convert Timestamps to Elapsed Seconds
+### Convert Timestamps to Elapsed Seconds
 
-For regression, we need numeric x-values. We'll convert timestamps to "seconds elapsed since start of measurement":
+For regression, We can not use 'Timestamps' as x-values because numeric x-values are required. We'll convert timestamps to "seconds elapsed since start of measurement" (time passed in seconds compared to the start of measurement):
 
 ```python
 from scipy import stats
@@ -1275,9 +1345,9 @@ regression_data['elapsed_seconds'] = (
 print(regression_data[['elapsed_seconds', 'N2O_ppb']].head())
 ```
 
-#### Step 2: Perform Linear Regression
+### Perform Linear Regression
 
-We'll use SciPy's `linregress` function to fit a line:
+Use SciPy's `linregress` function to fit a line:
 
 ```python
 # Perform linear regression
@@ -1313,7 +1383,7 @@ print(f"P-value: {p_value:.2e}")
 
 ### 3.4 Visualizing the Regression Fit
 
-Before calculating the flux, let's visualize the regression line to confirm it fits well:
+Before calculating the flux, let's visualize the regression line to confirm it fits well. Visualizing the regression fit is a critical quality control step that allows you to assess the physical validity of your flux measurement before accepting the calculated rate. By overlaying the raw $N_2O$ concentration points with the fitted regression line (derived from your calculated slope and intercept), you can visually confirm that the gas accumulation follows the expected linear pattern of a closed static chamber and easily spot anomalies like leaks, saturation curves, or pneumatic disturbances that mere summary statistics might miss.
 
 ```python
 import plotly.graph_objects as go
@@ -1356,7 +1426,7 @@ If the red line closely follows the data points and $R^2 > 0.7$, we can proceed 
 
 Now we have all the pieces. Let's put them together!
 
-#### Step 1: Get Average Temperature and Pressure
+### Get Average Temperature and Pressure
 
 We need the mean temperature and pressure during the measurement. **Unit conversion is critical!**
 
@@ -1366,16 +1436,15 @@ avg_temp_c = regression_data['Ta_C'].mean()
 avg_temp_k = avg_temp_c + 273.15
 
 # For pressure, we assume standard atmospheric pressure
-# (If you have measured pressure data, use that instead)
 pressure_atm = 1.0  # atm
 
 print(f"Average Temperature: {avg_temp_c:.2f} °C = {avg_temp_k:.2f} K")
 print(f"Pressure: {pressure_atm} atm")
 ```
 
-#### Step 2: Define Chamber Dimensions
+### Define Chamber Dimensions
 
-The chamber volume and area are constants for our setup. **Make sure volume is in liters!**
+The chamber volume and area are constants for our setup.
 
 ```python
 # Chamber specifications (measure these for your specific equipment!)
@@ -1386,9 +1455,9 @@ print(f"Chamber Volume: {CHAMBER_VOLUME_L} L")
 print(f"Collar Area: {COLLAR_AREA_M2} m²")
 ```
 
-#### Step 3: Calculate Moles of Air
+### Calculate Moles of Air
 
-Using the Ideal Gas Law:
+Now apply the Ideal Gas Law to get moles:
 
 ```python
 # Ideal gas constant (L·atm·K⁻¹·mol⁻¹)
@@ -1400,7 +1469,9 @@ n_moles = (pressure_atm * CHAMBER_VOLUME_L) / (R * avg_temp_k)
 print(f"Moles of air in chamber: {n_moles:.4f} mol")
 ```
 
-#### Step 4: Calculate the Flux
+### Calculate the Flux
+
+The flux is here:
 
 ```python
 # Convert slope from ppb/s to ppm/s
