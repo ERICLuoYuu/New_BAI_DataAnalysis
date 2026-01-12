@@ -546,11 +546,8 @@ The problem: humidity varies between measurements! A humid day will show artific
 
 **The solution: Dry correction**
 
-The analyzer also measures water vapor content `[H2O]_ppm`. It then calculates what the concentration **would be** if there were no water vapor present:
+The analyzer also measures water vapor content `[H2O]_ppm`. It then calculates what the concentration **would be** if there were no water vapor present.
 
-$$
-[\text{CH}_4]_{\text{dry}} = \frac{[\text{CH}_4]_{\text{wet}}}{1 - \frac{[\text{H}_2\text{O}]}{10^6}}
-$$
 
 > **Rule:** Always use **dry-corrected values** (`_d_ppm`) for flux calculations. This ensures your measurements are comparable across different humidity conditions.
 
@@ -875,7 +872,6 @@ The filtered data reveals a repeating pattern characteristic of the **static cha
 | **1. Baseline** | Chamber is open, sensor measures ambient air | Long, flat periods at ~background concentration |
 | **2. Accumulation** | Chamber closed over soil, gases accumulate | Steady, linear increase in concentration |
 | **3. Release** | Chamber lifted, gases escape | Sharp vertical drop back to baseline |
-| **4. Leveling off** | (If chamber left too long) Soil-air gradient decreases | Rate of increase slows, curve flattens |
 
 ### The Critical Insight: Linear Increase
 
